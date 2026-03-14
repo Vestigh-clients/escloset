@@ -64,3 +64,109 @@
     font-family: var(--font-display);
   }
 }
+
+@keyframes lux-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes lux-toast-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes lux-order-pulse {
+  0% {
+    background: #e8e2d9;
+  }
+  50% {
+    background: #f0ebe3;
+  }
+  100% {
+    background: #e8e2d9;
+  }
+}
+
+@keyframes lux-check-circle-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes lux-check-path-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@layer components {
+  .lux-cart-toast {
+    background: #1a1a1a !important;
+    color: #f5f0e8 !important;
+    border: none !important;
+    border-radius: 2px !important;
+    max-width: 320px !important;
+    padding: 12px 20px !important;
+    font-family: var(--font-body) !important;
+    font-size: 12px !important;
+    font-weight: 300 !important;
+    line-height: 1.45 !important;
+    box-shadow: none !important;
+    animation: lux-toast-in 200ms ease;
+  }
+
+  .lux-cart-toast.lux-cart-toast-error {
+    background: #c0392b !important;
+    color: #ffffff !important;
+  }
+
+  [data-sonner-toast][data-removed="true"].lux-cart-toast {
+    animation: lux-toast-out 200ms ease forwards;
+  }
+
+  .lux-cart-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #d4ccc2 transparent;
+  }
+
+  .lux-cart-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .lux-cart-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .lux-cart-scroll::-webkit-scrollbar-thumb {
+    background: #d4ccc2;
+    border-radius: 999px;
+  }
+
+  .lux-order-pulse {
+    border-radius: 2px;
+    background: #e8e2d9;
+    animation: lux-order-pulse 1.5s ease infinite;
+  }
+
+  .lux-check-circle {
+    stroke-dasharray: 189;
+    stroke-dashoffset: 189;
+    animation: lux-check-circle-draw 600ms ease-out forwards;
+  }
+
+  .lux-check-path {
+    stroke-dasharray: 38;
+    stroke-dashoffset: 38;
+    animation: lux-check-path-draw 400ms ease-out 500ms forwards;
+  }
+}

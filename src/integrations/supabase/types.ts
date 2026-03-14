@@ -175,6 +175,103 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_roles: {
+        Row: {
+          created_at: string
+          customer_id: string
+          role: Database["public"]["Enums"]["customer_role"]
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          role?: Database["public"]["Enums"]["customer_role"]
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          role?: Database["public"]["Enums"]["customer_role"]
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_roles_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_activity_log: {
+        Row: {
+          action: string
+          admin_id: string
+          created_at: string
+          id: string
+          metadata: Json
+          target_id: string | null
+          target_table: string | null
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          target_id?: string | null
+          target_table?: string | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          target_id?: string | null
+          target_table?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_activity_log_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_notifications: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_read: boolean
+          link: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          title: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
       discount_codes: {
         Row: {
           code: string
@@ -334,6 +431,7 @@ export type Database = {
           admin_notes: string | null
           cancel_reason: string | null
           cancelled_at: string | null
+          confirmation_email_sent: boolean
           created_at: string
           currency: string | null
           customer_id: string
@@ -341,6 +439,7 @@ export type Database = {
           discount_amount: number | null
           id: string
           ip_address: string | null
+          mobile_money_number: string | null
           notes: string | null
           order_number: string
           payment_method: string | null
@@ -358,6 +457,7 @@ export type Database = {
           admin_notes?: string | null
           cancel_reason?: string | null
           cancelled_at?: string | null
+          confirmation_email_sent?: boolean
           created_at?: string
           currency?: string | null
           customer_id: string
@@ -365,6 +465,7 @@ export type Database = {
           discount_amount?: number | null
           id?: string
           ip_address?: string | null
+          mobile_money_number?: string | null
           notes?: string | null
           order_number: string
           payment_method?: string | null
@@ -382,6 +483,7 @@ export type Database = {
           admin_notes?: string | null
           cancel_reason?: string | null
           cancelled_at?: string | null
+          confirmation_email_sent?: boolean
           created_at?: string
           currency?: string | null
           customer_id?: string
@@ -389,6 +491,7 @@ export type Database = {
           discount_amount?: number | null
           id?: string
           ip_address?: string | null
+          mobile_money_number?: string | null
           notes?: string | null
           order_number?: string
           payment_method?: string | null
@@ -546,9 +649,81 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      current_user_is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      get_current_customer_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string | null
+      }
+      get_order_confirmation_details: {
+        Args: {
+          p_order_number: string
+        }
+        Returns: Json
+      }
+      initialize_customer_profile: {
+        Args: {
+          p_email: string
+          p_first_name: string
+          p_last_name: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      log_admin_activity: {
+        Args: {
+          p_action: string
+          p_metadata?: Json
+          p_target_id?: string | null
+          p_target_table?: string | null
+        }
+        Returns: string
+      }
+      lookup_order_tracking_details: {
+        Args: {
+          p_email?: string | null
+          p_order_number: string
+        }
+        Returns: Json
+      }
+      submit_order: {
+        Args: {
+          p_address_line1: string
+          p_address_line2: string
+          p_city: string
+          p_country: string
+          p_customer_id: string | null
+          p_delivery_instructions: string
+          p_discount_amount: number
+          p_email: string
+          p_first_name: string
+          p_ip_address: string | null
+          p_items: Json
+          p_last_name: string
+          p_marketing_opt_in: boolean
+          p_mobile_money_number: string | null
+          p_notes: string
+          p_payment_method: string
+          p_phone: string
+          p_save_address: boolean
+          p_shipping_fee: number
+          p_state: string
+          p_subtotal: number
+          p_total: number
+        }
+        Returns: {
+          created_at: string
+          order_id: string
+          order_number: string
+          status: Database["public"]["Enums"]["order_status"]
+          total: number
+        }[]
+      }
     }
     Enums: {
+      customer_role: "customer" | "admin" | "super_admin"
       discount_type: "percentage" | "fixed_amount"
       gender_type: "male" | "female" | "prefer_not_to_say"
       order_status:
@@ -686,6 +861,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      customer_role: ["customer", "admin", "super_admin"],
       discount_type: ["percentage", "fixed_amount"],
       gender_type: ["male", "female", "prefer_not_to_say"],
       order_status: [

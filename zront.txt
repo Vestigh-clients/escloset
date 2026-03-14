@@ -1,7 +1,9 @@
-Replace all WhatsApp ordering functionality with 
-a proper backend order system connected to our 
-existing cloud backend.
+Here are the sections broken out one by one:
 
+---
+
+### PROMPT 1 — Cleanup
+```
 REMOVE (ordering only):
 - "Order on WhatsApp" buttons on product 
   detail pages
@@ -17,18 +19,14 @@ DO NOT REMOVE:
 - Any WhatsApp reference that is for 
   customer support or general enquiries
 - Social media links in the footer
+```
 
-ORDER FLOW:
-- Clicking "Add to Cart" adds the product to a 
-  persistent cart state
-- Cart icon appears in navbar showing item count
-- User can view cart, adjust quantities, remove items
-- User proceeds to checkout
-- Checkout collects real customer information
-- Order is submitted to the cloud backend
-- User receives confirmation
+---
 
-DATABASE SCHEMA — REAL TABLES:
+### PROMPT 2 — Database Schema
+```
+Create the following real tables in our cloud 
+backend. No dummy fields, no placeholder columns.
 
 Table: customers
   - id: uuid, primary key
@@ -59,30 +57,26 @@ Table: products
     'bags','shoes'), not null
   - price: numeric(10,2), not null
   - compare_at_price: numeric(10,2)
-    (for showing original price if on sale)
   - stock_quantity: integer, not null, default 0
   - is_available: boolean, default true
-  - images: jsonb 
-    (array of image URLs with primary flag)
+  - images: jsonb
   - benefits: jsonb
-    (array of benefit objects {icon, label})
   - created_at: timestamp, default now()
   - updated_at: timestamp
 
 Table: orders
   - id: uuid, primary key
   - order_number: varchar(20), unique, not null
-    (human readable e.g. LUX-2026-00142)
   - customer_id: uuid, foreign key → customers.id
   - shipping_address_id: uuid, 
     foreign key → addresses.id
-  - status: enum('pending', 'confirmed', 
-    'processing', 'shipped', 'delivered', 
+  - status: enum('pending','confirmed',
+    'processing','shipped','delivered',
     'cancelled'), default 'pending'
   - subtotal: numeric(10,2), not null
   - shipping_fee: numeric(10,2), not null
   - total: numeric(10,2), not null
-  - notes: text (customer order notes)
+  - notes: text
   - created_at: timestamp, default now()
   - updated_at: timestamp
 
@@ -91,9 +85,7 @@ Table: order_items
   - order_id: uuid, foreign key → orders.id
   - product_id: uuid, foreign key → products.id
   - product_name: varchar(255), not null
-    (snapshot of name at time of order)
   - product_price: numeric(10,2), not null
-    (snapshot of price at time of order)
   - quantity: integer, not null
   - subtotal: numeric(10,2), not null
   - created_at: timestamp, default now()
@@ -102,60 +94,160 @@ Table: order_status_history
   - id: uuid, primary key
   - order_id: uuid, foreign key → orders.id
   - status: enum (same as orders.status)
-  - note: text (internal admin note per status)
+  - note: text
   - changed_at: timestamp, default now()
+```
 
-CART (frontend state — no cart table needed):
-- Cart lives in React context + localStorage
+---
+
+### PROMPT 3 — Cart
+```
+Implement a persistent cart using React context 
+and localStorage. No cart table in the database.
+
+CART STATE:
+- Lives in a CartContext wrapping the entire app
 - Each cart item holds:
   product_id, name, price, quantity, image
-- Cart persists across page refreshes
+- Cart persists across page refreshes 
+  via localStorage
 - Cart is cleared on successful order submission
 
-CHECKOUT PAGE:
-- Step 1 — Contact Info:
-  First Name, Last Name, Email, Phone
-- Step 2 — Delivery Address:
-  Address Line 1, Address Line 2 (optional),
-  City, State, Country (default Nigeria)
-- Step 3 — Order Summary:
-  List of items, quantities, prices,
-  shipping fee, total
-  Confirm Order button
+CART ACTIONS:
+- addToCart(product): 
+  if product already in cart, increment quantity
+  if new product, add with quantity 1
+- removeFromCart(product_id):
+  removes item completely
+- updateQuantity(product_id, quantity):
+  if quantity reaches 0, remove item
+- clearCart():
+  empties cart, clears localStorage
 
-- Form validation on all required fields
-  before allowing next step
-- Show inline errors per field, not alerts
-- Error style: Inter 11px, color #C0392B,
-  margin-top 4px below the field
+NAVBAR CART ICON:
+- Thin line cart icon, right side of navbar
+- Badge showing total item count:
+  background #C4A882, color #1A1A1A,
+  font-size 9px, 18px circle,
+  positioned top-right of icon
+  hidden if cart is empty
+- Clicking icon opens cart drawer
 
-CHECKOUT STYLING:
-- Background: #F5F0E8
-- Step indicator at top:
-  3 steps shown as:
-  ① Contact  →  ② Delivery  →  ③ Review
-  Active step: color #1A1A1A, font-weight 500
-  Completed step: color #C4A882
-  Inactive step: color #aaa
-  Connector line: 1px solid #d4ccc2
+CART DRAWER:
+- Slides in from the right
+- Width 420px, background #F5F0E8
+- Padding 40px 32px
+- Overlay behind drawer: 
+  background rgba(0,0,0,0.3)
+  clicking overlay closes drawer
+- Drawer heading: "Your Cart"
+  Cormorant Garamond, 28px, italic
+
+- Each cart item shows:
+  * Image: 60x80px, object-fit cover
+  * Product name: Cormorant Garamond, 
+    15px, italic, color #1A1A1A
+  * Price: Inter, 12px, color #888
+  * Quantity controls: − [qty] +
+    Inter 12px, thin bordered controls
+    border: 1px solid #d4ccc2
+    padding 4px 12px
+  * Remove: "Remove" text link
+    Inter 10px, uppercase, color #aaa
+    hover: color #1A1A1A
+  * Thin divider between items:
+    border-bottom 1px solid #d4ccc2
+
+- Bottom of drawer:
+  * Subtotal label left, amount right
+    Inter 13px, color #1A1A1A
+  * Thin divider above subtotal
+  * "Proceed to Checkout" button:
+    background #1A1A1A, color #F5F0E8
+    Inter 11px uppercase letter-spacing 0.18em
+    padding 18px, full width, border-radius 2px
+    hover: background #C4A882, color #1A1A1A
+  * Below button: Inter 11px, color #aaa,
+    centered: "Free delivery on all orders"
+
+- If cart is empty show:
+  * Thin line shopping bag icon, 32px, color #d4ccc2
+  * "Your cart is empty"
+    Cormorant Garamond, 22px, italic, color #888
+  * "Continue Shopping" text link → /shop
+    Inter 11px uppercase color #C4A882
+```
+
+---
+
+### PROMPT 4 — Checkout Page
+```
+Build a 3-step checkout page at /checkout
+
+STEP INDICATOR:
+- Top of page, full width, centered
+- 3 steps: Contact → Delivery → Review
+- Active: color #1A1A1A, font-weight 500
+- Completed: color #C4A882
+- Inactive: color #aaa
+- Connector: 1px solid #d4ccc2
+- Inter 11px uppercase letter-spacing 0.12em
+
+STEP 1 — CONTACT INFO:
+  Fields: First Name, Last Name, Email, Phone
+  All required except Phone
+
+STEP 2 — DELIVERY ADDRESS:
+  Fields: Address Line 1, Address Line 2 
+  (optional), City, State, 
+  Country (default Nigeria, editable)
+  All required except Address Line 2
+
+STEP 3 — ORDER REVIEW:
+  - List all cart items:
+    image, name, quantity, line total
+  - Subtotal
+  - Shipping fee
+  - Order total
+  - Optional notes field:
+    placeholder "Any notes for your order..."
+  - Confirm Order button
+
+FORM STYLING:
+- Page background: #F5F0E8
+- Max width: 560px, centered
 - Input fields:
   border: none
   border-bottom: 1px solid #d4ccc2
   background: transparent
   padding: 12px 0
-  Inter, 14px, color #1A1A1A
+  Inter 14px, color #1A1A1A
   focus: border-bottom-color #1A1A1A
-  border-radius: 0
-- Labels: Inter, 10px, uppercase, 
+  outline: none, border-radius: 0
+- Labels: Inter 10px uppercase 
   letter-spacing 0.12em, color #888,
-  margin-bottom 8px
-- Confirm Order button:
+  display block, margin-bottom 8px
+- Inline validation errors:
+  Inter 11px, color #C0392B,
+  margin-top 4px, no alert boxes
+- Next Step button:
   background #1A1A1A, color #F5F0E8
   Inter 11px uppercase letter-spacing 0.18em
-  padding 18px, full width, border-radius 2px
+  padding 16px 48px, border-radius 2px
   hover: background #C4A882, color #1A1A1A
+- Back link above button:
+  Inter 11px, color #888, uppercase
+  "← Back" — goes to previous step
+- Do not allow proceeding to next step 
+  if current step has validation errors
+```
 
-API CALLS:
+---
+
+### PROMPT 5 — API & Order Submission
+```
+Connect checkout form to the cloud backend
+via these API calls:
 
 POST /api/orders
   Request body:
@@ -174,54 +266,71 @@ POST /api/orders
   }
   Response:
   {
-    order_id, order_number, status, total,
+    order_id,
+    order_number,
+    status,
+    total,
     created_at
   }
 
 GET /api/orders/:order_number
-  Returns full order with items and status history
+  Returns full order details including
+  items and full status history
 
-ORDER CONFIRMATION PAGE:
-- After successful POST /api/orders:
-  Show a confirmation screen (not a new page,
-  replace the checkout form in place)
-- Large checkmark icon, thin line style, 
-  color #C4A882, size 48px
-- Heading: "Order Confirmed" 
-  Cormorant Garamond, 42px, italic
-- Subtext: "Your order [LUX-2026-00142] has been 
-  placed and is being processed."
-  Inter 14px, color #888
-- Below: two action links
+ERROR HANDLING:
+- If API call fails show an inline error 
+  above the Confirm Order button:
+  Inter 12px, color #C0392B
+  "Something went wrong. Please try again."
+- Do not clear the form on failure
+- Disable the Confirm Order button while 
+  the request is in flight
+- Show a subtle loading state on the button:
+  text changes to "Placing Order..."
+  opacity 0.7, cursor not-allowed
+
+STOCK:
+- On successful order submission decrement 
+  stock_quantity in the products table 
+  for each ordered item by its quantity
+- If any item in the cart has 
+  stock_quantity === 0 before submission:
+  block checkout, show inline message:
+  "[Product Name] is no longer available"
+  Inter 12px, color #C0392B
+```
+
+---
+
+### PROMPT 6 — Order Confirmation
+```
+After successful POST /api/orders replace 
+the checkout form in place with a 
+confirmation screen. Do not navigate 
+to a new page.
+
+CONFIRMATION SCREEN:
+- Centered, max-width 480px
+- Large checkmark icon: thin line style,
+  color #C4A882, size 56px,
+  margin-bottom 32px
+- Heading: "Order Confirmed"
+  Cormorant Garamond, 48px, italic,
+  color #1A1A1A, margin-bottom 16px
+- Subtext: 
+  "Your order [order_number] has been placed 
+  and is being processed."
+  Inter 14px, font-weight 300, color #888,
+  line-height 1.8, margin-bottom 48px
+- Two text links below, stacked centered:
   "Continue Shopping" → /shop
   "View Order" → /orders/:order_number
-  Both styled as text links, no buttons
   Inter 11px uppercase letter-spacing 0.15em
+  color #1A1A1A, hover color #C4A882
+  gap between links: 20px
+- Clear cart on render of this screen
+```
 
-NAVBAR CART ICON:
-- Add a cart icon (thin line style) to the 
-  right side of the navbar
-- Show item count as a small badge:
-  8px circle, background #C4A882, 
-  color #1A1A1A, font-size 9px
-  positioned top-right of the icon
-- Clicking opens a cart drawer from the right:
-  width 420px, background #F5F0E8,
-  padding 40px 32px
-  showing all cart items with:
-  image (60x80px), name, price, quantity 
-  controls (− qty +), remove link
-  subtotal at bottom
-  "Proceed to Checkout" button:
-  background #1A1A1A, color #F5F0E8,
-  full width, Inter 11px uppercase
+---
 
-STOCK HANDLING:
-- If product stock_quantity === 0:
-  show "Out of Stock" label on product card
-  disable Add to Cart interaction
-  label style: Inter 10px uppercase 
-  color #888, not red — keep it elegant
-- When order is submitted, decrement 
-  stock_quantity in the products table
-  for each ordered item
+Run these in order — each one builds on the previous. Don't run PROMPT 5 before PROMPT 2 is done and your backend endpoints exist.

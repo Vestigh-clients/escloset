@@ -8,6 +8,7 @@ import {
 } from "@/data/products";
 import { productImages } from "@/data/images";
 import ShopProductCard from "@/components/ShopProductCard";
+import { useCart } from "@/contexts/CartContext";
 import {
   BadgeCheck,
   Droplets,
@@ -27,6 +28,7 @@ const trustItems = [
 
 const ProductPage = () => {
   const { id } = useParams<{ id: string }>();
+  const { addToCart } = useCart();
   const product = getProductById(id || "");
   const activeCategory = product?.category ?? "hair-care";
   const activeProductId = product?.id ?? "";
@@ -98,6 +100,23 @@ const ProductPage = () => {
     );
   }
 
+  const isOutOfStock = !product.is_available || product.stock_quantity < 1;
+
+  const handleAddToCart = () => {
+    addToCart({
+      product_id: product.id,
+      name: product.name,
+      slug: product.slug,
+      category: categoryLabels[product.category],
+      price: product.price,
+      compare_at_price: product.compare_at_price,
+      image_url: productImages[product.id] ?? "",
+      image_alt: product.name,
+      sku: product.sku,
+      stock_quantity: product.stock_quantity,
+    });
+  };
+
   return (
     <div className="container mx-auto px-4 py-12">
       <div className="mb-10 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -157,7 +176,30 @@ const ProductPage = () => {
           <h1 className="mb-5 font-display text-[42px] font-normal leading-[1.1] text-foreground">
             {product.name}
           </h1>
-          <p className="font-display text-[28px] font-normal text-foreground">{formatPrice(product.price)}</p>
+          <div className="flex items-end gap-3">
+            {product.compare_at_price !== null && product.compare_at_price > product.price ? (
+              <p className="font-body text-[16px] font-light text-[#aaaaaa] line-through">
+                {formatPrice(product.compare_at_price)}
+              </p>
+            ) : null}
+            <p className="font-display text-[28px] font-normal text-foreground">{formatPrice(product.price)}</p>
+          </div>
+
+          <div className="mt-7 flex flex-wrap items-center gap-4">
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              disabled={isOutOfStock}
+              className="rounded-[2px] border border-[#1A1A1A] bg-[#1A1A1A] px-10 py-[14px] font-body text-[11px] uppercase tracking-[0.18em] text-[#F5F0E8] transition-colors duration-300 hover:bg-[#C4A882] hover:text-[#1A1A1A] disabled:cursor-not-allowed disabled:border-[#d4ccc2] disabled:bg-transparent disabled:text-[#888888]"
+            >
+              {isOutOfStock ? "Out of Stock" : "Add to Cart"}
+            </button>
+            {!isOutOfStock ? (
+              <p className="font-body text-[11px] uppercase tracking-[0.1em] text-[#888888]">
+                {product.stock_quantity} in stock
+              </p>
+            ) : null}
+          </div>
 
           <div className="my-6 border-b border-[#d4ccc2]" />
 
