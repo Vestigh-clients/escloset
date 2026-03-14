@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { productImages } from "@/data/images";
-import { type Product, formatPrice, getWhatsAppLink } from "@/data/products";
+import { type Product, formatPrice } from "@/data/products";
 
 interface ShopProductCardProps {
   product: Product;
@@ -28,14 +28,6 @@ const ShopProductCard = ({ product, size = "regular" }: ShopProductCardProps) =>
           />
         </Link>
 
-        <a
-          href={getWhatsAppLink(product.name)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="absolute inset-x-0 bottom-0 flex h-12 translate-y-full items-center justify-center bg-[rgba(26,26,26,0.85)] font-body text-[11px] font-light uppercase tracking-[0.15em] text-[#F5F0E8] transition-transform ease-out [transition-duration:400ms] group-hover:translate-y-0"
-        >
-          Add to Cart
-        </a>
       </div>
 
       <div className="mt-3 text-left">

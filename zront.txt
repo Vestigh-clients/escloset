@@ -1,0 +1,227 @@
+Replace all WhatsApp ordering functionality with 
+a proper backend order system connected to our 
+existing cloud backend.
+
+REMOVE (ordering only):
+- "Order on WhatsApp" buttons on product 
+  detail pages
+- "Order on WhatsApp →" links on banner 
+  cards in the shop/category pages
+- "Orders fulfilled via WhatsApp chat" 
+  trust line on product detail page
+- Any WhatsApp link that triggers an order
+
+DO NOT REMOVE:
+- WhatsApp number in the footer Connect section
+- WhatsApp as a contact/social link anywhere
+- Any WhatsApp reference that is for 
+  customer support or general enquiries
+- Social media links in the footer
+
+ORDER FLOW:
+- Clicking "Add to Cart" adds the product to a 
+  persistent cart state
+- Cart icon appears in navbar showing item count
+- User can view cart, adjust quantities, remove items
+- User proceeds to checkout
+- Checkout collects real customer information
+- Order is submitted to the cloud backend
+- User receives confirmation
+
+DATABASE SCHEMA — REAL TABLES:
+
+Table: customers
+  - id: uuid, primary key
+  - first_name: varchar(100), not null
+  - last_name: varchar(100), not null
+  - email: varchar(255), unique, not null
+  - phone: varchar(20)
+  - created_at: timestamp, default now()
+  - updated_at: timestamp
+
+Table: addresses
+  - id: uuid, primary key
+  - customer_id: uuid, foreign key → customers.id
+  - address_line1: varchar(255), not null
+  - address_line2: varchar(255)
+  - city: varchar(100), not null
+  - state: varchar(100), not null
+  - country: varchar(100), not null, default 'Nigeria'
+  - is_default: boolean, default false
+  - created_at: timestamp, default now()
+
+Table: products
+  - id: uuid, primary key
+  - name: varchar(255), not null
+  - slug: varchar(255), unique, not null
+  - description: text
+  - category: enum('hair_care','men','women',
+    'bags','shoes'), not null
+  - price: numeric(10,2), not null
+  - compare_at_price: numeric(10,2)
+    (for showing original price if on sale)
+  - stock_quantity: integer, not null, default 0
+  - is_available: boolean, default true
+  - images: jsonb 
+    (array of image URLs with primary flag)
+  - benefits: jsonb
+    (array of benefit objects {icon, label})
+  - created_at: timestamp, default now()
+  - updated_at: timestamp
+
+Table: orders
+  - id: uuid, primary key
+  - order_number: varchar(20), unique, not null
+    (human readable e.g. LUX-2026-00142)
+  - customer_id: uuid, foreign key → customers.id
+  - shipping_address_id: uuid, 
+    foreign key → addresses.id
+  - status: enum('pending', 'confirmed', 
+    'processing', 'shipped', 'delivered', 
+    'cancelled'), default 'pending'
+  - subtotal: numeric(10,2), not null
+  - shipping_fee: numeric(10,2), not null
+  - total: numeric(10,2), not null
+  - notes: text (customer order notes)
+  - created_at: timestamp, default now()
+  - updated_at: timestamp
+
+Table: order_items
+  - id: uuid, primary key
+  - order_id: uuid, foreign key → orders.id
+  - product_id: uuid, foreign key → products.id
+  - product_name: varchar(255), not null
+    (snapshot of name at time of order)
+  - product_price: numeric(10,2), not null
+    (snapshot of price at time of order)
+  - quantity: integer, not null
+  - subtotal: numeric(10,2), not null
+  - created_at: timestamp, default now()
+
+Table: order_status_history
+  - id: uuid, primary key
+  - order_id: uuid, foreign key → orders.id
+  - status: enum (same as orders.status)
+  - note: text (internal admin note per status)
+  - changed_at: timestamp, default now()
+
+CART (frontend state — no cart table needed):
+- Cart lives in React context + localStorage
+- Each cart item holds:
+  product_id, name, price, quantity, image
+- Cart persists across page refreshes
+- Cart is cleared on successful order submission
+
+CHECKOUT PAGE:
+- Step 1 — Contact Info:
+  First Name, Last Name, Email, Phone
+- Step 2 — Delivery Address:
+  Address Line 1, Address Line 2 (optional),
+  City, State, Country (default Nigeria)
+- Step 3 — Order Summary:
+  List of items, quantities, prices,
+  shipping fee, total
+  Confirm Order button
+
+- Form validation on all required fields
+  before allowing next step
+- Show inline errors per field, not alerts
+- Error style: Inter 11px, color #C0392B,
+  margin-top 4px below the field
+
+CHECKOUT STYLING:
+- Background: #F5F0E8
+- Step indicator at top:
+  3 steps shown as:
+  ① Contact  →  ② Delivery  →  ③ Review
+  Active step: color #1A1A1A, font-weight 500
+  Completed step: color #C4A882
+  Inactive step: color #aaa
+  Connector line: 1px solid #d4ccc2
+- Input fields:
+  border: none
+  border-bottom: 1px solid #d4ccc2
+  background: transparent
+  padding: 12px 0
+  Inter, 14px, color #1A1A1A
+  focus: border-bottom-color #1A1A1A
+  border-radius: 0
+- Labels: Inter, 10px, uppercase, 
+  letter-spacing 0.12em, color #888,
+  margin-bottom 8px
+- Confirm Order button:
+  background #1A1A1A, color #F5F0E8
+  Inter 11px uppercase letter-spacing 0.18em
+  padding 18px, full width, border-radius 2px
+  hover: background #C4A882, color #1A1A1A
+
+API CALLS:
+
+POST /api/orders
+  Request body:
+  {
+    customer: {
+      first_name, last_name, email, phone
+    },
+    shipping_address: {
+      address_line1, address_line2,
+      city, state, country
+    },
+    items: [
+      { product_id, quantity }
+    ],
+    notes: string (optional)
+  }
+  Response:
+  {
+    order_id, order_number, status, total,
+    created_at
+  }
+
+GET /api/orders/:order_number
+  Returns full order with items and status history
+
+ORDER CONFIRMATION PAGE:
+- After successful POST /api/orders:
+  Show a confirmation screen (not a new page,
+  replace the checkout form in place)
+- Large checkmark icon, thin line style, 
+  color #C4A882, size 48px
+- Heading: "Order Confirmed" 
+  Cormorant Garamond, 42px, italic
+- Subtext: "Your order [LUX-2026-00142] has been 
+  placed and is being processed."
+  Inter 14px, color #888
+- Below: two action links
+  "Continue Shopping" → /shop
+  "View Order" → /orders/:order_number
+  Both styled as text links, no buttons
+  Inter 11px uppercase letter-spacing 0.15em
+
+NAVBAR CART ICON:
+- Add a cart icon (thin line style) to the 
+  right side of the navbar
+- Show item count as a small badge:
+  8px circle, background #C4A882, 
+  color #1A1A1A, font-size 9px
+  positioned top-right of the icon
+- Clicking opens a cart drawer from the right:
+  width 420px, background #F5F0E8,
+  padding 40px 32px
+  showing all cart items with:
+  image (60x80px), name, price, quantity 
+  controls (− qty +), remove link
+  subtotal at bottom
+  "Proceed to Checkout" button:
+  background #1A1A1A, color #F5F0E8,
+  full width, Inter 11px uppercase
+
+STOCK HANDLING:
+- If product stock_quantity === 0:
+  show "Out of Stock" label on product card
+  disable Add to Cart interaction
+  label style: Inter 10px uppercase 
+  color #888, not red — keep it elegant
+- When order is submitted, decrement 
+  stock_quantity in the products table
+  for each ordered item

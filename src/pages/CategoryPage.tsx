@@ -5,7 +5,6 @@ import {
   categoryLabels,
   formatPrice,
   getProductsByCategory,
-  getWhatsAppLink,
   type Category,
   type Product,
 } from "@/data/products";
@@ -59,15 +58,6 @@ const CategoryProductCard = ({ product, variant }: CategoryProductCardProps) => 
                 loading="lazy"
               />
             </Link>
-
-            <a
-              href={getWhatsAppLink(product.name)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="absolute inset-x-0 bottom-0 flex h-11 translate-y-full items-center justify-center bg-[rgba(26,26,26,0.88)] font-body text-[11px] font-light uppercase tracking-[0.15em] text-[#F5F0E8] transition-transform ease-out [transition-duration:400ms] group-hover:translate-y-0"
-            >
-              Add to Cart
-            </a>
           </div>
 
           <div className="md:col-span-2 flex flex-col justify-center border-[#d4ccc2] px-6 py-8 transition-colors duration-300 ease-in-out md:border-l md:px-8 group-hover:bg-[#1A1A1A]">
@@ -79,15 +69,6 @@ const CategoryProductCard = ({ product, variant }: CategoryProductCardProps) => 
             <p className="mt-2 font-body text-[13px] font-normal text-[#888] transition-colors duration-300 ease-in-out group-hover:text-[#F5F0E8]">
               {formatPrice(product.price)}
             </p>
-
-            <a
-              href={getWhatsAppLink(product.name)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-4 inline-block font-body text-[11px] font-normal uppercase tracking-[0.15em] text-[#C4A882] transition-colors duration-300 ease-in-out"
-            >
-              Order on WhatsApp →
-            </a>
 
             <p className="mt-4 font-body text-[13px] font-light leading-[1.8] text-[#666666] transition-colors duration-300 ease-in-out group-hover:text-[#F5F0E8]">
               {product.description}
@@ -115,14 +96,6 @@ const CategoryProductCard = ({ product, variant }: CategoryProductCardProps) => 
           />
         </Link>
 
-        <a
-          href={getWhatsAppLink(product.name)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="absolute inset-x-0 bottom-0 flex h-11 translate-y-full items-center justify-center bg-[rgba(26,26,26,0.88)] font-body text-[11px] font-light uppercase tracking-[0.15em] text-[#F5F0E8] transition-transform ease-out [transition-duration:400ms] group-hover:translate-y-0"
-        >
-          Add to Cart
-        </a>
       </div>
 
       <div className="mt-[14px] text-left">

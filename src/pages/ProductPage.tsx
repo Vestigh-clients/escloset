@@ -4,7 +4,6 @@ import {
   categoryLabels,
   formatPrice,
   getProductById,
-  getWhatsAppLink,
   products,
 } from "@/data/products";
 import { productImages } from "@/data/images";
@@ -12,7 +11,6 @@ import ShopProductCard from "@/components/ShopProductCard";
 import {
   BadgeCheck,
   Droplets,
-  MessageCircle,
   Package,
   RefreshCw,
   ShieldCheck,
@@ -185,26 +183,6 @@ const ProductPage = () => {
                 );
               })}
             </div>
-          </div>
-
-          <a
-            href={getWhatsAppLink(product.name)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex w-full items-center justify-center gap-3 bg-[#1A1A1A] px-6 py-[18px] font-body text-[12px] font-light uppercase tracking-[0.15em] text-[#F5F0E8] transition-colors duration-300 hover:bg-accent hover:text-foreground"
-          >
-            <MessageCircle size={18} className="text-current" />
-            Order on WhatsApp
-          </a>
-
-          <div className="mt-5 text-center">
-            <p className="flex items-center justify-center gap-2 font-body text-[12px] font-light text-[#888888]">
-              <span className="h-[6px] w-[6px] rounded-full bg-[#4CAF50]" />
-              Typically responds within 1 hour
-            </p>
-            <p className="mt-1.5 font-body text-[11px] font-light text-[#aaaaaa]">
-              Orders fulfilled via WhatsApp chat · Nationwide delivery available
-            </p>
           </div>
 
           <div className="my-7 border-b border-[#d4ccc2]" />

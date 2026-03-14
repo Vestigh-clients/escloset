@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { type Product, formatPrice, getWhatsAppLink } from "@/data/products";
+import { type Product, formatPrice } from "@/data/products";
 import { productImages } from "@/data/images";
 
 interface ProductCardProps {
@@ -28,14 +28,6 @@ const ProductCard = ({ product }: ProductCardProps) => {
         </Link>
         <p className="font-body font-light text-lg mt-3">{formatPrice(product.price)}</p>
 
-        <a
-          href={getWhatsAppLink(product.name)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-8 inline-flex items-center justify-center border border-foreground text-foreground px-6 py-3 rounded-[4px] font-body text-xs md:text-sm font-medium tracking-[0.12em] uppercase transition-all duration-300 hover:bg-foreground hover:text-background hover:border-foreground"
-        >
-          Add to Cart
-        </a>
       </div>
     </div>
   );

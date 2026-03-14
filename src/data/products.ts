@@ -208,9 +208,7 @@ export const getProductById = (id: string) => products.find((p) => p.id === id);
 export const formatPrice = (price: number) =>
   `₦${price.toLocaleString()}`;
 
-export const getWhatsAppLink = (productName?: string) => {
-  const message = productName
-    ? `Hello, I would like to order ${productName} from Luxuriant.`
-    : "Hello, I would like to order this product from Luxuriant.";
+export const getWhatsAppContactLink = () => {
+  const message = "Hello, I have a general enquiry about Luxuriant.";
   return `https://wa.me/233594817032?text=${encodeURIComponent(message)}`;
 };

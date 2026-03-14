@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Instagram } from "lucide-react";
-import { getWhatsAppLink } from "@/data/products";
+import { getWhatsAppContactLink } from "@/data/products";
 
 const Footer = () => {
   return (
@@ -37,7 +37,7 @@ const Footer = () => {
           <div>
             <h4 className="font-display text-sm font-semibold mb-4 tracking-wider uppercase">Connect</h4>
             <div className="flex flex-col gap-3">
-              <a href={getWhatsAppLink()} target="_blank" rel="noopener noreferrer" className="font-body text-sm text-primary-foreground/70 hover:text-accent transition-colors">
+              <a href={getWhatsAppContactLink()} target="_blank" rel="noopener noreferrer" className="font-body text-sm text-primary-foreground/70 hover:text-accent transition-colors">
                 WhatsApp: 0594817032
               </a>
               <a href="https://instagram.com/torriefebri" target="_blank" rel="noopener noreferrer" className="font-body text-sm text-primary-foreground/70 hover:text-accent transition-colors flex items-center gap-2">
