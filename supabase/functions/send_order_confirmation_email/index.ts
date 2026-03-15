@@ -28,6 +28,7 @@ interface OrderPayload {
     quantity: number;
     unit_price: number;
     subtotal: number;
+    variant_label: string | null;
   }>;
 }
 
@@ -133,6 +134,20 @@ Deno.serve(async (request: Request) => {
       });
     }
 
+    const { data: orderItemsData, error: orderItemsError } = await adminClient
+      .from("order_items")
+      .select(
+        "product_name, product_image_url, quantity, unit_price, subtotal, variant_label",
+      )
+      .eq("order_id", order.id)
+      .order("created_at", { ascending: true });
+
+    if (orderItemsError) {
+      throw orderItemsError;
+    }
+
+    const orderItems = (orderItemsData ?? order.order_items ?? []) as OrderPayload["order_items"];
+
     const customerEmail = order.customer?.email?.trim();
     if (!customerEmail) {
       throw new Error("Order customer email is missing");
@@ -156,17 +171,22 @@ Deno.serve(async (request: Request) => {
     const trackingBaseUrl = SITE_URL.replace(/\/+$/, "");
     const trackingUrl = `${trackingBaseUrl}/orders/${encodeURIComponent(order.order_number)}`;
 
-    const itemRows = order.order_items
+    const itemRows = orderItems
       .map((item) => {
         const imageHtml = item.product_image_url
           ? `<img src="${escapeHtml(item.product_image_url)}" alt="${escapeHtml(item.product_name)}" width="54" height="72" style="width:54px;height:72px;object-fit:cover;border-radius:2px;border:1px solid #e8e2d9;" />`
           : `<div style="width:54px;height:72px;border:1px solid #e8e2d9;border-radius:2px;background:#f0ebe3;"></div>`;
+        const variantLabel = typeof item.variant_label === "string" && item.variant_label.trim() ? item.variant_label.trim() : null;
+        const variantHtml = variantLabel
+          ? `<div style="font-family:Inter,system-ui,sans-serif;font-size:11px;color:#888;margin-top:2px;">${escapeHtml(variantLabel)}</div>`
+          : "";
 
         return `
           <tr>
             <td style="padding:10px 0;vertical-align:top;">${imageHtml}</td>
             <td style="padding:10px 12px 10px 12px;vertical-align:top;">
               <div style="font-family:Inter,system-ui,sans-serif;font-size:13px;color:#1A1A1A;">${escapeHtml(item.product_name)}</div>
+              ${variantHtml}
               <div style="font-family:Inter,system-ui,sans-serif;font-size:11px;color:#888;">Qty: ${item.quantity}</div>
             </td>
             <td style="padding:10px 0;vertical-align:top;text-align:right;font-family:Inter,system-ui,sans-serif;font-size:13px;color:#1A1A1A;">
@@ -230,8 +250,12 @@ Deno.serve(async (request: Request) => {
       </div>
     `;
 
-    const plainTextItems = order.order_items
-      .map((item) => `- ${item.product_name} x ${item.quantity}: ${formatPrice(item.subtotal)}`)
+    const plainTextItems = orderItems
+      .map((item) => {
+        const variantLabel = typeof item.variant_label === "string" && item.variant_label.trim() ? item.variant_label.trim() : null;
+        const itemName = variantLabel ? `${item.product_name} (${variantLabel})` : item.product_name;
+        return `- ${itemName} x ${item.quantity}: ${formatPrice(item.subtotal)}`;
+      })
       .join("\n");
 
     const plainText = [

@@ -109,6 +109,9 @@ export interface OrderItemSummary {
   compare_at_price: number | null;
   quantity: number;
   subtotal: number;
+  variant_id: string | null;
+  variant_label: string | null;
+  variant_sku: string | null;
   created_at: string;
 }
 
@@ -172,6 +175,9 @@ const isStockConflictError = (error: unknown) => {
   const message = getErrorMessage(error).toUpperCase();
   return (
     message.includes("STOCK_CONFLICT") ||
+    message.includes("VARIANT_STOCK_CONFLICT") ||
+    message.includes("VARIANT_UNAVAILABLE") ||
+    message.includes("VARIANT_REQUIRED") ||
     message.includes("PRODUCT_UNAVAILABLE") ||
     message.includes("OUT OF STOCK") ||
     message.includes("SOLD OUT")
@@ -478,6 +484,15 @@ export const submitOrderRpc = async (input: SubmitOrderInput): Promise<SubmitOrd
     p_items: input.items.map((item) => ({
       product_id: item.product_id,
       quantity: item.quantity,
+      variant_id: item.variant_id,
+      product_name: item.name,
+      product_sku: item.sku,
+      product_image_url: item.image_url,
+      unit_price: item.price,
+      compare_at_price: item.compare_at_price,
+      subtotal: item.price * item.quantity,
+      variant_label: item.variant_label,
+      variant_sku: item.sku,
     })),
     p_subtotal: input.subtotal,
     p_shipping_fee: input.shippingFee,

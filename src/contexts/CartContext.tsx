@@ -13,7 +13,7 @@ import { validateCartStock } from "@/services/stockService";
 
 const CART_STORAGE_KEY = "luxuriant_cart";
 const CART_VERSION_STORAGE_KEY = "luxuriant_cart_version";
-const CART_SCHEMA_VERSION = 1;
+const CART_SCHEMA_VERSION = 3;
 const CART_TOAST_DURATION_MS = 2500;
 
 export interface CartItem {
@@ -29,6 +29,8 @@ export interface CartItem {
   quantity: number;
   stock_quantity: number;
   added_at: string;
+  variant_id: string | null;
+  variant_label: string | null;
 }
 
 export interface CartState {
@@ -49,6 +51,8 @@ export interface CartProductInput {
   image_alt: string;
   sku: string | null;
   stock_quantity: number;
+  variant_id: string | null;
+  variant_label: string | null;
 }
 
 interface ValidateCartResult {
@@ -67,8 +71,8 @@ interface CartContextValue {
   openCart: () => void;
   closeCart: () => void;
   addToCart: (product: CartProductInput) => void;
-  removeFromCart: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  removeFromCart: (productId: string, variantId?: string | null) => void;
+  updateQuantity: (productId: string, quantity: number, variantId?: string | null) => void;
   replaceItems: (items: CartItem[]) => void;
   clearCart: () => void;
   validateCart: () => Promise<ValidateCartResult>;
@@ -138,7 +142,13 @@ const normalizeCartItem = (value: unknown): CartItem | null => {
     quantity,
     stock_quantity: stockQuantity,
     added_at: toNonEmptyString(value.added_at, new Date().toISOString()),
+    variant_id: typeof value.variant_id === "string" && value.variant_id.trim() ? value.variant_id : null,
+    variant_label: typeof value.variant_label === "string" && value.variant_label.trim() ? value.variant_label : null,
   };
+};
+
+const isSameCartLine = (item: CartItem, productId: string, variantId?: string | null) => {
+  return item.product_id === productId && item.variant_id === (variantId ?? null);
 };
 
 const sanitizeCart = (items: CartItem[]): CartItem[] => {
@@ -332,7 +342,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const currentItems = cartStateRef.current.items;
-      const existingIndex = currentItems.findIndex((item) => item.product_id === product.product_id);
+      const existingIndex = currentItems.findIndex((item) => isSameCartLine(item, product.product_id, product.variant_id));
 
       if (existingIndex >= 0) {
         const existingItem = currentItems[existingIndex];
@@ -354,6 +364,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           image_alt: product.image_alt,
           sku: product.sku,
           stock_quantity: product.stock_quantity,
+          variant_id: product.variant_id,
+          variant_label: product.variant_label,
           quantity: cappedQuantity,
         };
 
@@ -378,15 +390,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const removeFromCart = useCallback(
-    (productId: string) => {
+    (productId: string, variantId?: string | null) => {
       const currentItems = cartStateRef.current.items;
-      const targetItem = currentItems.find((item) => item.product_id === productId);
+      const targetItem = currentItems.find((item) => isSameCartLine(item, productId, variantId));
 
       if (!targetItem) {
         return;
       }
 
-      const nextItems = currentItems.filter((item) => item.product_id !== productId);
+      const nextItems = currentItems.filter((item) => !isSameCartLine(item, productId, variantId));
       commitItems(nextItems);
       showNeutralToast(`${targetItem.name} removed from cart`);
     },
@@ -394,8 +406,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const updateQuantity = useCallback(
-    (productId: string, quantity: number) => {
-      const targetItem = cartStateRef.current.items.find((item) => item.product_id === productId);
+    (productId: string, quantity: number, variantId?: string | null) => {
+      const targetItem = cartStateRef.current.items.find((item) => isSameCartLine(item, productId, variantId));
 
       if (!targetItem) {
         return;
@@ -404,7 +416,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       const normalizedQuantity = Math.trunc(quantity);
 
       if (normalizedQuantity < 1) {
-        removeFromCart(productId);
+        removeFromCart(productId, variantId);
         return;
       }
 
@@ -419,7 +431,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const nextItems = cartStateRef.current.items.map((item) =>
-        item.product_id === productId
+        isSameCartLine(item, productId, variantId)
           ? {
               ...item,
               quantity: cappedQuantity,

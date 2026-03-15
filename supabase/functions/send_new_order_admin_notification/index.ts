@@ -9,11 +9,14 @@ const SITE_URL = Deno.env.get("SITE_URL") ?? "https://luxuriantgh.store";
 const fromEmail = "Luxuriant Orders <orders@luxuriantgh.store>";
 
 interface OrderItemRow {
+  product_id: string;
+  variant_id: string | null;
   product_name: string;
   product_image_url: string | null;
   unit_price: number;
   quantity: number;
   subtotal: number;
+  variant_label: string | null;
 }
 
 interface OrderRow {
@@ -61,6 +64,8 @@ const safeNumber = (value: unknown, fallback = 0): number => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
 };
+
+const getVariantLabel = (item: Pick<OrderItemRow, "variant_label">): string | null => safeString(item.variant_label);
 
 const toTitleCase = (value: string) =>
   value
@@ -148,13 +153,138 @@ const getSettingValue = async (
   return null;
 };
 
+const buildLowStockNotifications = async (
+  adminClient: ReturnType<typeof createClient>,
+  orderItems: OrderItemRow[],
+) => {
+  const productIds = [...new Set(orderItems.map((item) => safeString(item.product_id)).filter((id): id is string => Boolean(id)))];
+
+  if (productIds.length === 0) {
+    return [] as Array<{
+      type: string;
+      title: string;
+      description: string;
+      link: string;
+      is_read: boolean;
+    }>;
+  }
+
+  const notifications: Array<{
+    type: string;
+    title: string;
+    description: string;
+    link: string;
+    is_read: boolean;
+  }> = [];
+
+  const { data: lowProducts, error: lowProductsError } = await adminClient
+    .from("products")
+    .select("id,name,stock_quantity,low_stock_threshold,is_available")
+    .in("id", productIds)
+    .eq("is_available", true);
+
+  if (!lowProductsError && Array.isArray(lowProducts)) {
+    for (const productEntry of lowProducts) {
+      const product = productEntry as Record<string, unknown>;
+      const stockQuantity = Math.max(0, Math.trunc(safeNumber(product.stock_quantity)));
+      const threshold = Math.max(0, Math.trunc(safeNumber(product.low_stock_threshold, 5)));
+
+      if (stockQuantity > threshold) {
+        continue;
+      }
+
+      const productId = safeString(product.id);
+      const productName = safeString(product.name) || "Product";
+      if (!productId) {
+        continue;
+      }
+
+      notifications.push({
+        type: "low_stock",
+        title: "Low Stock Alert",
+        description: `${productName} - only ${stockQuantity} left in stock`,
+        link: `/admin/products/${productId}/edit`,
+        is_read: false,
+      });
+    }
+  } else if (lowProductsError) {
+    console.warn("Unable to evaluate low stock products", lowProductsError);
+  }
+
+  const { data: variantsData, error: variantsError } = await adminClient
+    .from("product_variants")
+    .select(
+      `
+      id,
+      product_id,
+      sku,
+      stock_quantity,
+      low_stock_threshold,
+      label,
+      is_available,
+      products (
+        id,
+        name
+      )
+    `,
+    )
+    .in("product_id", productIds)
+    .eq("is_available", true);
+
+  if (variantsError) {
+    console.warn("Unable to evaluate low stock variants", variantsError);
+    return notifications;
+  }
+
+  if (!Array.isArray(variantsData)) {
+    return notifications;
+  }
+
+  for (const variantEntry of variantsData) {
+    const variant = variantEntry as Record<string, unknown>;
+    const stockQuantity = Math.max(0, Math.trunc(safeNumber(variant.stock_quantity)));
+    const threshold = Math.max(0, Math.trunc(safeNumber(variant.low_stock_threshold, 5)));
+
+    if (stockQuantity > threshold) {
+      continue;
+    }
+
+    const productRecord = mapMaybeEmbeddedRecord(variant.products);
+    const productId = safeString(productRecord?.id) || safeString(variant.product_id);
+    const productName = safeString(productRecord?.name) || "Product";
+    if (!productId) {
+      continue;
+    }
+
+    const variantLabelRaw = safeString(variant.label);
+    const variantLabel = variantLabelRaw || safeString(variant.sku) || "Variant";
+
+    notifications.push({
+      type: "low_stock",
+      title: "Low Stock Alert",
+      description: `${productName} (${variantLabel}) - only ${stockQuantity} left in stock`,
+      link: `/admin/products/${productId}/edit`,
+      is_read: false,
+    });
+  }
+
+  return notifications;
+};
+
 const buildItemsRowsHtml = (items: OrderItemRow[]): string =>
   items
     .map((item, index) => {
       const rowColor = index % 2 === 0 ? "#F5F0E8" : "#EDE8DF";
+      const variantLabel = getVariantLabel(item);
+      const variantHtml = variantLabel
+        ? `<div style="font-family:Inter,system-ui,sans-serif;font-size:11px;color:#888;margin-top:2px;">${escapeHtml(variantLabel)}</div>`
+        : "";
       return `
         <tr style="background:${rowColor};">
-          <td style="padding:10px 12px;font-size:13px;color:#1A1A1A;">${escapeHtml(item.product_name)}</td>
+          <td style="padding:10px 12px;font-size:13px;color:#1A1A1A;">
+            ${escapeHtml(item.product_name)}
+            ${variantHtml}
+          </td>
           <td style="padding:10px 12px;font-size:13px;color:#1A1A1A;text-align:center;">${Math.max(
             1,
             Math.round(safeNumber(item.quantity, 1)),
@@ -340,7 +470,14 @@ Deno.serve(async (request: Request) => {
           first_name, last_name, email, phone
         ),
         order_items (
-          product_name, product_image_url, unit_price, quantity, subtotal
+          product_id,
+          variant_id,
+          product_name,
+          product_image_url,
+          unit_price,
+          quantity,
+          subtotal,
+          variant_label
         )
       `,
       )
@@ -381,16 +518,18 @@ Deno.serve(async (request: Request) => {
     const notificationPayload = {
       type: "new_order",
       title: "New Order Received",
-      description: `Order ${order.order_number} from ${customerName} — ${formatAmountGhs(safeNumber(order.total))}`,
+      description: `Order ${order.order_number} from ${customerName} - ${formatAmountGhs(safeNumber(order.total))}`,
       link: `/admin/orders/${order.order_number}`,
       is_read: false,
     };
+    const lowStockNotifications = await buildLowStockNotifications(adminClient, orderItems);
+    const allNotifications = [notificationPayload, ...lowStockNotifications];
 
     const adminNotificationEmail = await getSettingValue(adminClient, "new_order_email");
     if (!adminNotificationEmail) {
       console.warn("new_order_email is not configured in site_settings; skipping admin email send.");
 
-      const { error: insertError } = await adminClient.from("admin_notifications").insert(notificationPayload);
+      const { error: insertError } = await adminClient.from("admin_notifications").insert(allNotifications);
       if (insertError) {
         console.error("Failed to insert admin notification", insertError);
         return jsonResponse(500, { success: false, message: "Failed to create admin notification" });
@@ -398,7 +537,7 @@ Deno.serve(async (request: Request) => {
 
       return jsonResponse(200, {
         success: true,
-        message: "Notification created, email skipped — no admin email configured",
+        message: "Notification created, email skipped - no admin email configured",
       });
     }
 
@@ -438,10 +577,13 @@ Deno.serve(async (request: Request) => {
         "",
         "Items:",
         ...orderItems.map(
-          (item) =>
-            `- ${item.product_name} | Qty: ${Math.max(1, Math.round(safeNumber(item.quantity, 1)))} | Unit: ${formatAmountGhs(
+          (item) => {
+            const variantLabel = getVariantLabel(item);
+            const itemName = variantLabel ? `${item.product_name} (${variantLabel})` : item.product_name;
+            return `- ${itemName} | Qty: ${Math.max(1, Math.round(safeNumber(item.quantity, 1)))} | Unit: ${formatAmountGhs(
               safeNumber(item.unit_price),
-            )} | Subtotal: ${formatAmountGhs(safeNumber(item.subtotal))}`,
+            )} | Subtotal: ${formatAmountGhs(safeNumber(item.subtotal))}`;
+          },
         ),
         "",
         `Subtotal: ${formatAmountGhs(safeNumber(order.subtotal))}`,
@@ -470,7 +612,7 @@ Deno.serve(async (request: Request) => {
           body: JSON.stringify({
             to: [adminNotificationEmail],
             from: fromEmail,
-            subject: `New Order ${order.order_number} — ${formatAmountGhs(safeNumber(order.total))}`,
+            subject: `New Order ${order.order_number} - ${formatAmountGhs(safeNumber(order.total))}`,
             html: emailHtml,
             text: emailText,
           }),
@@ -488,7 +630,7 @@ Deno.serve(async (request: Request) => {
       }
     }
 
-    const { error: insertError } = await adminClient.from("admin_notifications").insert(notificationPayload);
+    const { error: insertError } = await adminClient.from("admin_notifications").insert(allNotifications);
     if (insertError) {
       console.error("Failed to insert admin notification", insertError);
       return jsonResponse(500, { success: false, message: "Failed to create admin notification" });

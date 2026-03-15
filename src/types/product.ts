@@ -17,6 +17,38 @@ export type ProductCategory = {
   slug: string;
 };
 
+export type ProductOptionValue = {
+  id: string;
+  option_type_id: string;
+  value: string;
+  color_hex: string | null;
+  display_order: number;
+};
+
+export type ProductOptionType = {
+  id: string;
+  name: string;
+  display_order: number;
+  product_option_values: ProductOptionValue[];
+};
+
+export type ProductVariantOption = {
+  option_type_id: string;
+  option_value_id: string;
+};
+
+export type ProductVariant = {
+  id: string;
+  label: string | null;
+  price: number | null;
+  compare_at_price: number | null;
+  stock_quantity: number;
+  is_available: boolean;
+  display_order: number;
+  sku: string | null;
+  product_variant_options: ProductVariantOption[];
+};
+
 export type Product = {
   id: string;
   name: string;
@@ -33,6 +65,9 @@ export type Product = {
   tags?: string[];
   weight_grams?: number;
   sku?: string;
+  has_variants?: boolean;
+  product_option_types?: ProductOptionType[];
+  product_variants?: ProductVariant[];
   categories: ProductCategory;
 };
 

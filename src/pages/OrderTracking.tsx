@@ -40,6 +40,9 @@ const ORDER_TRACKING_SELECT = `
     compare_at_price,
     quantity,
     subtotal,
+    variant_id,
+    variant_label,
+    variant_sku,
     created_at
   ),
   order_status_history (
@@ -114,6 +117,9 @@ const mapOrderRowToOrderDetails = (value: unknown): OrderDetails | null => {
               : null,
           quantity: readNumber(entry.quantity),
           subtotal: readNumber(entry.subtotal),
+          variant_id: readString(entry.variant_id) || null,
+          variant_label: readString(entry.variant_label) || null,
+          variant_sku: readString(entry.variant_sku) || null,
           created_at: readString(entry.created_at),
         }))
     : [];

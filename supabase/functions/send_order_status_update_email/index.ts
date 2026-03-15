@@ -16,6 +16,7 @@ interface OrderItemRow {
   unit_price: number;
   quantity: number;
   subtotal: number;
+  variant_label: string | null;
 }
 
 interface OrderRow {
@@ -77,6 +78,8 @@ const safeNumber = (value: unknown, fallback = 0): number => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
 };
+
+const getVariantLabel = (item: Pick<OrderItemRow, "variant_label">): string | null => safeString(item.variant_label);
 
 const escapeHtml = (value: string): string =>
   value
@@ -238,6 +241,10 @@ const buildOrderRowsHtml = (items: OrderItemRow[], currency: string | null) =>
       const imageHtml = item.product_image_url
         ? `<img src="${escapeHtml(item.product_image_url)}" alt="${escapeHtml(item.product_name)}" width="60" height="80" style="display:block;width:60px;height:80px;object-fit:cover;" />`
         : `<div style="width:60px;height:80px;background:#DED8CF;"></div>`;
+      const variantLabel = getVariantLabel(item);
+      const variantHtml = variantLabel
+        ? `<div style="font-family:Inter,system-ui,sans-serif;font-size:11px;color:#888;margin-top:2px;">${escapeHtml(variantLabel)}</div>`
+        : "";
 
       return `
         <tr style="background:${rowColor};">
@@ -246,6 +253,7 @@ const buildOrderRowsHtml = (items: OrderItemRow[], currency: string | null) =>
           </td>
           <td style="padding:10px 12px;vertical-align:middle;font-size:14px;color:#1A1A1A;">
             ${escapeHtml(item.product_name)}
+            ${variantHtml}
           </td>
           <td style="padding:10px 12px;vertical-align:middle;font-size:13px;color:#1A1A1A;text-align:center;">
             ${Math.max(1, Math.round(safeNumber(item.quantity, 1)))}
@@ -461,11 +469,14 @@ const buildEmailText = (
     lines.push("Order summary:");
     lines.push(
       ...items.map(
-        (item) =>
-          `- ${item.product_name} x ${Math.max(1, Math.round(safeNumber(item.quantity, 1)))}: ${formatCurrency(
+        (item) => {
+          const variantLabel = getVariantLabel(item);
+          const itemName = variantLabel ? `${item.product_name} (${variantLabel})` : item.product_name;
+          return `- ${itemName} x ${Math.max(1, Math.round(safeNumber(item.quantity, 1)))}: ${formatCurrency(
             safeNumber(item.subtotal),
             order.currency,
-          )}`,
+          )}`;
+        },
       ),
     );
     lines.push("");
@@ -545,7 +556,12 @@ Deno.serve(async (request: Request) => {
           first_name, last_name, email
         ),
         order_items (
-          product_name, product_image_url, unit_price, quantity, subtotal
+          product_name,
+          product_image_url,
+          unit_price,
+          quantity,
+          subtotal,
+          variant_label
         ),
         order_status_history (
           new_status, note, changed_at

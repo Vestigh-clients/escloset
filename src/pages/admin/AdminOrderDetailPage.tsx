@@ -270,6 +270,11 @@ const AdminOrderDetailPage = () => {
                   <div className="flex-1">
                     <p className="font-display text-[16px] italic text-[#1A1A1A]">{item.product_name}</p>
                     <p className="font-body text-[10px] text-[#aaaaaa]">{item.product_sku || "No SKU"}</p>
+                    {item.variant_label ? (
+                      <p className="mt-[2px] font-body text-[11px] text-[#888888]">
+                        {item.variant_label}
+                      </p>
+                    ) : null}
                     <p className="mt-1 font-body text-[12px] text-[#888888]">{formatCurrency(item.unit_price)} each</p>
                     <p className="font-body text-[11px] text-[#888888]">Qty: {item.quantity}</p>
                   </div>
@@ -363,7 +368,7 @@ const AdminOrderDetailPage = () => {
                       </p>
                       {entry.note ? <p className="mt-0.5 font-body text-[11px] font-light text-[#888888]">{entry.note}</p> : null}
                       <p className="mt-0.5 font-body text-[10px] text-[#aaaaaa]">
-                        {entry.changed_by || "System"} · {formatRelativeDate(entry.changed_at)}
+                        {entry.changed_by || "System"} {"\u00B7"} {formatRelativeDate(entry.changed_at)}
                       </p>
                     </div>
                   </div>
@@ -473,7 +478,7 @@ const AdminOrderDetailPage = () => {
               View Customer &rarr;
             </Link>
             <p className="mt-2 font-body text-[11px] text-[#aaaaaa]">
-              {(order.customer.total_orders ?? 0).toLocaleString("en-GH")} orders ·{" "}
+              {(order.customer.total_orders ?? 0).toLocaleString("en-GH")} orders {"\u00B7"}{" "}
               {formatCurrency(order.customer.total_spent ?? 0)} total spent
             </p>
           </section>

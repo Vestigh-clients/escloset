@@ -1,4 +1,4 @@
-import type { CartItem } from "@/contexts/CartContext";
+﻿import type { CartItem } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 
 export type StockValidationMessageType = "error" | "info";
@@ -20,8 +20,17 @@ interface ProductStockRow {
   id: string;
   name: string;
   price: number;
+  compare_at_price: number | null;
   stock_quantity: number;
   is_available: boolean | null;
+}
+
+interface VariantStockRow {
+  id: string;
+  stock_quantity: number;
+  is_available: boolean | null;
+  price: number | null;
+  compare_at_price: number | null;
 }
 
 const toStockQuantity = (value: number) => {
@@ -45,20 +54,6 @@ export const validateCartStock = async (items: CartItem[]): Promise<StockValidat
     };
   }
 
-  const cartProductIds = [...new Set(items.map((item) => item.product_id))];
-
-  const { data, error } = await supabase
-    .from("products")
-    .select("id,name,price,stock_quantity,is_available")
-    .in("id", cartProductIds);
-
-  if (error) {
-    throw error;
-  }
-
-  const rows = (data ?? []) as ProductStockRow[];
-  const rowById = new Map(rows.map((row) => [row.id, row]));
-
   const messages: StockValidationMessage[] = [];
   const updatedItems: CartItem[] = [];
 
@@ -67,25 +62,104 @@ export const validateCartStock = async (items: CartItem[]): Promise<StockValidat
   let blockingMessage: string | null = null;
 
   for (const item of items) {
-    const row = rowById.get(item.product_id);
+    const variantLabel = item.variant_label?.trim() || "";
+    const itemDisplayName = variantLabel ? `${item.name} (${variantLabel})` : item.name;
+
+    const { data: row, error: productError } = await supabase
+      .from("products")
+      .select("id,name,price,compare_at_price,stock_quantity,is_available")
+      .eq("id", item.product_id)
+      .maybeSingle();
+
+    if (productError) {
+      throw productError;
+    }
 
     if (!row || row.is_available === false) {
       hasChanges = true;
       shouldBlockCheckout = true;
 
       if (!blockingMessage) {
-        blockingMessage = `${item.name} is no longer available`;
+        blockingMessage = `${itemDisplayName} is no longer available`;
       }
 
       messages.push({
         type: "error",
-        message: `${item.name} is no longer available and has been removed from your cart`,
+        message: `${itemDisplayName} is no longer available and has been removed from your cart`,
       });
       continue;
     }
 
     const currentName = row.name?.trim() || item.name;
-    const currentPrice = toPrice(row.price);
+    const currentProductPrice = toPrice(row.price);
+    const currentProductCompareAtPrice =
+      row.compare_at_price === null || row.compare_at_price === undefined ? null : toPrice(row.compare_at_price);
+
+    if (item.variant_id) {
+      const { data: variant, error: variantError } = await supabase
+        .from("product_variants")
+        .select("id,stock_quantity,is_available,price,compare_at_price")
+        .eq("id", item.variant_id)
+        .maybeSingle();
+
+      if (variantError) {
+        throw variantError;
+      }
+
+      const variantRow = variant as VariantStockRow | null;
+      if (!variantRow || variantRow.is_available === false || toStockQuantity(Number(variantRow.stock_quantity)) === 0) {
+        hasChanges = true;
+        shouldBlockCheckout = true;
+
+        if (!blockingMessage) {
+          blockingMessage = `${itemDisplayName} is no longer available`;
+        }
+
+        messages.push({
+          type: "error",
+          message: `${itemDisplayName} is no longer available and has been removed from your cart`,
+        });
+        continue;
+      }
+
+      const currentVariantStock = toStockQuantity(Number(variantRow.stock_quantity));
+      const currentVariantPrice =
+        variantRow.price === null || variantRow.price === undefined ? currentProductPrice : toPrice(variantRow.price);
+      const currentVariantCompareAt =
+        variantRow.compare_at_price === null || variantRow.compare_at_price === undefined
+          ? currentProductCompareAtPrice
+          : toPrice(variantRow.compare_at_price);
+
+      const nextItem: CartItem = {
+        ...item,
+        name: currentName,
+        price: currentVariantPrice,
+        compare_at_price: currentVariantCompareAt,
+        stock_quantity: currentVariantStock,
+      };
+
+      if (item.price !== currentVariantPrice) {
+        hasChanges = true;
+        messages.push({
+          type: "info",
+          message: `Price updated for ${itemDisplayName}`,
+        });
+      }
+
+      if (item.quantity > currentVariantStock) {
+        hasChanges = true;
+        nextItem.quantity = currentVariantStock;
+        messages.push({
+          type: "error",
+          message: `Quantity adjusted for ${itemDisplayName} - only ${currentVariantStock} left in stock`,
+        });
+      }
+
+      updatedItems.push(nextItem);
+      continue;
+    }
+
+    const currentPrice = currentProductPrice;
     const currentStock = toStockQuantity(Number(row.stock_quantity));
 
     if (currentStock === 0) {
@@ -107,6 +181,7 @@ export const validateCartStock = async (items: CartItem[]): Promise<StockValidat
       ...item,
       name: currentName,
       price: currentPrice,
+      compare_at_price: currentProductCompareAtPrice,
       stock_quantity: currentStock,
     };
 
@@ -145,3 +220,4 @@ export const validateCartStock = async (items: CartItem[]): Promise<StockValidat
     messages,
   };
 };
+

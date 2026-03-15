@@ -43,6 +43,53 @@ interface AIFillFunctionResponse {
   used_image?: boolean;
 }
 
+interface OptionValueState {
+  local_id: string;
+  id?: string;
+  option_type_id?: string;
+  value: string;
+  color_hex: string | null;
+  display_order: number;
+}
+
+interface OptionTypeState {
+  local_id: string;
+  id?: string;
+  product_id?: string;
+  name: string;
+  display_order: number;
+  values: OptionValueState[];
+}
+
+interface VariantOptionSelection {
+  option_type_local_id: string;
+  option_value_local_id: string;
+}
+
+interface ProductVariant {
+  local_id: string;
+  id?: string;
+  product_id?: string;
+  label: string;
+  options: VariantOptionSelection[];
+  price: number | null;
+  compare_at_price: number | null;
+  stock_quantity: number;
+  low_stock_threshold: number;
+  sku: string;
+  is_available: boolean;
+  display_order: number;
+  isNew?: boolean;
+  isDirty?: boolean;
+  isDeleted?: boolean;
+}
+
+interface OptionValueDraftState {
+  value: string;
+  withColor: boolean;
+  color_hex: string;
+}
+
 const iconOptions = [
   "leaf",
   "droplet",
@@ -132,6 +179,54 @@ const fileToBase64 = (file: File): Promise<string> =>
 const sectionLabelClass =
   "mb-6 border-t border-[#d4ccc2] pt-8 font-body text-[10px] uppercase tracking-[0.2em] text-[#C4A882]";
 
+const normalizeSkuToken = (value: string | null | undefined, fallback = "VAR") => {
+  const token = (value ?? "")
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "")
+    .slice(0, 4);
+  return token || fallback;
+};
+
+const normalizeHexColor = (value: string | null | undefined) => {
+  if (!value) return null;
+  const normalized = value.trim();
+  return /^#[A-Fa-f0-9]{6}$/.test(normalized) ? normalized.toUpperCase() : null;
+};
+
+const createRandomVariantCode = () => Math.random().toString(36).slice(2, 8).toUpperCase();
+
+const toComboKey = (options: VariantOptionSelection[]) =>
+  options
+    .map((option) => `${option.option_type_local_id}:${option.option_value_local_id}`)
+    .sort()
+    .join("|");
+
+const mapOptionTypeRowToState = (row: Record<string, unknown>, index: number): OptionTypeState => {
+  const optionValues = Array.isArray(row.product_option_values) ? (row.product_option_values as Array<Record<string, unknown>>) : [];
+  return {
+    local_id: typeof row.id === "string" ? row.id : crypto.randomUUID(),
+    id: typeof row.id === "string" ? row.id : undefined,
+    product_id: typeof row.product_id === "string" ? row.product_id : undefined,
+    name: typeof row.name === "string" ? row.name : "",
+    display_order:
+      Number.isFinite(Number(row.display_order)) && Number(row.display_order) >= 0 ? Math.trunc(Number(row.display_order)) : index,
+    values: optionValues
+      .map((valueRow, valueIndex) => ({
+        local_id: typeof valueRow.id === "string" ? valueRow.id : crypto.randomUUID(),
+        id: typeof valueRow.id === "string" ? valueRow.id : undefined,
+        option_type_id: typeof valueRow.option_type_id === "string" ? valueRow.option_type_id : undefined,
+        value: typeof valueRow.value === "string" ? valueRow.value : "",
+        color_hex: normalizeHexColor(typeof valueRow.color_hex === "string" ? valueRow.color_hex : null),
+        display_order:
+          Number.isFinite(Number(valueRow.display_order)) && Number(valueRow.display_order) >= 0
+            ? Math.trunc(Number(valueRow.display_order))
+            : valueIndex,
+      }))
+      .sort((a, b) => a.display_order - b.display_order),
+  };
+};
+
 const AdminProductEditorPage = () => {
   const { id } = useParams();
   const isEditMode = Boolean(id);
@@ -178,6 +273,15 @@ const AdminProductEditorPage = () => {
   const [aiMessageVisible, setAIMessageVisible] = useState(false);
   const [selectedProductImageForAI, setSelectedProductImageForAI] = useState<File | null>(null);
   const [pendingProductImageFiles, setPendingProductImageFiles] = useState<File[]>([]);
+  const [hasVariants, setHasVariants] = useState(false);
+  const [optionTypes, setOptionTypes] = useState<OptionTypeState[]>([]);
+  const [newOptionTypeName, setNewOptionTypeName] = useState("");
+  const [valueDrafts, setValueDrafts] = useState<Record<string, OptionValueDraftState>>({});
+  const [variants, setVariants] = useState<ProductVariant[]>([]);
+  const [variantToggleWarning, setVariantToggleWarning] = useState(false);
+  const [confirmDeleteVariantId, setConfirmDeleteVariantId] = useState<string | null>(null);
+  const [editingPriceVariantId, setEditingPriceVariantId] = useState<string | null>(null);
+  const [editingPriceValue, setEditingPriceValue] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -211,9 +315,114 @@ const AdminProductEditorPage = () => {
       setIsLoading(true);
       setLoadError(null);
       try {
-        const [product, usageCount] = await Promise.all([fetchAdminProductById(id), fetchProductOrderCount(id)]);
+        const [product, usageCount, optionTypesResponse, variantsResponse] = await Promise.all([
+          fetchAdminProductById(id),
+          fetchProductOrderCount(id),
+          (supabase as any)
+            .from("product_option_types")
+            .select(
+              `
+              *,
+              product_option_values (*)
+            `,
+            )
+            .eq("product_id", id)
+            .order("display_order", { ascending: true }),
+          (supabase as any)
+            .from("product_variants")
+            .select(
+              `
+              *,
+              product_variant_options (
+                option_type_id,
+                option_value_id
+              )
+            `,
+            )
+            .eq("product_id", id)
+            .order("display_order", { ascending: true }),
+        ]);
+
+        if (optionTypesResponse.error) {
+          throw optionTypesResponse.error;
+        }
+
+        if (variantsResponse.error) {
+          throw variantsResponse.error;
+        }
 
         if (!isMounted) return;
+        const productRecord = product as Record<string, unknown>;
+        const existingOptionTypes = (optionTypesResponse.data ?? []) as Array<Record<string, unknown>>;
+        const existingVariants = (variantsResponse.data ?? []) as Array<Record<string, unknown>>;
+        const mappedOptionTypes = existingOptionTypes.map((row, index) => mapOptionTypeRowToState(row, index));
+        const optionTypeIdToLocalId = new Map(
+          mappedOptionTypes.filter((optionType) => optionType.id).map((optionType) => [optionType.id as string, optionType.local_id]),
+        );
+        const optionValueIdToLocalId = new Map<string, string>();
+        const optionValueByLocalId = new Map<string, OptionValueState>();
+
+        mappedOptionTypes.forEach((optionType) => {
+          optionType.values.forEach((optionValue) => {
+            if (optionValue.id) {
+              optionValueIdToLocalId.set(optionValue.id, optionValue.local_id);
+            }
+            optionValueByLocalId.set(optionValue.local_id, optionValue);
+          });
+        });
+
+        const mappedVariants: ProductVariant[] = existingVariants.map((variant, index) => {
+          const links = Array.isArray(variant.product_variant_options)
+            ? (variant.product_variant_options as Array<Record<string, unknown>>)
+            : [];
+          const options = links
+            .map((link) => {
+              const optionTypeId = typeof link.option_type_id === "string" ? link.option_type_id : "";
+              const optionValueId = typeof link.option_value_id === "string" ? link.option_value_id : "";
+              const optionTypeLocalId = optionTypeIdToLocalId.get(optionTypeId);
+              const optionValueLocalId = optionValueIdToLocalId.get(optionValueId);
+              if (!optionTypeLocalId || !optionValueLocalId) return null;
+              return {
+                option_type_local_id: optionTypeLocalId,
+                option_value_local_id: optionValueLocalId,
+              };
+            })
+            .filter((entry): entry is VariantOptionSelection => Boolean(entry));
+
+          const derivedLabel = options
+            .map((entry) => optionValueByLocalId.get(entry.option_value_local_id)?.value ?? "")
+            .filter(Boolean)
+            .join(" / ");
+
+          return {
+            local_id: typeof variant.id === "string" ? variant.id : crypto.randomUUID(),
+            id: typeof variant.id === "string" ? variant.id : undefined,
+            product_id: typeof variant.product_id === "string" ? variant.product_id : undefined,
+            label:
+              typeof variant.label === "string" && variant.label.trim().length > 0
+                ? variant.label
+                : derivedLabel || `Variant ${index + 1}`,
+            options,
+            price: typeof variant.price === "number" ? variant.price : null,
+            compare_at_price: typeof variant.compare_at_price === "number" ? variant.compare_at_price : null,
+            stock_quantity:
+              Number.isFinite(Number(variant.stock_quantity)) ? Math.max(0, Math.trunc(Number(variant.stock_quantity))) : 0,
+            low_stock_threshold:
+              Number.isFinite(Number(variant.low_stock_threshold)) && Number(variant.low_stock_threshold) >= 0
+                ? Math.trunc(Number(variant.low_stock_threshold))
+                : 5,
+            sku: typeof variant.sku === "string" ? variant.sku : "",
+            is_available: variant.is_available !== false,
+            display_order:
+              Number.isFinite(Number(variant.display_order)) && Number(variant.display_order) >= 0
+                ? Math.trunc(Number(variant.display_order))
+                : index,
+            isNew: false,
+            isDirty: false,
+            isDeleted: false,
+          };
+        });
+
         setCurrentProductSnapshot(product);
         setCurrentProductName(product.name || "");
         setName(product.name || "");
@@ -235,6 +444,12 @@ const AdminProductEditorPage = () => {
         setImages(normalizeProductImages(product.images));
         setIsAvailable(Boolean(product.is_available));
         setIsFeatured(Boolean(product.is_featured));
+        setHasVariants(Boolean(productRecord.has_variants) || mappedVariants.length > 0);
+        setOptionTypes(mappedOptionTypes);
+        setNewOptionTypeName("");
+        setValueDrafts({});
+        setVariants(mappedVariants);
+        setVariantToggleWarning(false);
         setHasOrderUsage(usageCount);
       } catch {
         if (!isMounted) return;
@@ -252,6 +467,19 @@ const AdminProductEditorPage = () => {
       isMounted = false;
     };
   }, [id, isEditMode]);
+
+  useEffect(() => {
+    if (isEditMode) return;
+    setHasVariants(false);
+    setOptionTypes([]);
+    setNewOptionTypeName("");
+    setValueDrafts({});
+    setVariants([]);
+    setVariantToggleWarning(false);
+    setConfirmDeleteVariantId(null);
+    setEditingPriceVariantId(null);
+    setEditingPriceValue("");
+  }, [isEditMode]);
 
   useEffect(() => {
     if (isSlugEditable) return;
@@ -299,6 +527,334 @@ const AdminProductEditorPage = () => {
   const selectedCategory = useMemo(() => categories.find((category) => category.id === categoryId) ?? null, [categories, categoryId]);
   const categorySlug = selectedCategory?.slug ?? "";
   const selectedCategoryName = selectedCategory?.name ?? "";
+  const optionValueByLocalId = useMemo(() => {
+    const next = new Map<string, { optionType: OptionTypeState; optionValue: OptionValueState }>();
+    optionTypes.forEach((optionType) => {
+      optionType.values.forEach((optionValue) => {
+        next.set(optionValue.local_id, { optionType, optionValue });
+      });
+    });
+    return next;
+  }, [optionTypes]);
+  const activeVariants = useMemo(() => variants.filter((variant) => !variant.isDeleted), [variants]);
+  const parsedLowStockThreshold = useMemo(() => {
+    const numeric = Number(lowStockThreshold || 5);
+    if (!Number.isFinite(numeric)) return 5;
+    return Math.max(0, Math.trunc(numeric));
+  }, [lowStockThreshold]);
+  const totalVariantStock = useMemo(
+    () => activeVariants.reduce((sum, variant) => sum + Math.max(0, variant.stock_quantity), 0),
+    [activeVariants],
+  );
+  const availableVariantCount = useMemo(
+    () => activeVariants.filter((variant) => variant.is_available).length,
+    [activeVariants],
+  );
+  const outOfStockVariantCount = useMemo(
+    () => activeVariants.filter((variant) => variant.stock_quantity <= 0).length,
+    [activeVariants],
+  );
+  const activeOptionTypes = useMemo(
+    () =>
+      optionTypes
+        .map((optionType, index) => ({
+          ...optionType,
+          display_order: index,
+          values: optionType.values
+            .filter((optionValue) => optionValue.value.trim().length > 0)
+            .map((optionValue, valueIndex) => ({ ...optionValue, display_order: valueIndex })),
+        }))
+        .filter((optionType) => optionType.name.trim().length > 0),
+    [optionTypes],
+  );
+
+  const buildVariantLabelFromOptions = (options: VariantOptionSelection[]) => {
+    const values = options
+      .map((optionSelection) => optionValueByLocalId.get(optionSelection.option_value_local_id)?.optionValue.value ?? "")
+      .filter(Boolean);
+    return values.join(" / ");
+  };
+
+  const buildVariantSku = (options: VariantOptionSelection[]) => {
+    const baseSku = sku.trim().toUpperCase() || `LUX-VAR-${createRandomVariantCode()}`;
+    const suffix = options
+      .map((optionSelection) => {
+        const valueName = optionValueByLocalId.get(optionSelection.option_value_local_id)?.optionValue.value ?? "";
+        return normalizeSkuToken(valueName, "VAR");
+      })
+      .join("-");
+    return suffix ? `${baseSku}-${suffix}` : `${baseSku}-${createRandomVariantCode()}`;
+  };
+
+  const updateVariantRow = (localId: string, updater: (variant: ProductVariant) => ProductVariant) => {
+    setVariants((current) =>
+      current.map((variant) => {
+        if (variant.local_id !== localId) return variant;
+        const next = updater(variant);
+        return next.isNew ? next : { ...next, isDirty: true };
+      }),
+    );
+  };
+
+  const onToggleHasVariants = () => {
+    if (hasVariants) {
+      const hasExistingRows = activeVariants.length > 0;
+      setHasVariants(false);
+      setVariantToggleWarning(hasExistingRows);
+      return;
+    }
+    setHasVariants(true);
+    setVariantToggleWarning(false);
+  };
+
+  const onAddOptionType = () => {
+    const normalizedName = newOptionTypeName.trim();
+    if (!normalizedName) {
+      return;
+    }
+
+    const duplicate = optionTypes.some((optionType) => optionType.name.trim().toLowerCase() === normalizedName.toLowerCase());
+    if (duplicate) {
+      setSaveMessage("Option type already exists on this product.");
+      return;
+    }
+
+    const localId = crypto.randomUUID();
+    setOptionTypes((current) => [
+      ...current,
+      {
+        local_id: localId,
+        name: normalizedName,
+        display_order: current.length,
+        values: [],
+      },
+    ]);
+    setValueDrafts((current) => ({
+      ...current,
+      [localId]: {
+        value: "",
+        withColor: false,
+        color_hex: "#000000",
+      },
+    }));
+    setNewOptionTypeName("");
+  };
+
+  const onUpdateOptionTypeName = (localId: string, value: string) => {
+    setOptionTypes((current) =>
+      current.map((optionType) => (optionType.local_id === localId ? { ...optionType, name: value } : optionType)),
+    );
+  };
+
+  const onRemoveOptionType = (localId: string) => {
+    const inUse = activeVariants.some((variant) =>
+      variant.options.some((optionSelection) => optionSelection.option_type_local_id === localId),
+    );
+    if (inUse && !window.confirm("Delete this option type and all variants using it?")) {
+      return;
+    }
+
+    setOptionTypes((current) => current.filter((optionType) => optionType.local_id !== localId));
+    setValueDrafts((current) => {
+      const next = { ...current };
+      delete next[localId];
+      return next;
+    });
+    setVariants((current) =>
+      current.map((variant) =>
+        variant.options.some((optionSelection) => optionSelection.option_type_local_id === localId)
+          ? { ...variant, isDeleted: true, isDirty: true }
+          : variant,
+      ),
+    );
+  };
+
+  const onUpdateValueDraft = (optionTypeLocalId: string, updater: (current: OptionValueDraftState) => OptionValueDraftState) => {
+    setValueDrafts((current) => {
+      const previous = current[optionTypeLocalId] ?? {
+        value: "",
+        withColor: false,
+        color_hex: "#000000",
+      };
+      return {
+        ...current,
+        [optionTypeLocalId]: updater(previous),
+      };
+    });
+  };
+
+  const onAddOptionValue = (optionTypeLocalId: string) => {
+    const draft = valueDrafts[optionTypeLocalId] ?? {
+      value: "",
+      withColor: false,
+      color_hex: "#000000",
+    };
+    const normalizedValue = draft.value.trim();
+    if (!normalizedValue) {
+      return;
+    }
+
+    setOptionTypes((current) =>
+      current.map((optionType) => {
+        if (optionType.local_id !== optionTypeLocalId) return optionType;
+        const duplicate = optionType.values.some((optionValue) => optionValue.value.trim().toLowerCase() === normalizedValue.toLowerCase());
+        if (duplicate) {
+          return optionType;
+        }
+        return {
+          ...optionType,
+          values: [
+            ...optionType.values,
+            {
+              local_id: crypto.randomUUID(),
+              value: normalizedValue,
+              color_hex: draft.withColor ? normalizeHexColor(draft.color_hex) : null,
+              display_order: optionType.values.length,
+            },
+          ],
+        };
+      }),
+    );
+    onUpdateValueDraft(optionTypeLocalId, () => ({
+      value: "",
+      withColor: draft.withColor,
+      color_hex: draft.color_hex,
+    }));
+  };
+
+  const onRemoveOptionValue = (optionTypeLocalId: string, optionValueLocalId: string) => {
+    const inUse = activeVariants.some((variant) =>
+      variant.options.some((optionSelection) => optionSelection.option_value_local_id === optionValueLocalId),
+    );
+    if (inUse && !window.confirm("Delete this value and all variants using it?")) {
+      return;
+    }
+
+    setOptionTypes((current) =>
+      current.map((optionType) =>
+        optionType.local_id === optionTypeLocalId
+          ? {
+              ...optionType,
+              values: optionType.values.filter((optionValue) => optionValue.local_id !== optionValueLocalId),
+            }
+          : optionType,
+      ),
+    );
+    setVariants((current) =>
+      current.map((variant) =>
+        variant.options.some((optionSelection) => optionSelection.option_value_local_id === optionValueLocalId)
+          ? { ...variant, isDeleted: true, isDirty: true }
+          : variant,
+      ),
+    );
+  };
+
+  const onGenerateVariants = () => {
+    const validOptionTypes = activeOptionTypes.filter((optionType) => optionType.values.length > 0);
+    if (validOptionTypes.length === 0) {
+      setSaveMessage("Add at least one option type with values before generating variants.");
+      return;
+    }
+
+    const valueArrays = validOptionTypes.map((optionType) =>
+      optionType.values.map((optionValue) => ({
+        option_type_local_id: optionType.local_id,
+        option_value_local_id: optionValue.local_id,
+      })),
+    );
+
+    const combinations = valueArrays.reduce<VariantOptionSelection[][]>(
+      (accumulator, currentValues) =>
+        accumulator.flatMap((combo) => currentValues.map((item) => [...combo, item])),
+      [[]],
+    );
+
+    const existingByKey = new Map(
+      activeVariants.map((variant) => [toComboKey(variant.options), variant] as const),
+    );
+    const generatedKeys = new Set<string>();
+
+    const generatedVariants = combinations.map((combo, index) => {
+      const key = toComboKey(combo);
+      generatedKeys.add(key);
+      const existing = existingByKey.get(key);
+      if (existing) {
+        return {
+          ...existing,
+          label: existing.label?.trim() || buildVariantLabelFromOptions(combo),
+          options: combo,
+          display_order: index,
+        };
+      }
+
+      return {
+        local_id: crypto.randomUUID(),
+        label: buildVariantLabelFromOptions(combo),
+        options: combo,
+        price: null,
+        compare_at_price: null,
+        stock_quantity: 0,
+        low_stock_threshold: parsedLowStockThreshold,
+        sku: buildVariantSku(combo),
+        is_available: true,
+        display_order: index,
+        isNew: true,
+        isDirty: false,
+        isDeleted: false,
+      } satisfies ProductVariant;
+    });
+
+    const unmatchedVariants = activeVariants
+      .filter((variant) => !generatedKeys.has(toComboKey(variant.options)))
+      .map((variant, index) => ({
+        ...variant,
+        display_order: generatedVariants.length + index,
+      }));
+
+    setVariants([...generatedVariants, ...unmatchedVariants]);
+    setHasVariants(true);
+    setVariantToggleWarning(false);
+  };
+
+  const onChangeVariantLabel = (localId: string, value: string) => {
+    updateVariantRow(localId, (variant) => ({ ...variant, label: value }));
+  };
+
+  const onChangeVariantStock = (localId: string, value: string) => {
+    const numeric = Math.max(0, Math.trunc(Number(value || 0)));
+    updateVariantRow(localId, (variant) => ({ ...variant, stock_quantity: numeric }));
+  };
+
+  const onChangeVariantSku = (localId: string, value: string) => {
+    updateVariantRow(localId, (variant) => ({ ...variant, sku: value.toUpperCase() }));
+  };
+
+  const onToggleVariantAvailable = (localId: string) => {
+    updateVariantRow(localId, (variant) => ({ ...variant, is_available: !variant.is_available }));
+  };
+
+  const onConfirmDeleteVariant = (localId: string) => {
+    updateVariantRow(localId, (variant) => ({ ...variant, isDeleted: true }));
+    setConfirmDeleteVariantId(null);
+  };
+
+  const onStartEditingVariantPrice = (variant: ProductVariant) => {
+    setEditingPriceVariantId(variant.local_id);
+    setEditingPriceValue(variant.price === null ? "" : variant.price.toString());
+  };
+
+  const onSaveEditingVariantPrice = (localId: string) => {
+    const nextPrice = numberOrNull(editingPriceValue);
+    updateVariantRow(localId, (variant) => ({ ...variant, price: nextPrice }));
+    setEditingPriceVariantId(null);
+    setEditingPriceValue("");
+  };
+
+  const onClearVariantPrice = (localId: string) => {
+    updateVariantRow(localId, (variant) => ({ ...variant, price: null }));
+    setEditingPriceVariantId(null);
+    setEditingPriceValue("");
+  };
 
   const onAddTag = () => {
     const normalized = tagInput.trim();
@@ -554,6 +1110,356 @@ const AdminProductEditorPage = () => {
     }
   };
 
+  const saveVariants = async (productId: string) => {
+    const normalizedOptionTypes = activeOptionTypes.map((optionType, index) => ({
+      ...optionType,
+      name: optionType.name.trim(),
+      display_order: index,
+      values: optionType.values
+        .map((optionValue, valueIndex) => ({
+          ...optionValue,
+          value: optionValue.value.trim(),
+          color_hex: normalizeHexColor(optionValue.color_hex),
+          display_order: valueIndex,
+        }))
+        .filter((optionValue) => optionValue.value.length > 0),
+    }));
+
+    const existingOptionTypeIds = normalizedOptionTypes
+      .map((optionType) => optionType.id)
+      .filter((optionTypeId): optionTypeId is string => Boolean(optionTypeId));
+
+    const { data: existingOptionTypeRows, error: existingOptionTypeRowsError } = await (supabase as any)
+      .from("product_option_types")
+      .select("id")
+      .eq("product_id", productId);
+    if (existingOptionTypeRowsError) {
+      throw existingOptionTypeRowsError;
+    }
+
+    const optionTypeIdsToDelete = ((existingOptionTypeRows ?? []) as Array<{ id: string }>)
+      .map((row) => row.id)
+      .filter((optionTypeId) => !existingOptionTypeIds.includes(optionTypeId));
+    if (optionTypeIdsToDelete.length > 0) {
+      const { error } = await (supabase as any).from("product_option_types").delete().in("id", optionTypeIdsToDelete);
+      if (error) {
+        throw error;
+      }
+    }
+
+    const optionTypeDbIdByLocalId = new Map<string, string>();
+    const optionValueDbIdByLocalId = new Map<string, string>();
+
+    for (const optionType of normalizedOptionTypes) {
+      let optionTypeId = optionType.id ?? null;
+
+      if (optionTypeId) {
+        const { error } = await (supabase as any)
+          .from("product_option_types")
+          .update({
+            name: optionType.name,
+            display_order: optionType.display_order,
+          })
+          .eq("id", optionTypeId);
+        if (error) {
+          throw error;
+        }
+      } else {
+        const { data, error } = await (supabase as any)
+          .from("product_option_types")
+          .insert({
+            product_id: productId,
+            name: optionType.name,
+            display_order: optionType.display_order,
+          })
+          .select("id")
+          .single();
+        if (error) {
+          throw error;
+        }
+        optionTypeId = data?.id ?? null;
+      }
+
+      if (!optionTypeId) {
+        throw new Error("Failed to persist option type");
+      }
+
+      optionTypeDbIdByLocalId.set(optionType.local_id, optionTypeId);
+
+      const existingOptionValueIds = optionType.values
+        .map((optionValue) => optionValue.id)
+        .filter((optionValueId): optionValueId is string => Boolean(optionValueId));
+
+      const { data: existingOptionValueRows, error: existingOptionValueRowsError } = await (supabase as any)
+        .from("product_option_values")
+        .select("id")
+        .eq("option_type_id", optionTypeId);
+      if (existingOptionValueRowsError) {
+        throw existingOptionValueRowsError;
+      }
+
+      const optionValueIdsToDelete = ((existingOptionValueRows ?? []) as Array<{ id: string }>)
+        .map((row) => row.id)
+        .filter((optionValueId) => !existingOptionValueIds.includes(optionValueId));
+      if (optionValueIdsToDelete.length > 0) {
+        const { error } = await (supabase as any).from("product_option_values").delete().in("id", optionValueIdsToDelete);
+        if (error) {
+          throw error;
+        }
+      }
+
+      for (const optionValue of optionType.values) {
+        let optionValueId = optionValue.id ?? null;
+        if (optionValueId) {
+          const { error } = await (supabase as any)
+            .from("product_option_values")
+            .update({
+              value: optionValue.value,
+              color_hex: optionValue.color_hex,
+              display_order: optionValue.display_order,
+            })
+            .eq("id", optionValueId);
+          if (error) {
+            throw error;
+          }
+        } else {
+          const { data, error } = await (supabase as any)
+            .from("product_option_values")
+            .insert({
+              option_type_id: optionTypeId,
+              value: optionValue.value,
+              color_hex: optionValue.color_hex,
+              display_order: optionValue.display_order,
+            })
+            .select("id")
+            .single();
+          if (error) {
+            throw error;
+          }
+          optionValueId = data?.id ?? null;
+        }
+
+        if (!optionValueId) {
+          throw new Error("Failed to persist option value");
+        }
+        optionValueDbIdByLocalId.set(optionValue.local_id, optionValueId);
+      }
+    }
+
+    const orderedActiveVariants = variants
+      .filter((variant) => !variant.isDeleted)
+      .map((variant, index) => ({
+        ...variant,
+        display_order: index,
+      }));
+
+    const toDelete = variants
+      .filter((variant) => variant.isDeleted && variant.id)
+      .map((variant) => variant.id)
+      .filter((variantId): variantId is string => Boolean(variantId));
+    if (toDelete.length > 0) {
+      const { error } = await (supabase as any).from("product_variants").delete().in("id", toDelete);
+      if (error) {
+        throw error;
+      }
+    }
+
+    for (const variant of orderedActiveVariants) {
+      let variantId = variant.id ?? null;
+      const label = variant.label.trim() || buildVariantLabelFromOptions(variant.options) || `Variant ${variant.display_order + 1}`;
+
+      if (variantId) {
+        const { error } = await (supabase as any)
+          .from("product_variants")
+          .update({
+            label,
+            price: variant.price ?? null,
+            compare_at_price: variant.compare_at_price ?? null,
+            stock_quantity: variant.stock_quantity,
+            low_stock_threshold: variant.low_stock_threshold,
+            sku: variant.sku || null,
+            is_available: variant.is_available,
+            display_order: variant.display_order,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", variantId);
+        if (error) {
+          throw error;
+        }
+      } else {
+        const { data, error } = await (supabase as any)
+          .from("product_variants")
+          .insert({
+            product_id: productId,
+            label,
+            price: variant.price ?? null,
+            compare_at_price: variant.compare_at_price ?? null,
+            stock_quantity: variant.stock_quantity,
+            low_stock_threshold: variant.low_stock_threshold,
+            sku: variant.sku || null,
+            is_available: variant.is_available,
+            display_order: variant.display_order,
+          })
+          .select("id")
+          .single();
+        if (error) {
+          throw error;
+        }
+        variantId = data?.id ?? null;
+      }
+
+      if (!variantId) {
+        throw new Error("Failed to persist variant");
+      }
+
+      const { error: clearOptionsError } = await (supabase as any)
+        .from("product_variant_options")
+        .delete()
+        .eq("variant_id", variantId);
+      if (clearOptionsError) {
+        throw clearOptionsError;
+      }
+
+      const optionLinks = variant.options
+        .map((optionSelection) => {
+          const optionTypeId = optionTypeDbIdByLocalId.get(optionSelection.option_type_local_id);
+          const optionValueId = optionValueDbIdByLocalId.get(optionSelection.option_value_local_id);
+          if (!optionTypeId || !optionValueId) return null;
+          return {
+            variant_id: variantId,
+            option_type_id: optionTypeId,
+            option_value_id: optionValueId,
+          };
+        })
+        .filter((entry): entry is { variant_id: string; option_type_id: string; option_value_id: string } => Boolean(entry));
+
+      if (optionLinks.length > 0) {
+        const { error: insertOptionsError } = await (supabase as any).from("product_variant_options").insert(optionLinks);
+        if (insertOptionsError) {
+          throw insertOptionsError;
+        }
+      }
+    }
+
+    const hasDynamicVariants = hasVariants && orderedActiveVariants.length > 0;
+    const { error: hasVariantsError } = await supabase
+      .from("products")
+      .update({
+        has_variants: hasDynamicVariants,
+      } as never)
+      .eq("id", productId);
+    if (hasVariantsError) {
+      throw hasVariantsError;
+    }
+
+    const [optionTypesResponse, variantsResponse] = await Promise.all([
+      (supabase as any)
+        .from("product_option_types")
+        .select(
+          `
+          *,
+          product_option_values (*)
+        `,
+        )
+        .eq("product_id", productId)
+        .order("display_order", { ascending: true }),
+      (supabase as any)
+        .from("product_variants")
+        .select(
+          `
+          *,
+          product_variant_options (
+            option_type_id,
+            option_value_id
+          )
+        `,
+        )
+        .eq("product_id", productId)
+        .order("display_order", { ascending: true }),
+    ]);
+
+    if (optionTypesResponse.error) {
+      throw optionTypesResponse.error;
+    }
+    if (variantsResponse.error) {
+      throw variantsResponse.error;
+    }
+
+    const refreshedOptionTypes = (optionTypesResponse.data ?? []) as Array<Record<string, unknown>>;
+    const mappedOptionTypes = refreshedOptionTypes.map((row, index) => mapOptionTypeRowToState(row, index));
+    const optionTypeIdToLocalId = new Map(
+      mappedOptionTypes.filter((optionType) => optionType.id).map((optionType) => [optionType.id as string, optionType.local_id]),
+    );
+    const optionValueIdToLocalId = new Map<string, string>();
+    const optionValueNameByLocalId = new Map<string, string>();
+
+    mappedOptionTypes.forEach((optionType) => {
+      optionType.values.forEach((optionValue) => {
+        if (optionValue.id) {
+          optionValueIdToLocalId.set(optionValue.id, optionValue.local_id);
+        }
+        optionValueNameByLocalId.set(optionValue.local_id, optionValue.value);
+      });
+    });
+
+    const refreshedVariants = (variantsResponse.data ?? []) as Array<Record<string, unknown>>;
+    const mappedVariants = refreshedVariants.map((variant, index) => {
+      const links = Array.isArray(variant.product_variant_options)
+        ? (variant.product_variant_options as Array<Record<string, unknown>>)
+        : [];
+      const options = links
+        .map((link) => {
+          const optionTypeId = typeof link.option_type_id === "string" ? link.option_type_id : "";
+          const optionValueId = typeof link.option_value_id === "string" ? link.option_value_id : "";
+          const optionTypeLocalId = optionTypeIdToLocalId.get(optionTypeId);
+          const optionValueLocalId = optionValueIdToLocalId.get(optionValueId);
+          if (!optionTypeLocalId || !optionValueLocalId) return null;
+          return {
+            option_type_local_id: optionTypeLocalId,
+            option_value_local_id: optionValueLocalId,
+          };
+        })
+        .filter((entry): entry is VariantOptionSelection => Boolean(entry));
+      const derivedLabel = options
+        .map((entry) => optionValueNameByLocalId.get(entry.option_value_local_id) ?? "")
+        .filter(Boolean)
+        .join(" / ");
+
+      return {
+        local_id: typeof variant.id === "string" ? variant.id : crypto.randomUUID(),
+        id: typeof variant.id === "string" ? variant.id : undefined,
+        product_id: typeof variant.product_id === "string" ? variant.product_id : undefined,
+        label:
+          typeof variant.label === "string" && variant.label.trim().length > 0
+            ? variant.label
+            : derivedLabel || `Variant ${index + 1}`,
+        options,
+        price: typeof variant.price === "number" ? variant.price : null,
+        compare_at_price: typeof variant.compare_at_price === "number" ? variant.compare_at_price : null,
+        stock_quantity:
+          Number.isFinite(Number(variant.stock_quantity)) ? Math.max(0, Math.trunc(Number(variant.stock_quantity))) : 0,
+        low_stock_threshold:
+          Number.isFinite(Number(variant.low_stock_threshold)) && Number(variant.low_stock_threshold) >= 0
+            ? Math.trunc(Number(variant.low_stock_threshold))
+            : 5,
+        sku: typeof variant.sku === "string" ? variant.sku : "",
+        is_available: variant.is_available !== false,
+        display_order:
+          Number.isFinite(Number(variant.display_order)) && Number(variant.display_order) >= 0
+            ? Math.trunc(Number(variant.display_order))
+            : index,
+        isNew: false,
+        isDirty: false,
+        isDeleted: false,
+      } satisfies ProductVariant;
+    });
+
+    setOptionTypes(mappedOptionTypes);
+    setVariants(mappedVariants);
+    setHasVariants(hasDynamicVariants);
+    setValueDrafts({});
+  };
+
   const save = async (asDraft = false) => {
     setIsSaving(true);
     setSaveMessage(null);
@@ -570,6 +1476,7 @@ const AdminProductEditorPage = () => {
         sku: sku.trim() || null,
         stock_quantity: Number(stockQuantity || 0),
         low_stock_threshold: Number(lowStockThreshold || 5),
+        has_variants: hasVariants,
         is_available: asDraft ? false : isAvailable,
         is_featured: isFeatured,
         images: toImageJson(images),
@@ -593,12 +1500,14 @@ const AdminProductEditorPage = () => {
 
       if (isEditMode && id) {
         const updated = await updateAdminProduct(id, payload as never, currentProductSnapshot as never);
+        await saveVariants(id);
         setCurrentProductSnapshot(updated);
         setCurrentProductName(updated.name || payload.name);
         setSaveMessage("Product updated.");
       } else {
         const createPayload = pendingProductImageFiles.length > 0 ? { ...payload, images: [] } : payload;
         const created = await createAdminProduct(createPayload as never);
+        await saveVariants(created.id);
 
         if (pendingProductImageFiles.length > 0) {
           setIsUploadingImage(true);
@@ -637,6 +1546,17 @@ const AdminProductEditorPage = () => {
 
         setSaveMessage("Product saved.");
         navigate(`/admin/products/${created.id}/edit`, { replace: true });
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      if (
+        message.toLowerCase().includes("unique_option_type") ||
+        message.toLowerCase().includes("unique_option_value") ||
+        message.toLowerCase().includes("unique_variant_option")
+      ) {
+        setSaveMessage("Duplicate option or variant combination detected. Ensure each option and value is unique.");
+      } else {
+        setSaveMessage("Unable to save product. Please review the form and try again.");
       }
     } finally {
       setIsSaving(false);
@@ -857,17 +1777,34 @@ const AdminProductEditorPage = () => {
               <input
                 value={stockQuantity}
                 onChange={(event) => setStockQuantity(event.target.value.replace(/[^\d]/g, ""))}
-                className="mt-2 w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[14px] text-[#1A1A1A] outline-none focus:border-[#1A1A1A]"
+                disabled={hasVariants}
+                className={`mt-2 w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[14px] text-[#1A1A1A] outline-none ${
+                  hasVariants ? "cursor-not-allowed text-[#aaaaaa]" : "focus:border-[#1A1A1A]"
+                }`}
               />
+              {hasVariants ? (
+                <p className="mt-1 font-body text-[10px] text-[#C4A882]">
+                  Stock is managed per variant when variants are enabled
+                </p>
+              ) : null}
             </div>
             <div>
               <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Low Stock Threshold</label>
               <input
                 value={lowStockThreshold}
                 onChange={(event) => setLowStockThreshold(event.target.value.replace(/[^\d]/g, ""))}
-                className="mt-2 w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[14px] text-[#1A1A1A] outline-none focus:border-[#1A1A1A]"
+                disabled={hasVariants}
+                className={`mt-2 w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[14px] text-[#1A1A1A] outline-none ${
+                  hasVariants ? "cursor-not-allowed text-[#aaaaaa]" : "focus:border-[#1A1A1A]"
+                }`}
               />
-              <p className="mt-1 font-body text-[10px] text-[#aaaaaa]">Alert when stock falls below this</p>
+              {hasVariants ? (
+                <p className="mt-1 font-body text-[10px] text-[#C4A882]">
+                  Stock is managed per variant when variants are enabled
+                </p>
+              ) : (
+                <p className="mt-1 font-body text-[10px] text-[#aaaaaa]">Alert when stock falls below this</p>
+              )}
             </div>
           </div>
 
@@ -1012,6 +1949,309 @@ const AdminProductEditorPage = () => {
               </div>
             ))}
           </div>
+
+          {hasVariants ? (
+            <div>
+              <p className="mb-6 mt-12 border-t border-[#d4ccc2] pt-8 font-body text-[10px] uppercase tracking-[0.2em] text-[#C4A882]">Option Types</p>
+              <p className="mb-5 font-body text-[11px] leading-[1.7] text-[#aaaaaa]">
+                Define what makes this product&apos;s variants different. Use any option names that fit this product.
+              </p>
+
+              <div className="space-y-4">
+                {optionTypes.map((optionType, optionTypeIndex) => {
+                  const draft = valueDrafts[optionType.local_id] ?? {
+                    value: "",
+                    withColor: false,
+                    color_hex: "#000000",
+                  };
+
+                  return (
+                    <div key={optionType.local_id} className="rounded-[2px] border border-[#d4ccc2] p-4">
+                      <div className="flex items-center gap-2">
+                        <span className="font-body text-[12px] text-[#888888]">&#10303;</span>
+                        <input
+                          value={optionType.name}
+                          onChange={(event) => onUpdateOptionTypeName(optionType.local_id, event.target.value)}
+                          className="flex-1 border-0 border-b border-[#d4ccc2] bg-transparent pb-1 font-body text-[13px] font-medium text-[#1A1A1A] outline-none focus:border-[#1A1A1A]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => onRemoveOptionType(optionType.local_id)}
+                          className="font-body text-[12px] text-[#aaaaaa] transition-colors hover:text-[#C0392B]"
+                        >
+                          &times;
+                        </button>
+                      </div>
+
+                      <p className="mt-3 font-body text-[11px] text-[#888888]">Add values for {optionType.name || "option"}:</p>
+
+                      <div className="mt-2 flex flex-wrap items-end gap-3">
+                        <input
+                          value={draft.value}
+                          onChange={(event) =>
+                            onUpdateValueDraft(optionType.local_id, (current) => ({ ...current, value: event.target.value }))
+                          }
+                          placeholder="e.g. Small, Medium, Large..."
+                          className="w-[170px] border-0 border-b border-[#d4ccc2] bg-transparent pb-1.5 font-body text-[13px] text-[#1A1A1A] outline-none focus:border-[#1A1A1A]"
+                        />
+
+                        <label className="flex items-center gap-2 font-body text-[10px] text-[#aaaaaa]">
+                          <input
+                            type="checkbox"
+                            checked={draft.withColor}
+                            onChange={(event) =>
+                              onUpdateValueDraft(optionType.local_id, (current) => ({ ...current, withColor: event.target.checked }))
+                            }
+                            className="h-3.5 w-3.5 accent-[#1A1A1A]"
+                          />
+                          Add color swatch
+                        </label>
+
+                        {draft.withColor ? (
+                          <label className="flex h-6 w-6 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-[#d4ccc2]">
+                            <input
+                              type="color"
+                              value={draft.color_hex}
+                              onChange={(event) =>
+                                onUpdateValueDraft(optionType.local_id, (current) => ({ ...current, color_hex: event.target.value }))
+                              }
+                              className="h-7 w-7 cursor-pointer border-0 bg-transparent p-0"
+                            />
+                          </label>
+                        ) : null}
+
+                        <button
+                          type="button"
+                          onClick={() => onAddOptionValue(optionType.local_id)}
+                          className="rounded-[2px] border border-[#1A1A1A] bg-transparent px-5 py-2 font-body text-[10px] uppercase tracking-[0.1em] text-[#1A1A1A] transition-colors hover:bg-[#1A1A1A] hover:text-[#F5F0E8]"
+                        >
+                          Add Value
+                        </button>
+                      </div>
+
+                      {optionType.values.length > 0 ? (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {optionType.values.map((optionValue) => (
+                            <span
+                              key={optionValue.local_id}
+                              className="inline-flex items-center gap-1 rounded-[2px] border border-[#d4ccc2] bg-[rgba(26,26,26,0.06)] px-2.5 py-1 font-body text-[11px] text-[#1A1A1A]"
+                            >
+                              {optionValue.color_hex ? (
+                                <span
+                                  className="inline-block h-2 w-2 rounded-full border border-[rgba(0,0,0,0.1)]"
+                                  style={{ backgroundColor: optionValue.color_hex }}
+                                />
+                              ) : null}
+                              <span>{optionValue.value}</span>
+                              <button
+                                type="button"
+                                onClick={() => onRemoveOptionValue(optionType.local_id, optionValue.local_id)}
+                                className="text-[#aaaaaa] transition-colors hover:text-[#C0392B]"
+                              >
+                                &times;
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      ) : null}
+
+                      {optionTypeIndex < optionTypes.length - 1 ? <div className="mt-4 border-b border-[#e8e2d9]" /> : null}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="mt-4 flex flex-wrap items-end gap-3">
+                <input
+                  value={newOptionTypeName}
+                  onChange={(event) => setNewOptionTypeName(event.target.value)}
+                  placeholder="Option name e.g. Size, Color, Material, Fit..."
+                  className="w-[240px] border-0 border-b border-[#d4ccc2] bg-transparent pb-1.5 font-body text-[13px] text-[#1A1A1A] outline-none focus:border-[#1A1A1A]"
+                />
+                <button
+                  type="button"
+                  onClick={onAddOptionType}
+                  className="rounded-[2px] border border-[#1A1A1A] bg-transparent px-5 py-2 font-body text-[10px] uppercase tracking-[0.1em] text-[#1A1A1A] transition-colors hover:bg-[#1A1A1A] hover:text-[#F5F0E8]"
+                >
+                  Add Option
+                </button>
+              </div>
+
+              <p className="mb-4 mt-8 font-body text-[10px] uppercase tracking-[0.2em] text-[#C4A882]">Variants</p>
+              <button
+                type="button"
+                onClick={onGenerateVariants}
+                className="rounded-[2px] border border-[#C4A882] bg-transparent px-5 py-2 font-body text-[10px] uppercase tracking-[0.1em] text-[#C4A882] transition-colors hover:bg-[#C4A882] hover:text-[#1A1A1A]"
+              >
+                Generate Variants
+              </button>
+              <p className="mt-2 font-body text-[10px] text-[#aaaaaa]">
+                Automatically creates combinations from option values. Existing variants are preserved.
+              </p>
+
+              <div className="mt-6 overflow-x-auto">
+                <div className="grid min-w-[780px] grid-cols-[1.6fr_80px_130px_1.2fr_90px_85px] gap-3 border-b border-[#d4ccc2] pb-3 font-body text-[9px] uppercase tracking-[0.15em] text-[#aaaaaa]">
+                  <span>Variant</span>
+                  <span>Stock</span>
+                  <span>Price</span>
+                  <span>SKU</span>
+                  <span>Available</span>
+                  <span>Actions</span>
+                </div>
+
+                {activeVariants.length === 0 ? (
+                  <p className="py-8 text-center font-body text-[12px] text-[#aaaaaa]">
+                    No variants added yet. Add option types and generate variants above.
+                  </p>
+                ) : (
+                  activeVariants.map((variant) => {
+                    const isEditingPrice = editingPriceVariantId === variant.local_id;
+                    const stockColorClass =
+                      variant.stock_quantity === 0
+                        ? "text-[#C0392B]"
+                        : variant.stock_quantity <= variant.low_stock_threshold
+                          ? "text-[#C4A882]"
+                          : "text-[#1A1A1A]";
+
+                    return (
+                      <div
+                        key={variant.local_id}
+                        className="grid min-w-[780px] grid-cols-[1.6fr_80px_130px_1.2fr_90px_85px] items-center gap-3 border-b border-[#d4ccc2] py-3 font-body text-[13px] text-[#1A1A1A] transition-colors hover:bg-[rgba(196,168,130,0.03)]"
+                      >
+                        <div>
+                          <input
+                            value={variant.label}
+                            onChange={(event) => onChangeVariantLabel(variant.local_id, event.target.value)}
+                            className="w-full border-0 border-b border-transparent bg-transparent pb-1 font-body text-[13px] text-[#1A1A1A] outline-none focus:border-[#d4ccc2]"
+                          />
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            {variant.options.map((optionSelection) => {
+                              const optionMeta = optionValueByLocalId.get(optionSelection.option_value_local_id);
+                              if (!optionMeta) return null;
+                              return (
+                                <span
+                                  key={[variant.local_id, optionSelection.option_type_local_id, optionSelection.option_value_local_id].join("-")}
+                                  className="inline-flex items-center gap-1 rounded-[2px] border border-[#e8e2d9] bg-[rgba(26,26,26,0.04)] px-2 py-0.5 font-body text-[9px] text-[#888888]"
+                                >
+                                  {optionMeta.optionValue.color_hex ? (
+                                    <span
+                                      className="inline-block h-2 w-2 rounded-full border border-[rgba(0,0,0,0.1)]"
+                                      style={{ backgroundColor: optionMeta.optionValue.color_hex }}
+                                    />
+                                  ) : null}
+                                  <span>{optionMeta.optionType.name}: {optionMeta.optionValue.value}</span>
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        <input
+                          value={variant.stock_quantity}
+                          onChange={(event) => onChangeVariantStock(variant.local_id, event.target.value.replace(/[^\d]/g, ""))}
+                          className={["w-[60px] border-0 border-b border-[#d4ccc2] bg-transparent pb-1 font-body text-[13px] outline-none focus:border-[#1A1A1A]", stockColorClass].join(" ")}
+                        />
+
+                        {isEditingPrice ? (
+                          <div>
+                            <div className="flex items-center border-b border-[#d4ccc2] pb-1">
+                              <span className="mr-1 font-body text-[11px] text-[#aaaaaa]">GH&#8373;</span>
+                              <input
+                                autoFocus
+                                value={editingPriceValue}
+                                onChange={(event) => setEditingPriceValue(event.target.value.replace(/[^\d.]/g, ""))}
+                                onBlur={() => onSaveEditingVariantPrice(variant.local_id)}
+                                onKeyDown={(event) => {
+                                  if (event.key === "Enter") {
+                                    event.preventDefault();
+                                    onSaveEditingVariantPrice(variant.local_id);
+                                  }
+                                }}
+                                className="w-full border-0 bg-transparent font-body text-[12px] text-[#1A1A1A] outline-none"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => onClearVariantPrice(variant.local_id)}
+                              className="mt-1 font-body text-[10px] text-[#aaaaaa] hover:text-[#1A1A1A]"
+                            >
+                              Clear
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => onStartEditingVariantPrice(variant)}
+                            className="text-left font-body text-[12px] text-[#1A1A1A]"
+                          >
+                            {variant.price === null
+                              ? <span className="font-body text-[11px] text-[#aaaaaa]">Base</span>
+                              : "GH\u20B5" + variant.price.toFixed(2)}
+                          </button>
+                        )}
+
+                        <input
+                          value={variant.sku}
+                          onChange={(event) => onChangeVariantSku(variant.local_id, event.target.value)}
+                          className="w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-1 font-body text-[11px] text-[#aaaaaa] outline-none focus:border-[#1A1A1A]"
+                        />
+
+                        <button
+                          type="button"
+                          onClick={() => onToggleVariantAvailable(variant.local_id)}
+                          className={"relative h-5 w-10 overflow-hidden rounded-full border-0 p-0 transition-colors " + (variant.is_available ? "bg-[#1A1A1A]" : "bg-[#d4ccc2]")}
+                        >
+                          <span
+                            className={"pointer-events-none absolute top-[2px] h-4 w-4 rounded-full bg-white transition-[left] duration-200 ease-in " + (variant.is_available ? "left-[22px]" : "left-[2px]")}
+                          />
+                        </button>
+
+                        {confirmDeleteVariantId === variant.local_id ? (
+                          <div>
+                            <p className="font-body text-[10px] uppercase tracking-[0.08em] text-[#aaaaaa]">Delete this variant?</p>
+                            <div className="mt-1 flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => onConfirmDeleteVariant(variant.local_id)}
+                                className="font-body text-[10px] uppercase tracking-[0.08em] text-[#C0392B]"
+                              >
+                                Yes
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setConfirmDeleteVariantId(null)}
+                                className="font-body text-[10px] uppercase tracking-[0.08em] text-[#888888]"
+                              >
+                                No
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setConfirmDeleteVariantId(variant.local_id)}
+                            className="font-body text-[10px] uppercase tracking-[0.1em] text-[#aaaaaa] transition-colors hover:text-[#C0392B]"
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              <div className="mt-4">
+                <p className="font-body text-[12px] text-[#888888]">Total stock across all variants: {totalVariantStock}</p>
+                <p className="mt-1 font-body text-[11px] text-[#aaaaaa]">
+                  {availableVariantCount} variants available {" - "}
+                  <span className={outOfStockVariantCount > 0 ? "text-[#C0392B]" : ""}>
+                    {outOfStockVariantCount} variants out of stock
+                  </span>
+                </p>
+              </div>
+            </div>
+          ) : null}
         </div>
 
         <div>
@@ -1096,7 +2336,38 @@ const AdminProductEditorPage = () => {
 
           <p className={`${sectionLabelClass} mt-10`}>Publishing</p>
 
-          <label className="mb-4 flex items-center justify-between gap-4">
+          <label className="mb-2 flex items-center justify-between gap-4">
+            <div>
+              <p className="font-body text-[12px] text-[#1A1A1A]">This product has variants</p>
+              <p className="font-body text-[10px] leading-[1.7] text-[#aaaaaa]">
+                Enable if this product comes in multiple option combinations. Stock and pricing will be managed per
+                variant.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onToggleHasVariants}
+              className={`relative h-6 w-11 shrink-0 cursor-pointer overflow-hidden rounded-full border-0 p-0 transition-colors ${
+                hasVariants ? "bg-[#1A1A1A]" : "bg-[#d4ccc2]"
+              }`}
+            >
+              <span
+                className={`pointer-events-none absolute top-[2px] h-5 w-5 rounded-full bg-white transition-[left] duration-200 ease-in ${
+                  hasVariants ? "left-[22px]" : "left-[2px]"
+                }`}
+              />
+            </button>
+          </label>
+
+          {!hasVariants && variantToggleWarning ? (
+            <div className="mt-2 rounded-[2px] border border-[#d4ccc2] bg-[rgba(196,168,130,0.08)] px-4 py-3">
+              <p className="font-body text-[11px] text-[#C4A882]">
+                Turning this off will not delete existing variants but stock will no longer be tracked per variant.
+              </p>
+            </div>
+          ) : null}
+
+          <label className="mb-4 mt-4 flex items-center justify-between gap-4">
             <div>
               <p className="font-body text-[12px] text-[#1A1A1A]">Available for purchase</p>
               <p className="font-body text-[11px] text-[#888888]">Make this product available to customers</p>

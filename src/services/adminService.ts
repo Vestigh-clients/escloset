@@ -132,6 +132,9 @@ export interface AdminOrderDetail {
     compare_at_price: number | null;
     quantity: number;
     subtotal: number;
+    variant_id: string | null;
+    variant_label: string | null;
+    variant_sku: string | null;
     product_slug: string | null;
   }>;
   order_status_history: Array<{
@@ -865,6 +868,9 @@ export const fetchAdminOrderDetail = async (orderNumber: string): Promise<AdminO
         compare_at_price,
         quantity,
         subtotal,
+        variant_id,
+        variant_label,
+        variant_sku,
         products ( id, slug )
       ),
       order_status_history (
@@ -905,6 +911,9 @@ export const fetchAdminOrderDetail = async (orderNumber: string): Promise<AdminO
           : safeNumber(itemRecord.compare_at_price),
       quantity: safeNumber(itemRecord.quantity),
       subtotal: safeNumber(itemRecord.subtotal),
+      variant_id: typeof itemRecord.variant_id === "string" ? itemRecord.variant_id : null,
+      variant_label: typeof itemRecord.variant_label === "string" ? itemRecord.variant_label : null,
+      variant_sku: typeof itemRecord.variant_sku === "string" ? itemRecord.variant_sku : null,
       product_slug: typeof product?.slug === "string" ? product.slug : null,
     };
   });

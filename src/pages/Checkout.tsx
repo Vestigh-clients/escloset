@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Banknote, Check, ChevronDown, Smartphone, X } from "lucide-react";
-import { toast } from "@/components/ui/sonner";
 import {
   Command,
   CommandEmpty,
@@ -11,9 +10,10 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useCart } from "@/contexts/CartContext";
+import { useCart, type CartItem } from "@/contexts/CartContext";
 import { formatPrice } from "@/lib/price";
 import { GHANAIAN_PHONE_HELPER_TEXT, validateGhanaianPhone } from "@/lib/phoneValidation";
+import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import {
   fetchActiveShippingRates,
@@ -27,7 +27,6 @@ import {
   triggerNewOrderAdminNotification,
 } from "@/services/orderService";
 import { REDIRECT_AFTER_LOGIN_KEY } from "@/services/authService";
-import { validateCartStock } from "@/services/stockService";
 
 type CheckoutStep = "contact" | "delivery" | "payment" | "review";
 
@@ -100,6 +99,32 @@ interface SavedContactDetails {
   lastName: string;
   email: string;
   phone: string;
+}
+
+interface CheckoutProductAvailabilityRow {
+  id: string;
+  name: string;
+  is_available: boolean | null;
+  stock_quantity: number;
+  price: number;
+  compare_at_price: number | null;
+  has_variants: boolean | null;
+}
+
+interface CheckoutVariantAvailabilityRow {
+  id: string;
+  product_id: string;
+  stock_quantity: number;
+  is_available: boolean | null;
+  price: number | null;
+  compare_at_price: number | null;
+}
+
+interface CheckoutPreSubmitValidationResult {
+  valid: boolean;
+  errors: string[];
+  updatedItems: CartItem[];
+  hasChanges: boolean;
 }
 
 interface CheckoutSessionSnapshot {
@@ -277,6 +302,20 @@ const sanitizeMultilineText = (value: string): string =>
     .filter((line, index, all) => line.length > 0 || (index > 0 && index < all.length - 1))
     .join("\n")
     .trim();
+
+const toStockQuantity = (value: unknown): number => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return 0;
+  }
+
+  return Math.max(0, Math.trunc(parsed));
+};
+
+const getItemDisplayName = (item: Pick<CartItem, "name" | "variant_label">): string => {
+  const variantLabel = typeof item.variant_label === "string" && item.variant_label.trim() ? item.variant_label.trim() : null;
+  return variantLabel ? `${item.name} (${variantLabel})` : item.name;
+};
 
 const decodeField = (value: string): string => {
   const normalized = value.replace(/\+/g, " ");
@@ -963,6 +1002,7 @@ const Checkout = () => {
 
   const [stepAdvanceError, setStepAdvanceError] = useState<string | null>(null);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [checkoutValidationErrors, setCheckoutValidationErrors] = useState<string[]>([]);
   const [submissionPhase, setSubmissionPhase] = useState<"idle" | "verifying" | "submitting">("idle");
 
   const pathStep = useMemo(() => getStepFromPath(location.pathname), [location.pathname]);
@@ -1693,8 +1733,165 @@ const Checkout = () => {
     [currentUserId, savedAddresses],
   );
 
+  const validateCartBeforeSubmit = useCallback(
+    async (cartItems: CartItem[]): Promise<CheckoutPreSubmitValidationResult> => {
+      if (cartItems.length === 0) {
+        return {
+          valid: false,
+          errors: ["Your cart is empty."],
+          updatedItems: [],
+          hasChanges: false,
+        };
+      }
+
+      const productIds = [...new Set(cartItems.map((item) => item.product_id))];
+      const variantIds = [
+        ...new Set(cartItems.map((item) => item.variant_id).filter((variantId): variantId is string => Boolean(variantId))),
+      ];
+
+      const [productsResult, variantsResult] = await Promise.all([
+        supabase
+          .from("products")
+          .select("id,name,is_available,stock_quantity,price,compare_at_price,has_variants")
+          .in("id", productIds),
+        variantIds.length > 0
+          ? supabase
+              .from("product_variants")
+              .select("id,product_id,stock_quantity,is_available,price,compare_at_price")
+              .in("id", variantIds)
+          : Promise.resolve({ data: [] as CheckoutVariantAvailabilityRow[], error: null }),
+      ]);
+
+      if (productsResult.error) {
+        throw productsResult.error;
+      }
+
+      if (variantsResult.error) {
+        throw variantsResult.error;
+      }
+
+      const products = (productsResult.data ?? []) as CheckoutProductAvailabilityRow[];
+      const variants = (variantsResult.data ?? []) as CheckoutVariantAvailabilityRow[];
+
+      const productsById = new Map(products.map((product) => [product.id, product]));
+      const variantsById = new Map(variants.map((variant) => [variant.id, variant]));
+
+      const errors: string[] = [];
+      const updatedItems: CartItem[] = [];
+
+      for (const item of cartItems) {
+        const product = productsById.get(item.product_id);
+        const itemDisplayName = getItemDisplayName(item);
+
+        if (!product) {
+          errors.push(`${itemDisplayName} is no longer available and will be removed from your cart.`);
+          continue;
+        }
+
+        if (product.is_available === false) {
+          errors.push(`${itemDisplayName} is no longer available.`);
+          continue;
+        }
+
+        if (item.variant_id) {
+          const variant = variantsById.get(item.variant_id);
+
+          if (!variant || variant.product_id !== item.product_id || variant.is_available === false) {
+            errors.push(`${itemDisplayName} is no longer available.`);
+            continue;
+          }
+
+          const variantStock = toStockQuantity(variant.stock_quantity);
+          if (variantStock === 0) {
+            errors.push(`${itemDisplayName} is out of stock.`);
+            continue;
+          }
+
+          const normalizedVariantPrice =
+            typeof variant.price === "number" && Number.isFinite(variant.price) ? variant.price : item.price;
+          const normalizedVariantCompareAt =
+            typeof variant.compare_at_price === "number" && Number.isFinite(variant.compare_at_price)
+              ? variant.compare_at_price
+              : item.compare_at_price;
+
+          if (variantStock < item.quantity) {
+            errors.push(`Only ${variantStock} left for ${itemDisplayName}. Your quantity has been adjusted.`);
+            updatedItems.push({
+              ...item,
+              quantity: variantStock,
+              stock_quantity: variantStock,
+              price: normalizedVariantPrice,
+              compare_at_price: normalizedVariantCompareAt,
+            });
+            continue;
+          }
+
+          updatedItems.push({
+            ...item,
+            stock_quantity: variantStock,
+            price: normalizedVariantPrice,
+            compare_at_price: normalizedVariantCompareAt,
+          });
+          continue;
+        }
+
+        const productStock = toStockQuantity(product.stock_quantity);
+        if (productStock === 0) {
+          errors.push(`${item.name} is out of stock.`);
+          continue;
+        }
+
+        if (productStock < item.quantity) {
+          errors.push(`Only ${productStock} left for ${item.name}. Your quantity has been adjusted.`);
+          updatedItems.push({
+            ...item,
+            quantity: productStock,
+            stock_quantity: productStock,
+            price: product.price,
+            compare_at_price: product.compare_at_price,
+          });
+          continue;
+        }
+
+        updatedItems.push({
+          ...item,
+          stock_quantity: productStock,
+          price: product.price,
+          compare_at_price: product.compare_at_price,
+        });
+      }
+
+      const hasChanges =
+        updatedItems.length !== cartItems.length ||
+        updatedItems.some((updatedItem, index) => {
+          const sourceItem = cartItems[index];
+          if (!sourceItem) {
+            return true;
+          }
+
+          return (
+            updatedItem.product_id !== sourceItem.product_id ||
+            updatedItem.variant_id !== sourceItem.variant_id ||
+            updatedItem.quantity !== sourceItem.quantity ||
+            updatedItem.stock_quantity !== sourceItem.stock_quantity ||
+            updatedItem.price !== sourceItem.price ||
+            updatedItem.compare_at_price !== sourceItem.compare_at_price
+          );
+        });
+
+      return {
+        valid: errors.length === 0 && updatedItems.length > 0,
+        errors,
+        updatedItems,
+        hasChanges,
+      };
+    },
+    [],
+  );
+
   const handleConfirmOrder = useCallback(async () => {
     setSubmissionError(null);
+    setCheckoutValidationErrors([]);
 
     const contactIsValid = validateContactStep();
     const deliveryIsValid = validateDeliveryStep();
@@ -1753,28 +1950,29 @@ const Checkout = () => {
       const sanitizedMobileMoneyNumber =
         paymentValues.method === "mobile_money" ? sanitizeText(paymentValues.mobileMoneyNumber) : null;
 
-      const stockValidation = await validateCartStock(items);
-      if (stockValidation.hasChanges) {
-        replaceItems(stockValidation.updatedItems);
+      const preSubmitValidation = await validateCartBeforeSubmit(items);
+      if (preSubmitValidation.hasChanges) {
+        replaceItems(preSubmitValidation.updatedItems);
       }
 
-      for (const message of stockValidation.messages) {
-        toast(message.message, {
-          className: message.type === "error" ? "lux-cart-toast lux-cart-toast-error" : "lux-cart-toast",
-        });
-      }
-
-      if (stockValidation.shouldBlockCheckout) {
-        setSubmissionError(stockValidation.blockingMessage ?? "Something went wrong. Please try again.");
+      if (!preSubmitValidation.valid) {
+        setCheckoutValidationErrors(
+          preSubmitValidation.errors.length > 0
+            ? preSubmitValidation.errors
+            : ["Please review your cart before placing your order."],
+        );
         setSubmissionPhase("idle");
         return;
       }
+
+      const validatedItems = preSubmitValidation.updatedItems;
+      const validatedSubtotal = validatedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
       const customerId = currentUserId ?? null;
 
       const shippingRate = await resolveShippingRateForState(cleanAddress.state);
       const validatedShippingFee = Number(shippingRate.base_rate ?? 0);
-      const validatedTotal = Math.max(0, subtotal + validatedShippingFee - discountAmount);
+      const validatedTotal = Math.max(0, validatedSubtotal + validatedShippingFee - discountAmount);
 
       setSubmissionPhase("submitting");
 
@@ -1791,8 +1989,8 @@ const Checkout = () => {
         country: cleanAddress.country,
         deliveryInstructions: cleanAddress.deliveryInstructions,
         saveAddress: isLoggedIn && deliveryValues.saveForFuture,
-        items: stockValidation.updatedItems,
-        subtotal,
+        items: validatedItems,
+        subtotal: validatedSubtotal,
         shippingFee: validatedShippingFee,
         discountAmount,
         total: validatedTotal,
@@ -1886,8 +2084,8 @@ const Checkout = () => {
     replaceItems,
     reviewValues.orderNotes,
     saveAddressForFutureOrders,
-    subtotal,
     validateCart,
+    validateCartBeforeSubmit,
     validateContactStep,
     validateDeliveryStep,
     validatePaymentStep,
@@ -1899,7 +2097,7 @@ const Checkout = () => {
 
       <div className="space-y-3 border-b border-[#d4ccc2] pb-4">
         {items.map((item) => (
-          <div key={item.product_id}>
+          <div key={`${item.product_id}-${item.variant_id ?? "base"}`}>
             <div className="flex items-start gap-3">
               <img
                 src={item.image_url || "/placeholder.svg"}
@@ -1913,6 +2111,11 @@ const Checkout = () => {
 
               <div className="min-w-0 flex-1">
                 <p className="truncate font-display text-[14px] italic text-[#1A1A1A]">{item.name}</p>
+                {item.variant_label ? (
+                  <p className="mt-[3px] mb-[6px] font-body text-[10px] tracking-[0.05em] text-[#888888]">
+                    {item.variant_label}
+                  </p>
+                ) : null}
                 <p className="font-body text-[11px] text-[#888888]">Qty: {item.quantity}</p>
               </div>
 
@@ -2008,7 +2211,7 @@ const Checkout = () => {
           className="sticky top-[72px] z-30 mb-6 flex h-[52px] w-full items-center justify-between bg-[#1A1A1A] px-4 lg:hidden"
         >
           <span className="font-body text-[12px] text-[#F5F0E8]">
-            {orderItemCountLabel} · {formatPrice(subtotal)}
+            {orderItemCountLabel} {"\u00B7"} {formatPrice(subtotal)}
           </span>
           <ChevronDown className="h-4 w-4 text-[#F5F0E8]" />
         </button>
@@ -2379,7 +2582,8 @@ const Checkout = () => {
 
                     {deliveryValues.state && shippingQuote ? (
                       <p className="mt-2 font-body text-[11px] text-[#888888]">
-                        Delivery to {deliveryValues.state}: {formatPrice(shippingQuote.fee)} · {shippingQuote.minDays}–
+                        Delivery to {deliveryValues.state}: {formatPrice(shippingQuote.fee)} {"\u00B7"}{" "}
+                        {shippingQuote.minDays}-
                         {shippingQuote.maxDays} business days
                       </p>
                     ) : null}
@@ -2576,7 +2780,7 @@ const Checkout = () => {
 
                 <div className="mt-6 space-y-4 border-b border-[#d4ccc2] pb-6">
                   {items.map((item) => (
-                    <div key={item.product_id} className="flex items-start gap-4">
+                    <div key={`${item.product_id}-${item.variant_id ?? "base"}`} className="flex items-start gap-4">
                       <img
                         src={item.image_url || "/placeholder.svg"}
                         alt={item.image_alt}
@@ -2589,6 +2793,11 @@ const Checkout = () => {
 
                       <div className="min-w-0 flex-1">
                         <p className="font-display text-[16px] italic text-[#1A1A1A]">{item.name}</p>
+                        {item.variant_label ? (
+                          <p className="mt-[3px] mb-[6px] font-body text-[10px] tracking-[0.05em] text-[#888888]">
+                            {item.variant_label}
+                          </p>
+                        ) : null}
                         <p className="font-body text-[12px] text-[#888888]">Qty: {item.quantity}</p>
                       </div>
 
@@ -2716,6 +2925,24 @@ const Checkout = () => {
                     </Link>
                   </p>
 
+                  {checkoutValidationErrors.length > 0 ? (
+                    <div className="mb-3">
+                      <p className="mb-2 font-body text-[12px] font-medium text-[#C0392B]">
+                        Please review the following before placing your order:
+                      </p>
+                      <div className="space-y-1">
+                        {checkoutValidationErrors.map((error, index) => (
+                          <p key={`checkout-validation-error-${index}`} className="font-body text-[12px] text-[#C0392B]">
+                            <span className="mr-1" aria-hidden="true">
+                              &middot;
+                            </span>
+                            {error}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+
                   {submissionError ? (
                     <p className="mb-3 font-body text-[12px] text-[#C0392B]">{submissionError}</p>
                   ) : null}
@@ -2753,7 +2980,7 @@ const Checkout = () => {
           <div className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto bg-[#F5F0E8] px-5 pb-6 pt-5">
             <div className="mb-4 flex items-center justify-between">
               <p className="font-body text-[10px] uppercase tracking-[0.14em] text-[#888888]">
-                {orderItemCountLabel} · {formatPrice(subtotal)}
+                {orderItemCountLabel} {"\u00B7"} {formatPrice(subtotal)}
               </p>
               <button
                 type="button"

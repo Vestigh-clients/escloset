@@ -33,6 +33,11 @@ const OrderSummaryDetails = ({ order, deliveryWindow }: OrderSummaryDetailsProps
               <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="truncate font-display text-[16px] italic text-[#1A1A1A]">{item.product_name}</p>
+                  {item.variant_label ? (
+                    <p className="mt-[3px] mb-[6px] font-body text-[10px] tracking-[0.05em] text-[#888888]">
+                      {item.variant_label}
+                    </p>
+                  ) : null}
                   <p className="mt-1 font-body text-[10px] uppercase tracking-[0.1em] text-[#C4A882]">
                     {getItemCategoryLabel(item)}
                   </p>

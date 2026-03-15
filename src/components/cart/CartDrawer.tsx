@@ -131,7 +131,7 @@ const CartDrawer = () => {
             <>
               <div className="lux-cart-scroll flex-1 overflow-y-auto pr-1 [max-height:calc(100vh-320px)]">
                 {items.map((item) => (
-                  <div key={item.product_id} className="border-b border-[#d4ccc2] py-4 first:pt-0">
+                  <div key={`${item.product_id}-${item.variant_id ?? "base"}`} className="border-b border-[#d4ccc2] py-4 first:pt-0">
                     <div className="flex gap-4">
                       <Link to={`/shop/${item.slug}`} onClick={closeCart} className="h-[80px] w-[60px] flex-shrink-0">
                         <CartItemThumbnail src={item.image_url} alt={item.image_alt} />
@@ -143,6 +143,11 @@ const CartDrawer = () => {
                         </Link>
 
                         <p className="mt-1 font-body text-[10px] uppercase tracking-[0.1em] text-[#C4A882]">{item.category}</p>
+                        {item.variant_label ? (
+                          <p className="mt-[3px] mb-[6px] font-body text-[10px] tracking-[0.05em] text-[#888888]">
+                            {item.variant_label}
+                          </p>
+                        ) : null}
 
                         <div className="mt-2 flex items-center gap-2 font-body text-[12px] text-[#1A1A1A]">
                           {item.compare_at_price !== null && item.compare_at_price > item.price ? (
@@ -160,7 +165,7 @@ const CartDrawer = () => {
                             <button
                               type="button"
                               aria-label={`Decrease quantity for ${item.name}`}
-                              onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
+                              onClick={() => updateQuantity(item.product_id, item.quantity - 1, item.variant_id)}
                               disabled={item.quantity <= 1}
                               className="px-2 transition-colors disabled:text-[#d4ccc2]"
                             >
@@ -170,7 +175,7 @@ const CartDrawer = () => {
                             <button
                               type="button"
                               aria-label={`Increase quantity for ${item.name}`}
-                              onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
+                              onClick={() => updateQuantity(item.product_id, item.quantity + 1, item.variant_id)}
                               disabled={item.quantity >= item.stock_quantity}
                               className="px-2 transition-colors disabled:text-[#d4ccc2]"
                             >
@@ -180,7 +185,7 @@ const CartDrawer = () => {
 
                           <button
                             type="button"
-                            onClick={() => removeFromCart(item.product_id)}
+                            onClick={() => removeFromCart(item.product_id, item.variant_id)}
                             className="font-body text-[10px] uppercase tracking-[0.1em] text-[#aaaaaa] transition-colors hover:text-[#C0392B]"
                           >
                             Remove

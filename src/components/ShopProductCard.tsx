@@ -38,6 +38,8 @@ const ShopProductCard = ({ product, size = "regular" }: ShopProductCardProps) =>
       image_alt: product.name,
       sku: product.sku ?? null,
       stock_quantity: product.stock_quantity,
+      variant_id: null,
+      variant_label: null,
     });
   };
 
