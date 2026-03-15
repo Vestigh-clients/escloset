@@ -3,7 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-route
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AdminRoute, ProtectedRoute } from "@/components/auth/RouteGuards";
+import { AdminRoute, ProtectedRoute, SuperAdminRoute } from "@/components/auth/RouteGuards";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CartDrawer from "@/components/cart/CartDrawer";
@@ -16,6 +16,7 @@ import CategoryPage from "./pages/CategoryPage";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Checkout from "./pages/Checkout";
+import CheckoutEntry from "./pages/CheckoutEntry";
 import CheckoutConfirmation from "./pages/CheckoutConfirmation";
 import OrderTracking from "./pages/OrderTracking";
 import NotFound from "./pages/NotFound";
@@ -37,7 +38,12 @@ import AdminOrderDetailPage from "./pages/admin/AdminOrderDetailPage";
 import AdminProductsPage from "./pages/admin/AdminProductsPage";
 import AdminProductEditorPage from "./pages/admin/AdminProductEditorPage";
 import AdminCategoriesPage from "./pages/admin/AdminCategoriesPage";
-import AdminCustomerPlaceholderPage from "./pages/admin/AdminCustomerPlaceholderPage";
+import AdminCustomersPage from "./pages/admin/AdminCustomersPage";
+import AdminCustomerDetailPage from "./pages/admin/AdminCustomerDetailPage";
+import AdminDiscountCodesPage from "./pages/admin/AdminDiscountCodesPage";
+import AdminShippingRatesPage from "./pages/admin/AdminShippingRatesPage";
+import AdminUsersPage from "./pages/admin/AdminUsersPage";
+import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
 
 const queryClient = new QueryClient();
 
@@ -54,25 +60,15 @@ const AppShell = () => {
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/shop" element={<Shop />} />
-          <Route path="/product/:id" element={<ProductPage />} />
-          <Route path="/category/:slug" element={<CategoryPage />} />
+          <Route path="/shop/:slug" element={<ProductPage />} />
+          <Route path="/category/:categorySlug" element={<CategoryPage />} />
           <Route
             path="/checkout/confirmation"
-            element={
-              <ProtectedRoute>
-                <CheckoutConfirmation />
-              </ProtectedRoute>
-            }
+            element={<CheckoutConfirmation />}
           />
+          <Route path="/checkout" element={<CheckoutEntry />} />
           <Route path="/orders/:orderNumber" element={<OrderTracking />} />
-          <Route
-            path="/checkout/*"
-            element={
-              <ProtectedRoute>
-                <Checkout />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/checkout/*" element={<Checkout />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
 
@@ -113,7 +109,26 @@ const AppShell = () => {
             <Route path="products/new" element={<AdminProductEditorPage />} />
             <Route path="products/:id/edit" element={<AdminProductEditorPage />} />
             <Route path="categories" element={<AdminCategoriesPage />} />
-            <Route path="customers/:id" element={<AdminCustomerPlaceholderPage />} />
+            <Route path="customers" element={<AdminCustomersPage />} />
+            <Route path="customers/:id" element={<AdminCustomerDetailPage />} />
+            <Route path="discounts" element={<AdminDiscountCodesPage />} />
+            <Route path="shipping" element={<AdminShippingRatesPage />} />
+            <Route
+              path="users"
+              element={
+                <SuperAdminRoute>
+                  <AdminUsersPage />
+                </SuperAdminRoute>
+              }
+            />
+            <Route
+              path="settings"
+              element={
+                <SuperAdminRoute>
+                  <AdminSettingsPage />
+                </SuperAdminRoute>
+              }
+            />
             <Route path="*" element={<Navigate to="/admin" replace />} />
           </Route>
 

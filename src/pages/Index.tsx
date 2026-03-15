@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
-import { type Category } from "@/data/products";
 import CategoryCard from "@/components/CategoryCard";
+import { type StorefrontCategorySlug } from "@/lib/categories";
 
-const categories: Category[] = ["hair-care", "mens-fashion", "womens-fashion", "bags", "shoes"];
+const categories: StorefrontCategorySlug[] = ["hair-care", "mens-fashion", "womens-fashion", "bags", "shoes"];
 const AUTOPLAY_INTERVAL_SECONDS = 5;
 type TransitionType = "push";
 const Transition_type: TransitionType = "push";

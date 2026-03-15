@@ -1,5 +1,5 @@
 import { MessageCircle } from "lucide-react";
-import { getWhatsAppContactLink } from "@/data/products";
+import { getWhatsAppContactLink } from "@/lib/contact";
 
 const WhatsAppButton = () => {
   return (
@@ -16,3 +16,4 @@ const WhatsAppButton = () => {
 };
 
 export default WhatsAppButton;
+

@@ -1,6 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { Check, Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import OrderSummaryDetails from "@/components/orders/OrderSummaryDetails";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
 import { getDeliveryWindow } from "@/lib/orderPresentation";
 import {
@@ -10,6 +13,7 @@ import {
 } from "@/services/orderService";
 
 const LAST_ORDER_STORAGE_KEY = "luxuriant_last_order";
+const CUSTOMER_NOT_FOUND_CODE = "PGRST116";
 
 const AnimatedCheckmark = () => (
   <svg
@@ -81,8 +85,12 @@ const ConfirmationSkeleton = () => (
   </div>
 );
 
+const hasUppercaseLetter = (value: string) => /[A-Z]/.test(value);
+const hasNumber = (value: string) => /[0-9]/.test(value);
+
 const CheckoutConfirmation = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const { clearCart } = useCart();
   const emailTriggerStartedRef = useRef(false);
 
@@ -90,6 +98,12 @@ const CheckoutConfirmation = () => {
   const [order, setOrder] = useState<OrderDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [accountCreateError, setAccountCreateError] = useState<string | null>(null);
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+  const [isAccountCreated, setIsAccountCreated] = useState(false);
+  const [isPromptDismissed, setIsPromptDismissed] = useState(false);
 
   useEffect(() => {
     clearCart();
@@ -195,6 +209,95 @@ const CheckoutConfirmation = () => {
     [order],
   );
 
+  const passwordRules = useMemo(
+    () => ({
+      minLength: password.length >= 8,
+      uppercase: hasUppercaseLetter(password),
+      number: hasNumber(password),
+    }),
+    [password],
+  );
+
+  const canSubmitPassword = passwordRules.minLength && passwordRules.uppercase && passwordRules.number;
+  const shouldShowGuestAccountPrompt = !isAuthenticated && !isPromptDismissed;
+
+  const handleCreateAccount = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!order || !canSubmitPassword || isCreatingAccount) {
+      return;
+    }
+
+    setAccountCreateError(null);
+    setIsCreatingAccount(true);
+
+    try {
+      const orderEmail = order.customer.email.trim().toLowerCase();
+      const orderFirstName = order.customer.first_name.trim();
+      const orderLastName = order.customer.last_name.trim();
+
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email: orderEmail,
+        password,
+        options: {
+          data: {
+            first_name: orderFirstName,
+            last_name: orderLastName,
+          },
+        },
+      });
+
+      if (signUpError) {
+        throw signUpError;
+      }
+
+      const newAuthUser = signUpData.user;
+      if (!newAuthUser?.id) {
+        throw new Error("Account creation did not return a user.");
+      }
+
+      const { data: existingCustomer, error: existingError } = await supabase
+        .from("customers")
+        .select("id")
+        .eq("email", orderEmail)
+        .single();
+
+      if (existingError) {
+        const code = (existingError as { code?: string }).code;
+        if (code !== CUSTOMER_NOT_FOUND_CODE) {
+          throw existingError;
+        }
+      } else if (existingCustomer?.id && existingCustomer.id !== newAuthUser.id) {
+        const { error: linkError } = await supabase
+          .from("customers")
+          .update({
+            id: newAuthUser.id,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("email", orderEmail);
+
+        if (linkError && import.meta.env.DEV) {
+          console.warn("Could not link guest customer row after account creation", linkError);
+        }
+      }
+
+      setIsAccountCreated(true);
+      setPassword("");
+      setAccountCreateError(null);
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error("Guest account creation failed", error);
+      }
+
+      const message =
+        (error as { message?: string }).message?.trim() ||
+        "We could not create your account right now. Please try again.";
+      setAccountCreateError(message);
+    } finally {
+      setIsCreatingAccount(false);
+    }
+  };
+
   if (isLoading) {
     return <ConfirmationSkeleton />;
   }
@@ -299,6 +402,83 @@ const CheckoutConfirmation = () => {
             View Order Status &rarr;
           </Link>
         </section>
+
+        {shouldShowGuestAccountPrompt ? (
+          <section className="mt-10 border-t border-[#d4ccc2] pt-10">
+            {isAccountCreated ? (
+              <div>
+                <Check size={32} strokeWidth={1.2} className="text-[#C4A882]" />
+                <h2 className="mt-4 font-display text-[22px] italic text-[#1A1A1A]">Account created successfully.</h2>
+                <p className="mt-2 max-w-[420px] font-body text-[12px] font-light leading-[1.7] text-[#888888]">
+                  You can now track all your orders and checkout faster next time.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleCreateAccount}>
+                <h2 className="font-display text-[24px] italic text-[#1A1A1A]">Save your details for next time</h2>
+                <p className="mb-6 mt-2 max-w-[460px] font-body text-[12px] font-light leading-[1.7] text-[#888888]">
+                  Create an account to track orders, save addresses and checkout faster.
+                </p>
+
+                <label
+                  htmlFor="guest-create-password"
+                  className="mb-2 block font-body text-[10px] uppercase tracking-[0.12em] text-[#888888]"
+                >
+                  Create a Password
+                </label>
+                <div className="relative border-b border-[#d4ccc2] pb-[10px] pt-[2px]">
+                  <input
+                    id="guest-create-password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder="Min. 8 characters"
+                    autoComplete="new-password"
+                    className="w-full bg-transparent pr-10 font-body text-[14px] text-[#1A1A1A] placeholder:text-[#aaaaaa] focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((previous) => !previous)}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 text-[#888888] transition-colors hover:text-[#1A1A1A]"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff size={16} strokeWidth={1.35} /> : <Eye size={16} strokeWidth={1.35} />}
+                  </button>
+                </div>
+
+                <div className="mt-3 space-y-1 font-body text-[10px] text-[#888888]">
+                  <p className={passwordRules.minLength ? "text-[#27AE60]" : "text-[#888888]"}>
+                    {passwordRules.minLength ? "✓" : "✗"} 8+ characters
+                  </p>
+                  <p className={passwordRules.uppercase ? "text-[#27AE60]" : "text-[#888888]"}>
+                    {passwordRules.uppercase ? "✓" : "✗"} One uppercase letter
+                  </p>
+                  <p className={passwordRules.number ? "text-[#27AE60]" : "text-[#888888]"}>
+                    {passwordRules.number ? "✓" : "✗"} One number
+                  </p>
+                </div>
+
+                {accountCreateError ? <p className="mt-3 font-body text-[12px] text-[#C0392B]">{accountCreateError}</p> : null}
+
+                <button
+                  type="submit"
+                  disabled={!canSubmitPassword || isCreatingAccount}
+                  className="mt-6 w-full rounded-[2px] bg-[#1A1A1A] px-4 py-4 font-body text-[11px] uppercase tracking-[0.18em] text-[#F5F0E8] transition-colors duration-300 hover:bg-[#C4A882] hover:text-[#1A1A1A] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isCreatingAccount ? "Creating..." : "Create Account"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsPromptDismissed(true)}
+                  className="mt-4 block w-full text-center font-body text-[10px] uppercase tracking-[0.12em] text-[#aaaaaa] transition-colors hover:text-[#1A1A1A]"
+                >
+                  No thanks, maybe later
+                </button>
+              </form>
+            )}
+          </section>
+        ) : null}
       </div>
     </div>
   );

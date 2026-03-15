@@ -1,13 +1,31 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ShoppingBag, X } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
-import { formatPrice } from "@/data/products";
+import { getSession } from "@/services/authService";
+import ProductImagePlaceholder from "@/components/products/ProductImagePlaceholder";
+import { formatPrice } from "@/lib/price";
 
 const FREE_DELIVERY_THRESHOLD = 50000;
 
+const CartItemThumbnail = ({ src, alt }: { src: string; alt: string }) => {
+  const [hasImageError, setHasImageError] = useState(false);
+
+  useEffect(() => {
+    setHasImageError(false);
+  }, [src]);
+
+  if (!src || hasImageError) {
+    return <ProductImagePlaceholder className="h-full w-full" />;
+  }
+
+  return <img src={src} alt={alt} className="h-full w-full object-cover" loading="lazy" onError={() => setHasImageError(true)} />;
+};
+
 const CartDrawer = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const {
     items,
     totalItems,
@@ -40,7 +58,21 @@ const CartDrawer = () => {
       }
 
       closeCart();
-      navigate("/checkout/contact");
+
+      if (isAuthenticated) {
+        navigate("/checkout/contact");
+        return;
+      }
+
+      if (isAuthLoading) {
+        const session = await getSession();
+        if (session?.user) {
+          navigate("/checkout/contact");
+          return;
+        }
+      }
+
+      navigate("/checkout");
     } finally {
       setIsCheckoutPending(false);
     }
@@ -101,12 +133,12 @@ const CartDrawer = () => {
                 {items.map((item) => (
                   <div key={item.product_id} className="border-b border-[#d4ccc2] py-4 first:pt-0">
                     <div className="flex gap-4">
-                      <Link to={`/product/${item.product_id}`} onClick={closeCart} className="h-[80px] w-[60px] flex-shrink-0">
-                        <img src={item.image_url} alt={item.image_alt} className="h-full w-full object-cover" loading="lazy" />
+                      <Link to={`/shop/${item.slug}`} onClick={closeCart} className="h-[80px] w-[60px] flex-shrink-0">
+                        <CartItemThumbnail src={item.image_url} alt={item.image_alt} />
                       </Link>
 
                       <div className="min-w-0 flex-1">
-                        <Link to={`/product/${item.product_id}`} onClick={closeCart}>
+                        <Link to={`/shop/${item.slug}`} onClick={closeCart}>
                           <p className="font-display text-[15px] italic leading-snug text-[#1A1A1A]">{item.name}</p>
                         </Link>
 
@@ -197,3 +229,4 @@ const CartDrawer = () => {
 };
 
 export default CartDrawer;
+

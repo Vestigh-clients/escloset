@@ -29,6 +29,7 @@ export interface RegisterWithEmailInput {
   firstName: string;
   lastName: string;
   email: string;
+  phone: string;
   password: string;
   marketingOptIn: boolean;
 }
@@ -257,6 +258,7 @@ export const getCurrentCustomerRole = async (): Promise<CustomerRole> => {
 
 export const signUpWithEmail = async (input: RegisterWithEmailInput): Promise<RegisterWithEmailResult> => {
   const email = normalizeEmail(input.email);
+  const normalizedPhone = input.phone.replace(/\s+/g, " ").trim();
 
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -266,6 +268,7 @@ export const signUpWithEmail = async (input: RegisterWithEmailInput): Promise<Re
       data: {
         first_name: sanitizeName(input.firstName),
         last_name: sanitizeName(input.lastName),
+        phone: normalizedPhone || null,
         marketing_opt_in: input.marketingOptIn,
       },
     },

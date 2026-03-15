@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import AccountOrderList from "@/components/account/AccountOrderList";
-import { formatPrice } from "@/data/products";
+import { formatPrice } from "@/lib/price";
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchAccountOrderSummaries, type AccountOrderSummary } from "@/services/accountService";
 import { useAccountLayoutContext } from "./AccountLayout";
@@ -144,3 +144,4 @@ const AccountOverview = () => {
 };
 
 export default AccountOverview;
+

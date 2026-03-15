@@ -177,24 +177,40 @@ export type Database = {
       }
       customer_roles: {
         Row: {
+          assigned_at: string
+          assigned_by: string | null
           created_at: string
           customer_id: string
+          id: string
           role: Database["public"]["Enums"]["customer_role"]
           updated_at: string | null
         }
         Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
           created_at?: string
           customer_id: string
+          id?: string
           role?: Database["public"]["Enums"]["customer_role"]
           updated_at?: string | null
         }
         Update: {
+          assigned_at?: string
+          assigned_by?: string | null
           created_at?: string
           customer_id?: string
+          id?: string
           role?: Database["public"]["Enums"]["customer_role"]
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "customer_roles_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "customer_roles_customer_id_fkey"
             columns: ["customer_id"]
@@ -644,12 +660,52 @@ export type Database = {
         }
         Relationships: []
       }
+      site_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: string | null
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: string | null
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      assign_customer_role: {
+        Args: {
+          new_role: Database["public"]["Enums"]["customer_role"]
+          target_customer_id: string
+        }
+        Returns: Database["public"]["Enums"]["customer_role"]
+      }
       current_user_is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      current_user_is_super_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }

@@ -5,6 +5,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const SITE_URL = Deno.env.get("SITE_URL") ?? "https://luxuriantgh.store";
+
 interface OrderPayload {
   id: string;
   order_number: string;
@@ -151,8 +153,8 @@ Deno.serve(async (request: Request) => {
     const discountAmount = Math.max(0, Number(order.discount_amount || 0));
     const addressLines = buildAddressLines(order.shipping_address_snapshot);
     const { minDays, maxDays } = normalizeBusinessDayWindow(order.shipping_address_snapshot);
-    const baseTrackingUrl = (Deno.env.get("ORDER_TRACKING_BASE_URL") || "http://localhost:5173").replace(/\/+$/, "");
-    const trackingUrl = `${baseTrackingUrl}/orders/${encodeURIComponent(order.order_number)}`;
+    const trackingBaseUrl = SITE_URL.replace(/\/+$/, "");
+    const trackingUrl = `${trackingBaseUrl}/orders/${encodeURIComponent(order.order_number)}`;
 
     const itemRows = order.order_items
       .map((item) => {
@@ -265,7 +267,7 @@ Deno.serve(async (request: Request) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: Deno.env.get("ORDER_CONFIRMATION_FROM_EMAIL") || "Luxuriant <orders@luxuriant.store>",
+        from: Deno.env.get("ORDER_CONFIRMATION_FROM_EMAIL") || "Luxuriant <orders@luxuriantgh.store>",
         to: [customerEmail],
         subject: `Order ${order.order_number} confirmed`,
         html: emailHtml,

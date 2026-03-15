@@ -7,6 +7,7 @@ import AuthInputField from "@/components/auth/AuthInputField";
 import AuthPageLayout from "@/components/auth/AuthPageLayout";
 import GoogleOAuthButton from "@/components/auth/GoogleOAuthButton";
 import { useAuth } from "@/contexts/AuthContext";
+import { GHANAIAN_PHONE_HELPER_TEXT, getGhanaianPhoneError } from "@/lib/phoneValidation";
 import {
   getConfirmPasswordError,
   getEmailError,
@@ -16,7 +17,7 @@ import {
 } from "@/lib/authValidation";
 import { AuthServiceError, VERIFY_EMAIL_STORAGE_KEY } from "@/services/authService";
 
-type RegisterField = "firstName" | "lastName" | "email" | "password" | "confirmPassword";
+type RegisterField = "firstName" | "lastName" | "email" | "phone" | "password" | "confirmPassword";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ const Register = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [marketingOptIn, setMarketingOptIn] = useState(false);
@@ -32,6 +34,7 @@ const Register = () => {
     firstName: false,
     lastName: false,
     email: false,
+    phone: false,
     password: false,
     confirmPassword: false,
   });
@@ -47,10 +50,11 @@ const Register = () => {
       firstName: getRequiredError("First name", firstName),
       lastName: getRequiredError("Last name", lastName),
       email: getEmailError(email),
+      phone: getGhanaianPhoneError(phone),
       password: getPasswordError(password),
       confirmPassword: getConfirmPasswordError(password, confirmPassword),
     }),
-    [firstName, lastName, email, password, confirmPassword],
+    [firstName, lastName, email, phone, password, confirmPassword],
   );
 
   const markTouched = (field: RegisterField) => {
@@ -70,6 +74,7 @@ const Register = () => {
       firstName: true,
       lastName: true,
       email: true,
+      phone: true,
       password: true,
       confirmPassword: true,
     };
@@ -95,6 +100,7 @@ const Register = () => {
         firstName: sanitizeInputText(firstName),
         lastName: sanitizeInputText(lastName),
         email: normalizedEmail,
+        phone: sanitizeInputText(phone),
         password,
         marketingOptIn,
       });
@@ -209,6 +215,19 @@ const Register = () => {
           autoComplete="email"
           touched={touched.email}
           error={errors.email}
+        />
+
+        <AuthInputField
+          id="register-phone"
+          label="Phone"
+          type="tel"
+          value={phone}
+          onChange={setPhone}
+          onBlur={() => markTouched("phone")}
+          autoComplete="tel"
+          touched={touched.phone}
+          error={errors.phone}
+          helperText={GHANAIAN_PHONE_HELPER_TEXT}
         />
 
         <AuthInputField

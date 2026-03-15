@@ -1,7 +1,10 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { productImages } from "@/data/images";
-import { categoryLabels, type Product, formatPrice } from "@/data/products";
 import { useCart } from "@/contexts/CartContext";
+import ProductImagePlaceholder from "@/components/products/ProductImagePlaceholder";
+import { getCategoryLabel } from "@/lib/categories";
+import { formatPrice } from "@/lib/price";
+import { getPrimaryImage, type Product } from "@/types/product";
 
 interface ShopProductCardProps {
   product: Product;
@@ -10,8 +13,14 @@ interface ShopProductCardProps {
 
 const ShopProductCard = ({ product, size = "regular" }: ShopProductCardProps) => {
   const { addToCart } = useCart();
-  const image = productImages[product.id];
+  const imageUrl = getPrimaryImage(product);
+  const [hasImageError, setHasImageError] = useState(false);
+  const categoryLabel = product.categories?.name || getCategoryLabel(product.categories?.slug);
   const isOutOfStock = !product.is_available || product.stock_quantity < 1;
+
+  useEffect(() => {
+    setHasImageError(false);
+  }, [imageUrl, product.id]);
 
   const handleAddToCart = () => {
     if (isOutOfStock) {
@@ -22,12 +31,12 @@ const ShopProductCard = ({ product, size = "regular" }: ShopProductCardProps) =>
       product_id: product.id,
       name: product.name,
       slug: product.slug,
-      category: categoryLabels[product.category],
+      category: categoryLabel,
       price: product.price,
-      compare_at_price: product.compare_at_price,
-      image_url: image ?? "",
+      compare_at_price: product.compare_at_price ?? null,
+      image_url: imageUrl,
       image_alt: product.name,
-      sku: product.sku,
+      sku: product.sku ?? null,
       stock_quantity: product.stock_quantity,
     });
   };
@@ -43,22 +52,27 @@ const ShopProductCard = ({ product, size = "regular" }: ShopProductCardProps) =>
       <article className="group bg-transparent">
         <div className="grid h-[400px] w-full grid-cols-[55fr_45fr]">
           <div className="relative overflow-hidden">
-            <Link to={`/product/${product.id}`} className="block h-full">
-              <img
-                src={image}
-                alt={product.name}
-                className="h-full w-full object-cover object-center transition-transform ease-out [transition-duration:400ms] group-hover:scale-[1.04]"
-                loading="lazy"
-              />
+            <Link to={`/shop/${product.slug}`} className="block h-full">
+              {imageUrl && !hasImageError ? (
+                <img
+                  src={imageUrl}
+                  alt={product.name}
+                  className="h-full w-full object-cover object-center transition-transform ease-out [transition-duration:400ms] group-hover:scale-[1.04]"
+                  loading="lazy"
+                  onError={() => setHasImageError(true)}
+                />
+              ) : (
+                <ProductImagePlaceholder className="h-full w-full" />
+              )}
             </Link>
           </div>
 
           <div className="flex h-full flex-col justify-center bg-[#F5F0E8] p-12">
             <p className="mb-3 font-body text-[10px] font-light uppercase tracking-[0.2em] text-[#C4A882]">
-              {categoryLabels[product.category]}
+              {categoryLabel}
             </p>
 
-            <Link to={`/product/${product.id}`} className="mb-2 block">
+            <Link to={`/shop/${product.slug}`} className="mb-2 block">
               <h3 className="font-display text-[24px] font-normal italic leading-[1.2] text-[#1A1A1A]">{product.name}</h3>
             </Link>
 
@@ -81,19 +95,24 @@ const ShopProductCard = ({ product, size = "regular" }: ShopProductCardProps) =>
   return (
     <article className="group bg-transparent">
       <div className="relative aspect-[4/5] w-full overflow-hidden">
-        <Link to={`/product/${product.id}`} className="block h-full">
-          <img
-            src={image}
-            alt={product.name}
-            className="h-full w-full object-cover object-center transition-transform ease-out [transition-duration:400ms] group-hover:scale-[1.04]"
-            loading="lazy"
-          />
+        <Link to={`/shop/${product.slug}`} className="block h-full">
+          {imageUrl && !hasImageError ? (
+            <img
+              src={imageUrl}
+              alt={product.name}
+              className="h-full w-full object-cover object-center transition-transform ease-out [transition-duration:400ms] group-hover:scale-[1.04]"
+              loading="lazy"
+              onError={() => setHasImageError(true)}
+            />
+          ) : (
+            <ProductImagePlaceholder className="h-full w-full" />
+          )}
           {imageHoverOverlay}
         </Link>
       </div>
 
       <div className="mt-3 text-left">
-        <Link to={`/product/${product.id}`}>
+        <Link to={`/shop/${product.slug}`}>
           <h3 className="font-display text-[15px] font-normal italic leading-snug text-[#1A1A1A]">{product.name}</h3>
         </Link>
         <p className="mt-1 font-body text-[12px] font-light text-[#888888]">{formatPrice(product.price)}</p>

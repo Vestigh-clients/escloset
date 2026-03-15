@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { formatPrice } from "@/data/products";
+import { formatPrice } from "@/lib/price";
 import { formatStatusLabel } from "@/lib/orderPresentation";
 import type { AccountOrderStatus, AccountOrderSummary } from "@/services/accountService";
 
@@ -89,3 +89,4 @@ const AccountOrderList = ({ orders }: AccountOrderListProps) => {
 };
 
 export default AccountOrderList;
+

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import AuthInputField from "@/components/auth/AuthInputField";
 import AuthPageLayout from "@/components/auth/AuthPageLayout";
 import GoogleOAuthButton from "@/components/auth/GoogleOAuthButton";
@@ -10,22 +10,33 @@ import { AuthServiceError, REDIRECT_AFTER_LOGIN_KEY } from "@/services/authServi
 
 type LoginField = "email" | "password";
 
-const readPostLoginRedirect = (): string => {
+const sanitizeRedirectPath = (candidate: string | null): string | null => {
+  const value = candidate?.trim() ?? "";
+  if (!value || !value.startsWith("/") || value.startsWith("//")) {
+    return null;
+  }
+  return value;
+};
+
+const readPostLoginRedirect = (search: string): string => {
   if (typeof window === "undefined") {
     return "/";
   }
 
-  const raw = window.sessionStorage.getItem(REDIRECT_AFTER_LOGIN_KEY)?.trim();
-  if (!raw) {
-    return "/";
+  const queryRedirect = sanitizeRedirectPath(new URLSearchParams(search).get("redirect"));
+
+  const raw = window.sessionStorage.getItem(REDIRECT_AFTER_LOGIN_KEY);
+  if (raw !== null) {
+    window.sessionStorage.removeItem(REDIRECT_AFTER_LOGIN_KEY);
   }
 
-  window.sessionStorage.removeItem(REDIRECT_AFTER_LOGIN_KEY);
-  return raw;
+  const storedRedirect = sanitizeRedirectPath(raw);
+  return storedRedirect ?? queryRedirect ?? "/";
 };
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, isLoading, login, loginWithGoogle, resendEmailVerification } = useAuth();
 
   const [email, setEmail] = useState("");
@@ -45,9 +56,9 @@ const Login = () => {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      navigate(readPostLoginRedirect(), { replace: true });
+      navigate(readPostLoginRedirect(location.search), { replace: true });
     }
-  }, [isLoading, isAuthenticated, navigate]);
+  }, [isLoading, isAuthenticated, location.search, navigate]);
 
   const fieldErrors = useMemo(
     () => ({
@@ -95,7 +106,7 @@ const Login = () => {
         email: sanitizeInputText(email).toLowerCase(),
         password,
       });
-      navigate(readPostLoginRedirect(), { replace: true });
+      navigate(readPostLoginRedirect(location.search), { replace: true });
     } catch (error) {
       if (error instanceof AuthServiceError) {
         if (error.code === "email_not_verified") {

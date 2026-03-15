@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import {
   createAdminProduct,
   deleteAdminProduct,
@@ -18,6 +19,28 @@ interface BenefitItem {
   icon: string;
   label: string;
   description: string;
+}
+
+interface AIFillResult {
+  short_description?: string;
+  full_description?: string;
+  meta_title?: string;
+  meta_description?: string;
+  tags?: string[];
+  benefits?: Array<{
+    icon?: string;
+    label?: string;
+    description?: string;
+  }>;
+  sku_suggestion?: string;
+  weight_grams?: number;
+}
+
+interface AIFillFunctionResponse {
+  success?: boolean;
+  message?: string;
+  data?: AIFillResult;
+  used_image?: boolean;
 }
 
 const iconOptions = [
@@ -94,6 +117,18 @@ const toImageJson = (images: ProductImageObject[]) =>
     display_order: index,
   }));
 
+const fileToBase64 = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      const base64 = result.split(",")[1];
+      resolve(base64);
+    };
+    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.readAsDataURL(file);
+  });
+
 const sectionLabelClass =
   "mb-6 border-t border-[#d4ccc2] pt-8 font-body text-[10px] uppercase tracking-[0.2em] text-[#C4A882]";
 
@@ -101,6 +136,7 @@ const AdminProductEditorPage = () => {
   const { id } = useParams();
   const isEditMode = Boolean(id);
   const navigate = useNavigate();
+  const productImagesInputRef = useRef<HTMLInputElement | null>(null);
 
   const [categories, setCategories] = useState<Array<{ id: string; name: string; slug: string }>>([]);
   const [isLoading, setIsLoading] = useState(isEditMode);
@@ -136,6 +172,12 @@ const AdminProductEditorPage = () => {
   const [isAvailable, setIsAvailable] = useState(true);
   const [isFeatured, setIsFeatured] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [aiLoading, setAILoading] = useState(false);
+  const [aiError, setAIError] = useState<string | null>(null);
+  const [aiSuccessMessage, setAISuccessMessage] = useState<string | null>(null);
+  const [aiMessageVisible, setAIMessageVisible] = useState(false);
+  const [selectedProductImageForAI, setSelectedProductImageForAI] = useState<File | null>(null);
+  const [pendingProductImageFiles, setPendingProductImageFiles] = useState<File[]>([]);
 
   useEffect(() => {
     let isMounted = true;
@@ -222,10 +264,41 @@ const AdminProductEditorPage = () => {
     return () => window.clearTimeout(timeout);
   }, [saveMessage]);
 
-  const categorySlug = useMemo(
-    () => categories.find((category) => category.id === categoryId)?.slug ?? "",
-    [categories, categoryId],
-  );
+  useEffect(() => {
+    if (!aiSuccessMessage && !aiError) return;
+    setAIMessageVisible(true);
+
+    const fadeTimer = window.setTimeout(() => setAIMessageVisible(false), 5000);
+    const clearTimer = window.setTimeout(() => {
+      setAISuccessMessage(null);
+      setAIError(null);
+    }, 5400);
+
+    return () => {
+      window.clearTimeout(fadeTimer);
+      window.clearTimeout(clearTimer);
+    };
+  }, [aiSuccessMessage, aiError]);
+
+  const queuedImagePreviewUrl = useMemo(() => {
+    const firstQueuedFile = pendingProductImageFiles[0];
+    if (!firstQueuedFile) {
+      return null;
+    }
+    return URL.createObjectURL(firstQueuedFile);
+  }, [pendingProductImageFiles]);
+
+  useEffect(() => {
+    return () => {
+      if (queuedImagePreviewUrl) {
+        URL.revokeObjectURL(queuedImagePreviewUrl);
+      }
+    };
+  }, [queuedImagePreviewUrl]);
+
+  const selectedCategory = useMemo(() => categories.find((category) => category.id === categoryId) ?? null, [categories, categoryId]);
+  const categorySlug = selectedCategory?.slug ?? "";
+  const selectedCategoryName = selectedCategory?.name ?? "";
 
   const onAddTag = () => {
     const normalized = tagInput.trim();
@@ -289,19 +362,31 @@ const AdminProductEditorPage = () => {
   };
 
   const onUploadImages = async (files: FileList | null) => {
-    if (!files || files.length === 0 || !id) {
+    if (!files || files.length === 0) {
       return;
     }
 
     const list = Array.from(files);
     const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
     const validFiles = list.filter((file) => allowedTypes.includes(file.type) && file.size <= 2 * 1024 * 1024);
-    const allowedCount = Math.max(0, 6 - images.length);
+    const currentCount = id ? images.length : pendingProductImageFiles.length;
+    const allowedCount = Math.max(0, 6 - currentCount);
     const filesToUpload = validFiles.slice(0, allowedCount);
 
     if (filesToUpload.length === 0) {
       return;
     }
+
+    if (!id) {
+      const queuedCount = Math.min(6, pendingProductImageFiles.length + filesToUpload.length);
+      setPendingProductImageFiles((current) => [...current, ...filesToUpload].slice(0, 6));
+      setSaveMessage(
+        `${queuedCount} image${queuedCount === 1 ? "" : "s"} queued. They will upload automatically after first save.`,
+      );
+      return;
+    }
+
+    setSelectedProductImageForAI(filesToUpload[0]);
 
     setIsUploadingImage(true);
     try {
@@ -358,6 +443,117 @@ const AdminProductEditorPage = () => {
     await persistImages(next);
   };
 
+  const onRemoveQueuedPreviewImage = () => {
+    setPendingProductImageFiles((current) => current.slice(1));
+  };
+
+  const setFormField = (field: string, value: unknown) => {
+    switch (field) {
+      case "shortDescription":
+        setShortDescription(typeof value === "string" ? value : "");
+        return;
+      case "fullDescription":
+        setDescription(typeof value === "string" ? value : "");
+        return;
+      case "metaTitle":
+        setMetaTitle(typeof value === "string" ? value : "");
+        return;
+      case "metaDescription":
+        setMetaDescription(typeof value === "string" ? value : "");
+        return;
+      case "tags":
+        setTags(parseTagsFromJson(value));
+        return;
+      case "benefits":
+        setBenefits(parseBenefitsFromJson(value).slice(0, 6));
+        return;
+      case "sku":
+        setSku(typeof value === "string" ? value : "");
+        return;
+      case "weight":
+        setWeightGrams(typeof value === "string" ? value : "");
+        return;
+      default:
+        return;
+    }
+  };
+
+  const applyWithFlash = (field: string, value: unknown) => {
+    setFormField(field, value);
+    const element = document.getElementById(`field-${field}`);
+    if (!element) {
+      return;
+    }
+
+    element.style.transition = "none";
+    element.style.background = "rgba(196,168,130,0.15)";
+
+    window.setTimeout(() => {
+      element.style.transition = "background 0.6s ease";
+      element.style.background = "transparent";
+    }, 50);
+  };
+
+  const handleAIFill = async () => {
+    if (!name.trim()) return;
+
+    setAILoading(true);
+    setAIError(null);
+    setAISuccessMessage(null);
+    setAIMessageVisible(false);
+
+    try {
+      let imagePayload: { data: string; mimeType: string } | undefined;
+      const selectedFileForAI = pendingProductImageFiles[0] ?? selectedProductImageForAI ?? null;
+
+      if (selectedFileForAI) {
+        const base64 = await fileToBase64(selectedFileForAI);
+        imagePayload = {
+          data: base64,
+          mimeType: selectedFileForAI.type,
+        };
+      }
+
+      const { data, error } = await supabase.functions.invoke("ai_product_autofill", {
+        body: {
+          product_name: name,
+          category: selectedCategoryName || undefined,
+          image: imagePayload,
+        },
+      });
+
+      const response = (data ?? {}) as AIFillFunctionResponse;
+      if (error || !response.success || !response.data) {
+        setAIError(response.message || "AI fill failed. Please try again.");
+        return;
+      }
+
+      const result = response.data;
+      applyWithFlash("shortDescription", result.short_description ?? "");
+      applyWithFlash("fullDescription", result.full_description ?? "");
+      applyWithFlash("metaTitle", result.meta_title ?? "");
+      applyWithFlash("metaDescription", result.meta_description ?? "");
+      applyWithFlash("tags", result.tags ?? []);
+      applyWithFlash("benefits", result.benefits ?? []);
+
+      if (!sku.trim()) {
+        applyWithFlash("sku", result.sku_suggestion ?? "");
+      }
+
+      if (!weightGrams.trim() && typeof result.weight_grams === "number") {
+        applyWithFlash("weight", result.weight_grams.toString());
+      }
+
+      setAISuccessMessage(
+        response.used_image ? "✦ Fields filled using product image" : "✦ Fields filled — review before saving",
+      );
+    } catch {
+      setAIError("AI fill failed. Please try again.");
+    } finally {
+      setAILoading(false);
+    }
+  };
+
   const save = async (asDraft = false) => {
     setIsSaving(true);
     setSaveMessage(null);
@@ -401,7 +597,44 @@ const AdminProductEditorPage = () => {
         setCurrentProductName(updated.name || payload.name);
         setSaveMessage("Product updated.");
       } else {
-        const created = await createAdminProduct(payload as never);
+        const createPayload = pendingProductImageFiles.length > 0 ? { ...payload, images: [] } : payload;
+        const created = await createAdminProduct(createPayload as never);
+
+        if (pendingProductImageFiles.length > 0) {
+          setIsUploadingImage(true);
+          try {
+            const uploaded: ProductImageObject[] = [];
+            for (const file of pendingProductImageFiles) {
+              const result = await uploadProductImage(created.id, file);
+              uploaded.push({
+                url: result.url,
+                alt_text: name || file.name,
+                is_primary: false,
+                display_order: 0,
+              });
+            }
+
+            const normalized = uploaded.map((image, index) => ({
+              ...image,
+              is_primary: index === 0,
+              display_order: index,
+            }));
+
+            if (normalized.length > 0) {
+              await updateAdminProduct(
+                created.id,
+                {
+                  images: toImageJson(normalized),
+                },
+                created as never,
+              );
+            }
+            setPendingProductImageFiles([]);
+          } finally {
+            setIsUploadingImage(false);
+          }
+        }
+
         setSaveMessage("Product saved.");
         navigate(`/admin/products/${created.id}/edit`, { replace: true });
       }
@@ -428,6 +661,11 @@ const AdminProductEditorPage = () => {
     }
   };
 
+  const aiDisabledByName = !name.trim();
+  const aiButtonDisabled = aiDisabledByName || aiLoading;
+  const hasImageForAI = Boolean(selectedProductImageForAI || pendingProductImageFiles.length > 0);
+  const aiButtonLabel = aiLoading ? "✦ Filling..." : hasImageForAI ? "✦ AI Fill with Image" : "✦ AI Fill";
+
   if (isLoading) {
     return <div className="px-6 py-10 lg:px-[60px] lg:py-12 font-body text-[12px] text-[#888888]">Loading product...</div>;
   }
@@ -442,13 +680,66 @@ const AdminProductEditorPage = () => {
 
   return (
     <div className="bg-[#F5F0E8] px-6 py-10 lg:px-[60px] lg:py-12">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <h1 className="font-display text-[34px] italic text-[#1A1A1A]">
           {isEditMode ? "Edit Product" : "Add Product"}
         </h1>
-        <Link to="/admin/products" className="font-body text-[10px] uppercase tracking-[0.1em] text-[#C4A882] hover:text-[#1A1A1A]">
-          Back to products
-        </Link>
+
+        <div className="flex flex-col items-start gap-2 sm:items-end">
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <Link
+              to="/admin/products"
+              className="font-body text-[10px] uppercase tracking-[0.1em] text-[#C4A882] hover:text-[#1A1A1A]"
+            >
+              Back to products
+            </Link>
+
+            <div className="group relative">
+              <button
+                type="button"
+                disabled={aiButtonDisabled}
+                onClick={() => void handleAIFill()}
+                className={`rounded-[2px] border border-[#C4A882] bg-transparent px-[24px] py-[10px] font-body text-[11px] uppercase tracking-[0.15em] text-[#C4A882] transition-all duration-200 ease-in-out ${
+                  aiLoading
+                    ? "cursor-not-allowed opacity-65"
+                    : aiDisabledByName
+                      ? "cursor-not-allowed opacity-40"
+                      : "hover:bg-[#C4A882] hover:text-[#1A1A1A]"
+                }`}
+              >
+                {aiButtonLabel}
+              </button>
+
+              {aiDisabledByName ? (
+                <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 w-max -translate-x-1/2 rounded-[2px] bg-[#1A1A1A] px-3 py-1.5 font-body text-[10px] text-[#F5F0E8] opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                  Enter a product name first
+                </span>
+              ) : null}
+            </div>
+          </div>
+
+          {aiSuccessMessage ? (
+            <p
+              className={`font-body text-[10px] text-[#C4A882] transition-opacity ease-in-out ${
+                aiMessageVisible ? "opacity-100" : "opacity-0"
+              }`}
+              style={{ transitionDuration: "400ms" }}
+            >
+              {aiSuccessMessage}
+            </p>
+          ) : null}
+
+          {aiError ? (
+            <p
+              className={`font-body text-[11px] text-[#C0392B] transition-opacity ease-in-out ${
+                aiMessageVisible ? "opacity-100" : "opacity-0"
+              }`}
+              style={{ transitionDuration: "400ms" }}
+            >
+              {aiError}
+            </p>
+          ) : null}
+        </div>
       </div>
 
       <div className="grid gap-10 lg:grid-cols-[58%_42%] lg:gap-[60px]">
@@ -481,7 +772,7 @@ const AdminProductEditorPage = () => {
             ) : null}
           </div>
 
-          <div className="mt-6">
+          <div id="field-shortDescription" className="mt-6 rounded-[2px]">
             <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Short Description *</label>
             <textarea
               value={shortDescription}
@@ -491,7 +782,7 @@ const AdminProductEditorPage = () => {
             <p className="mt-1 text-right font-body text-[10px] text-[#aaaaaa]">{shortDescription.length}/500</p>
           </div>
 
-          <div className="mt-6">
+          <div id="field-fullDescription" className="mt-6 rounded-[2px]">
             <label className="font-body text-[10px] uppercase tracking-[0.2em] text-[#C4A882]">Full Description</label>
             <textarea
               value={description}
@@ -541,7 +832,7 @@ const AdminProductEditorPage = () => {
               </div>
               <p className="mt-1 font-body text-[10px] text-[#aaaaaa]">Internal only. Never shown publicly.</p>
             </div>
-            <div>
+            <div id="field-sku" className="rounded-[2px]">
               <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">SKU</label>
               <div className="mt-2 flex items-center border-b border-[#d4ccc2] pb-2">
                 <input
@@ -580,7 +871,7 @@ const AdminProductEditorPage = () => {
             </div>
           </div>
 
-          <div className="mt-4">
+          <div id="field-weight" className="mt-4 rounded-[2px]">
             <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Weight (grams)</label>
             <input
               value={weightGrams}
@@ -608,7 +899,7 @@ const AdminProductEditorPage = () => {
             </select>
           </div>
 
-          <div className="mt-4">
+          <div id="field-tags" className="mt-4 rounded-[2px]">
             <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Tags</label>
             <input
               value={tagInput}
@@ -639,7 +930,7 @@ const AdminProductEditorPage = () => {
             ) : null}
           </div>
 
-          <div className="mt-4">
+          <div id="field-metaTitle" className="mt-4 rounded-[2px]">
             <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Meta Title</label>
             <input
               value={metaTitle}
@@ -649,7 +940,7 @@ const AdminProductEditorPage = () => {
             <p className="mt-1 font-body text-[10px] text-[#aaaaaa]">Defaults to product name if empty</p>
           </div>
 
-          <div className="mt-4">
+          <div id="field-metaDescription" className="mt-4 rounded-[2px]">
             <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Meta Description</label>
             <textarea
               value={metaDescription}
@@ -670,7 +961,7 @@ const AdminProductEditorPage = () => {
             Add Benefit
           </button>
 
-          <div className="mt-4">
+          <div id="field-benefits" className="mt-4 rounded-[2px]">
             {benefits.map((benefit, index) => (
               <div key={benefit.id} className="grid gap-2 border-b border-[#d4ccc2] py-3 sm:grid-cols-[120px_1fr_1.4fr_auto]">
                 <div className="flex items-center gap-2">
@@ -729,23 +1020,47 @@ const AdminProductEditorPage = () => {
             First image is primary. Max 6 images, 2MB each.
           </p>
 
-          <label className="block cursor-pointer border-2 border-dashed border-[#d4ccc2] p-8 text-center transition-colors hover:border-[#1A1A1A]">
+          <button
+            type="button"
+            onClick={() => productImagesInputRef.current?.click()}
+            disabled={isUploadingImage}
+            className="block w-full border-2 border-dashed border-[#d4ccc2] p-8 text-center transition-colors hover:border-[#1A1A1A] disabled:cursor-not-allowed disabled:opacity-50"
+          >
             <p className="font-body text-[12px] text-[#aaaaaa]">Drag images here</p>
             <p className="mt-1 font-body text-[11px] text-[#C4A882]">or click to upload</p>
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              multiple
-              disabled={!isEditMode || isUploadingImage}
-              onChange={(event) => {
-                void onUploadImages(event.target.files);
-                event.currentTarget.value = "";
-              }}
-              className="hidden"
-            />
-          </label>
+          </button>
+          <input
+            ref={productImagesInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            multiple
+            disabled={isUploadingImage}
+            onChange={(event) => {
+              void onUploadImages(event.currentTarget.files);
+              event.currentTarget.value = "";
+            }}
+            className="hidden"
+          />
           {!isEditMode ? (
-            <p className="mt-2 font-body text-[10px] text-[#aaaaaa]">Save the product first, then upload images.</p>
+            <p className="mt-2 font-body text-[10px] text-[#aaaaaa]">
+              Selected images are queued now and uploaded automatically after first save.
+            </p>
+          ) : null}
+          {!isEditMode && queuedImagePreviewUrl ? (
+            <div
+              className="relative mt-2 overflow-hidden rounded-[2px] border border-[#d4ccc2] bg-[#ede5db]"
+              style={{ width: "72px", aspectRatio: "3 / 4" }}
+            >
+              <img src={queuedImagePreviewUrl} alt="Queued product image preview" className="h-full w-full object-cover" />
+              <button
+                type="button"
+                onClick={onRemoveQueuedPreviewImage}
+                className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-[2px] bg-[rgba(26,26,26,0.78)] font-body text-[12px] leading-none text-[#F5F0E8] transition-colors hover:bg-[#C0392B]"
+                aria-label="Remove queued image"
+              >
+                &times;
+              </button>
+            </div>
           ) : null}
           {isUploadingImage ? <p className="mt-2 font-body text-[10px] text-[#C4A882]">Uploading images...</p> : null}
 
@@ -789,10 +1104,14 @@ const AdminProductEditorPage = () => {
             <button
               type="button"
               onClick={() => setIsAvailable((value) => !value)}
-              className={`relative h-6 w-11 rounded-full transition-colors ${isAvailable ? "bg-[#1A1A1A]" : "bg-[#d4ccc2]"}`}
+              className={`relative h-6 w-11 shrink-0 cursor-pointer overflow-hidden rounded-full border-0 p-0 transition-colors ${
+                isAvailable ? "bg-[#1A1A1A]" : "bg-[#d4ccc2]"
+              }`}
             >
               <span
-                className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-transform ${isAvailable ? "translate-x-6" : "translate-x-1"}`}
+                className={`pointer-events-none absolute top-[2px] h-5 w-5 rounded-full bg-white transition-[left] duration-200 ease-in ${
+                  isAvailable ? "left-[22px]" : "left-[2px]"
+                }`}
               />
             </button>
           </label>
@@ -805,10 +1124,14 @@ const AdminProductEditorPage = () => {
             <button
               type="button"
               onClick={() => setIsFeatured((value) => !value)}
-              className={`relative h-6 w-11 rounded-full transition-colors ${isFeatured ? "bg-[#1A1A1A]" : "bg-[#d4ccc2]"}`}
+              className={`relative h-6 w-11 shrink-0 cursor-pointer overflow-hidden rounded-full border-0 p-0 transition-colors ${
+                isFeatured ? "bg-[#1A1A1A]" : "bg-[#d4ccc2]"
+              }`}
             >
               <span
-                className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-transform ${isFeatured ? "translate-x-6" : "translate-x-1"}`}
+                className={`pointer-events-none absolute top-[2px] h-5 w-5 rounded-full bg-white transition-[left] duration-200 ease-in ${
+                  isFeatured ? "left-[22px]" : "left-[2px]"
+                }`}
               />
             </button>
           </label>

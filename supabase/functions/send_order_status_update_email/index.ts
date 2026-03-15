@@ -7,7 +7,8 @@ const corsHeaders = {
 
 const supportedStatuses = ["confirmed", "processing", "shipped", "delivered", "cancelled"] as const;
 type SupportedStatus = (typeof supportedStatuses)[number];
-const fromEmail = "Luxuriant <orders@yourdomain.com>";
+const SITE_URL = Deno.env.get("SITE_URL") ?? "https://luxuriantgh.store";
+const fromEmail = "Luxuriant <orders@luxuriantgh.store>";
 
 interface OrderItemRow {
   product_name: string;
@@ -191,11 +192,7 @@ const resolveDeliveryWindow = async (
 const loadSiteSettings = async (
   adminClient: ReturnType<typeof createClient>,
 ): Promise<SiteSettings> => {
-  const fallbackSiteUrl = normalizeSiteUrl(
-    safeString(Deno.env.get("SITE_URL")) ||
-      safeString(Deno.env.get("ORDER_TRACKING_BASE_URL")) ||
-      "http://localhost:5173",
-  );
+  const fallbackSiteUrl = normalizeSiteUrl(SITE_URL);
 
   const defaults: SiteSettings = {
     supportEmail: safeString(Deno.env.get("SUPPORT_EMAIL")) || "support@yourdomain.com",

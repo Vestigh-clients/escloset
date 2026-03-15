@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Instagram } from "lucide-react";
-import { getWhatsAppContactLink } from "@/data/products";
+import { getWhatsAppContactLink } from "@/lib/contact";
 
 const Footer = () => {
   return (
@@ -64,3 +64,4 @@ const Footer = () => {
 };
 
 export default Footer;
+

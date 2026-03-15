@@ -96,6 +96,8 @@ const toNonEmptyString = (value: unknown, fallback: string): string => {
   return trimmed.length > 0 ? trimmed : fallback;
 };
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const normalizeCartItem = (value: unknown): CartItem | null => {
   if (!isPlainRecord(value)) {
     return null;
@@ -137,6 +139,10 @@ const normalizeCartItem = (value: unknown): CartItem | null => {
     stock_quantity: stockQuantity,
     added_at: toNonEmptyString(value.added_at, new Date().toISOString()),
   };
+};
+
+const sanitizeCart = (items: CartItem[]): CartItem[] => {
+  return items.filter((item) => UUID_REGEX.test(item.product_id));
 };
 
 const getTotals = (items: CartItem[]) => {
@@ -188,11 +194,12 @@ const getInitialCartState = (): CartState => {
 
   try {
     const parsed = JSON.parse(raw) as Partial<CartState>;
-    const parsedItems = Array.isArray(parsed.items)
+    const normalizedItems = Array.isArray(parsed.items)
       ? parsed.items
           .map((entry) => normalizeCartItem(entry))
           .filter((entry): entry is CartItem => Boolean(entry))
       : [];
+    const parsedItems = sanitizeCart(normalizedItems);
 
     return createCartState(
       parsedItems,

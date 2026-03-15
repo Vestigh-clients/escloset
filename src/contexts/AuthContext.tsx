@@ -158,6 +158,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setSession(null);
     setUser(null);
     setRole(null);
+    if (typeof window !== "undefined") {
+      window.sessionStorage.removeItem("luxuriant_checkout_mode");
+    }
   }, []);
 
   const value = useMemo<AuthContextValue>(
@@ -205,4 +208,3 @@ export const useAuth = () => {
 
   return context;
 };
-

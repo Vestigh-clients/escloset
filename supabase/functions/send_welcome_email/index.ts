@@ -5,7 +5,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const fromEmail = "Luxuriant <hello@yourdomain.com>";
+const SITE_URL = Deno.env.get("SITE_URL") ?? "https://luxuriantgh.store";
+const fromEmail = "Luxuriant <hello@luxuriantgh.store>";
 
 interface CustomerRow {
   first_name: string | null;
@@ -166,9 +167,7 @@ Deno.serve(async (request: Request) => {
     const firstName = safeString(customer.first_name) || "there";
     const siteUrl =
       safeString(await getSettingValue(adminClient, "site_url")) ||
-      safeString(Deno.env.get("SITE_URL")) ||
-      safeString(Deno.env.get("ORDER_TRACKING_BASE_URL")) ||
-      "http://localhost:5173";
+      SITE_URL;
     const normalizedSiteUrl = siteUrl.replace(/\/+$/, "");
     const instagramUrl = safeString(await getSettingValue(adminClient, "instagram_url")) || "https://instagram.com/luxuriant";
     const tiktokUrl = safeString(await getSettingValue(adminClient, "tiktok_url")) || "https://tiktok.com/@luxuriant";
@@ -178,11 +177,11 @@ Deno.serve(async (request: Request) => {
     const fulfillmentDays = await resolveFulfillmentDays(adminClient);
 
     const categories = [
-      { label: "Hair Care", href: `${normalizedSiteUrl}/category/hair-care` },
-      { label: "Men", href: `${normalizedSiteUrl}/category/mens-fashion` },
-      { label: "Women", href: `${normalizedSiteUrl}/category/womens-fashion` },
-      { label: "Bags", href: `${normalizedSiteUrl}/category/bags` },
-      { label: "Shoes", href: `${normalizedSiteUrl}/category/shoes` },
+      { label: "Hair Care", href: `${normalizedSiteUrl}/hair-care` },
+      { label: "Men", href: `${normalizedSiteUrl}/men` },
+      { label: "Women", href: `${normalizedSiteUrl}/women` },
+      { label: "Bags", href: `${normalizedSiteUrl}/bags` },
+      { label: "Shoes", href: `${normalizedSiteUrl}/shoes` },
     ];
 
     const categoriesHtml = categories
@@ -243,7 +242,7 @@ Deno.serve(async (request: Request) => {
               <a href="${escapeHtml(unsubscribeUrl)}" style="color:#AAAAAA;text-decoration:underline;">Unsubscribe</a>
             </p>
             <p style="margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:10px;color:#AAAAAA;">
-              You're receiving this because you created an account at luxuriant.com
+              You're receiving this because you created an account at ${escapeHtml(normalizedSiteUrl)}
             </p>
           </div>
         </div>
@@ -262,11 +261,11 @@ Deno.serve(async (request: Request) => {
       `Start Shopping: ${shopUrl}`,
       "",
       "Browse by category:",
-      `Hair Care: ${normalizedSiteUrl}/category/hair-care`,
-      `Men: ${normalizedSiteUrl}/category/mens-fashion`,
-      `Women: ${normalizedSiteUrl}/category/womens-fashion`,
-      `Bags: ${normalizedSiteUrl}/category/bags`,
-      `Shoes: ${normalizedSiteUrl}/category/shoes`,
+      `Hair Care: ${normalizedSiteUrl}/hair-care`,
+      `Men: ${normalizedSiteUrl}/men`,
+      `Women: ${normalizedSiteUrl}/women`,
+      `Bags: ${normalizedSiteUrl}/bags`,
+      `Shoes: ${normalizedSiteUrl}/shoes`,
       "",
       "Thank you for joining us.",
       "- The Luxuriant Team",
@@ -275,7 +274,7 @@ Deno.serve(async (request: Request) => {
       `TikTok: ${tiktokUrl}`,
       `Facebook: ${facebookUrl}`,
       `Unsubscribe: ${unsubscribeUrl}`,
-      "You're receiving this because you created an account at luxuriant.com",
+      `You're receiving this because you created an account at ${normalizedSiteUrl}`,
     ].join("\n");
 
     const resendResponse = await fetch("https://api.resend.com/emails", {

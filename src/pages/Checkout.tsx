@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Banknote, Check, ChevronDown, Smartphone, X } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
@@ -12,7 +12,8 @@ import {
 } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useCart } from "@/contexts/CartContext";
-import { formatPrice } from "@/data/products";
+import { formatPrice } from "@/lib/price";
+import { GHANAIAN_PHONE_HELPER_TEXT, validateGhanaianPhone } from "@/lib/phoneValidation";
 import type { Json } from "@/integrations/supabase/types";
 import {
   fetchActiveShippingRates,
@@ -21,11 +22,11 @@ import {
   getOrderErrorMessage,
   type ShippingRateRow,
   OrderSubmissionError,
-  resolveCustomerIdForOrder,
   resolveShippingRateForState,
   submitOrderRpc,
   triggerNewOrderAdminNotification,
 } from "@/services/orderService";
+import { REDIRECT_AFTER_LOGIN_KEY } from "@/services/authService";
 import { validateCartStock } from "@/services/stockService";
 
 type CheckoutStep = "contact" | "delivery" | "payment" | "review";
@@ -94,6 +95,13 @@ interface SavedAddressCard {
   deliveryInstructions: string;
 }
 
+interface SavedContactDetails {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+}
+
 interface CheckoutSessionSnapshot {
   contact: ContactFormValues;
   delivery: DeliveryFormValues;
@@ -158,6 +166,7 @@ interface SearchableStateFieldProps {
 }
 
 const CHECKOUT_SESSION_STORAGE_KEY = "luxuriant_checkout_session_v1";
+const CHECKOUT_MODE_STORAGE_KEY = "luxuriant_checkout_mode";
 const SAVED_ADDRESS_STORAGE_KEY_PREFIX = "luxuriant_saved_addresses";
 
 const CHECKOUT_STEPS: CheckoutStep[] = ["contact", "delivery", "payment", "review"];
@@ -179,47 +188,26 @@ const STEP_LABEL: Record<CheckoutStep, string> = {
 const CONTACT_FIELDS: ContactField[] = ["firstName", "lastName", "email", "phone"];
 const DELIVERY_FIELDS: DeliveryField[] = ["addressLine1", "city", "state", "country", "deliveryInstructions"];
 
-const NIGERIA_STATES = [
-  "Abia",
-  "Adamawa",
-  "Akwa Ibom",
-  "Anambra",
-  "Bauchi",
-  "Bayelsa",
-  "Benue",
-  "Borno",
-  "Cross River",
-  "Delta",
-  "Ebonyi",
-  "Edo",
-  "Ekiti",
-  "Enugu",
-  "Gombe",
-  "Imo",
-  "Jigawa",
-  "Kaduna",
-  "Kano",
-  "Katsina",
-  "Kebbi",
-  "Kogi",
-  "Kwara",
-  "Lagos",
-  "Nasarawa",
-  "Niger",
-  "Ogun",
-  "Ondo",
-  "Osun",
-  "Oyo",
-  "Plateau",
-  "Rivers",
-  "Sokoto",
-  "Taraba",
-  "Yobe",
-  "Zamfara",
-  "FCT Abuja",
+const GHANA_REGIONS = [
+  "Ahafo",
+  "Ashanti",
+  "Bono",
+  "Bono East",
+  "Central",
+  "Eastern",
+  "Greater Accra",
+  "North East",
+  "Northern",
+  "Oti",
+  "Savannah",
+  "Upper East",
+  "Upper West",
+  "Volta",
+  "Western",
+  "Western North",
 ];
 
-const COUNTRY_OPTIONS = ["Nigeria", "Ghana", "Kenya", "South Africa", "United Kingdom", "United States"];
+const COUNTRY_OPTIONS = ["Ghana"];
 
 const DEFAULT_CONTACT_VALUES: ContactFormValues = {
   firstName: "",
@@ -234,7 +222,7 @@ const DEFAULT_DELIVERY_VALUES: DeliveryFormValues = {
   addressLine2: "",
   city: "",
   state: "",
-  country: "Nigeria",
+  country: "Ghana",
   deliveryInstructions: "",
   saveForFuture: false,
 };
@@ -290,6 +278,16 @@ const sanitizeMultilineText = (value: string): string =>
     .join("\n")
     .trim();
 
+const decodeField = (value: string): string => {
+  const normalized = value.replace(/\+/g, " ");
+
+  try {
+    return decodeURIComponent(normalized);
+  } catch {
+    return normalized;
+  }
+};
+
 const isLikelyTimeoutError = (error: unknown): boolean => {
   const candidate = error as { message?: string; details?: string; hint?: string } | null;
   const combined = [candidate?.message, candidate?.details, candidate?.hint].filter(Boolean).join(" ").toLowerCase();
@@ -303,11 +301,7 @@ const isLikelyTimeoutError = (error: unknown): boolean => {
 };
 
 const normalizeStateName = (value: string): string => {
-  const cleaned = value.toLowerCase().replace(/[().,-]/g, " ").replace(/\s+/g, " ").trim();
-  if (cleaned.includes("fct") || cleaned.includes("federal capital territory") || cleaned === "abuja") {
-    return "fct abuja";
-  }
-  return cleaned;
+  return value.toLowerCase().replace(/[().,-]/g, " ").replace(/\s+/g, " ").trim();
 };
 
 const addressIdentityKey = (address: Pick<SavedAddressCard, "addressLine1" | "city" | "state" | "country">): string =>
@@ -325,10 +319,6 @@ const uniqueCheckoutSteps = (steps: CheckoutStep[]): CheckoutStep[] => {
 
 const getStepFromPath = (pathname: string): CheckoutStep | null => {
   const normalized = pathname.replace(/\/+$/, "");
-  if (normalized === "/checkout" || normalized === "") {
-    return "contact";
-  }
-
   if (normalized === "/checkout/contact") {
     return "contact";
   }
@@ -349,7 +339,7 @@ const getStepFromPath = (pathname: string): CheckoutStep | null => {
     return null;
   }
 
-  return "contact";
+  return null;
 };
 
 const parseStateListFromJson = (value: Json | null): string[] => {
@@ -365,7 +355,7 @@ const parseStateListFromJson = (value: Json | null): string[] => {
 const getFallbackShippingQuote = (state: string): ShippingQuote => {
   const normalized = normalizeStateName(state);
 
-  if (normalized === "lagos") {
+  if (normalized === "greater accra") {
     return {
       state,
       fee: 1800,
@@ -374,19 +364,19 @@ const getFallbackShippingQuote = (state: string): ShippingQuote => {
     };
   }
 
-  if (normalized === "fct abuja") {
+  if (normalized === "ashanti") {
     return {
       state,
-      fee: 2600,
-      minDays: 2,
+      fee: 2400,
+      minDays: 1,
       maxDays: 3,
     };
   }
 
   return {
     state,
-    fee: 3500,
-    minDays: 3,
+    fee: 3200,
+    minDays: 2,
     maxDays: 5,
   };
 };
@@ -446,7 +436,7 @@ const parseSavedAddressList = (value: unknown): SavedAddressCard[] => {
       const addressLine1 = sanitizeText(readString(entry.addressLine1));
       const city = sanitizeText(readString(entry.city));
       const state = sanitizeText(readString(entry.state));
-      const country = sanitizeText(readString(entry.country, "Nigeria"));
+      const country = sanitizeText(readString(entry.country, "Ghana"));
 
       if (!addressLine1 || !city || !state || !country) {
         return null;
@@ -550,10 +540,8 @@ const getContactFieldError = (field: ContactField, value: string): string | unde
   }
 
   if (field === "phone") {
-    const normalized = trimmed.replace(/[\s()-]/g, "");
-    const phonePattern = /^(?:\+234|234|0)[789]\d{9}$/;
-    if (!phonePattern.test(normalized)) {
-      return "Enter a valid Nigerian phone number";
+    if (!validateGhanaianPhone(trimmed)) {
+      return "Enter a valid Ghanaian phone number";
     }
   }
 
@@ -573,8 +561,8 @@ const getDeliveryFieldError = (field: DeliveryField, value: string): string | un
   if (!trimmed) {
     const labelByField: Record<Exclude<DeliveryField, "deliveryInstructions">, string> = {
       addressLine1: "Address line 1",
-      city: "City",
-      state: "State",
+      city: "Town / City",
+      state: "Region",
       country: "Country",
     };
 
@@ -624,10 +612,8 @@ const getPaymentFieldError = (
     return "Mobile Money number is required";
   }
 
-  const normalized = trimmed.replace(/[\s()-]/g, "");
-  const ghanaMobilePattern = /^(?:\+233|233|0)(?:2[0-9]|5[0-9])[0-9]{7}$/;
-  if (!ghanaMobilePattern.test(normalized)) {
-    return "Enter a valid Ghanaian mobile number";
+  if (!validateGhanaianPhone(trimmed)) {
+    return "Enter a valid Ghanaian phone number";
   }
 
   return undefined;
@@ -885,11 +871,11 @@ const SearchableStateField = ({
           >
             <Command className="bg-[#F5F0E8]">
               <CommandInput
-                placeholder="Search state..."
+                placeholder="Search region..."
                 className="font-body text-[13px] placeholder:text-[#aaaaaa] focus:ring-0"
               />
               <CommandList>
-                <CommandEmpty className="font-body text-[12px] text-[#888888]">No state found.</CommandEmpty>
+                <CommandEmpty className="font-body text-[12px] text-[#888888]">No region found.</CommandEmpty>
                 <CommandGroup>
                   {options.map((stateName) => (
                     <CommandItem
@@ -964,8 +950,13 @@ const Checkout = () => {
   const [isMobileSummaryOpen, setIsMobileSummaryOpen] = useState(false);
 
   const [isSessionChecked, setIsSessionChecked] = useState(false);
+  const [checkoutMode, setCheckoutMode] = useState<"guest" | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [savedContactDetails, setSavedContactDetails] = useState<SavedContactDetails | null>(null);
+  const [isSavedDetailsPromptVisible, setIsSavedDetailsPromptVisible] = useState(false);
+  const [isSavedDetailsConfirmationVisible, setIsSavedDetailsConfirmationVisible] = useState(false);
+  const [isSavedDetailsConfirmationFading, setIsSavedDetailsConfirmationFading] = useState(false);
   const [savedAddresses, setSavedAddresses] = useState<SavedAddressCard[]>([]);
   const [selectedSavedAddressId, setSelectedSavedAddressId] = useState<string | null>(null);
   const [isManualAddressOpen, setIsManualAddressOpen] = useState(true);
@@ -995,15 +986,27 @@ const Checkout = () => {
       ? "Calculated in next step"
       : shippingQuote
         ? formatPrice(shippingQuote.fee)
-        : "Select state";
+        : "Select region";
 
   const orderItemCountLabel = `${totalItems} ${totalItems === 1 ? "item" : "items"}`;
   const selectedPaymentLabel =
     paymentValues.method === "mobile_money" ? "Mobile Money" : "Cash on Delivery";
+  const shouldShowSavedDetailsPrompt =
+    isSessionChecked && isLoggedIn && Boolean(savedContactDetails) && isSavedDetailsPromptVisible;
+  const isGuestCheckout = isSessionChecked && !isLoggedIn && checkoutMode === "guest";
 
   useEffect(() => {
     void validateCart();
   }, [validateCart]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const storedMode = window.sessionStorage.getItem(CHECKOUT_MODE_STORAGE_KEY);
+    setCheckoutMode(storedMode === "guest" ? "guest" : null);
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -1020,23 +1023,19 @@ const Checkout = () => {
 
     try {
       const parsed = JSON.parse(raw) as Partial<CheckoutSessionSnapshot>;
-      if (isPlainRecord(parsed.contact)) {
-        setContactValues({
-          firstName: readString(parsed.contact.firstName),
-          lastName: readString(parsed.contact.lastName),
-          email: readString(parsed.contact.email),
-          phone: readString(parsed.contact.phone),
-          marketingOptIn: readBoolean(parsed.contact.marketingOptIn),
-        });
-      }
 
       if (isPlainRecord(parsed.delivery)) {
+        const restoredState = sanitizeText(readString(parsed.delivery.state));
+        const matchedRegion = GHANA_REGIONS.find(
+          (region) => normalizeStateName(region) === normalizeStateName(restoredState),
+        );
+
         setDeliveryValues({
           addressLine1: readString(parsed.delivery.addressLine1),
           addressLine2: readString(parsed.delivery.addressLine2),
           city: readString(parsed.delivery.city),
-          state: readString(parsed.delivery.state),
-          country: readString(parsed.delivery.country, "Nigeria") || "Nigeria",
+          state: matchedRegion ?? "",
+          country: "Ghana",
           deliveryInstructions: readString(parsed.delivery.deliveryInstructions).slice(0, 200),
           saveForFuture: readBoolean(parsed.delivery.saveForFuture),
         });
@@ -1167,6 +1166,27 @@ const Checkout = () => {
 
         setIsLoggedIn(sessionData.isLoggedIn);
         setCurrentUserId(sessionData.userId);
+        if (sessionData.isLoggedIn && typeof window !== "undefined") {
+          window.sessionStorage.removeItem(CHECKOUT_MODE_STORAGE_KEY);
+          setCheckoutMode(null);
+        }
+
+        const normalizedContactDetails: SavedContactDetails | null = sessionData.contactProfile
+          ? {
+              firstName: sanitizeText(sessionData.contactProfile.first_name ?? ""),
+              lastName: sanitizeText(sessionData.contactProfile.last_name ?? ""),
+              email: sanitizeText(sessionData.contactProfile.email ?? ""),
+              phone: sanitizeText(sessionData.contactProfile.phone ?? ""),
+            }
+          : null;
+        const hasSavedContactDetails =
+          normalizedContactDetails !== null &&
+          CONTACT_FIELDS.some((field) => normalizedContactDetails[field].trim().length > 0);
+
+        setSavedContactDetails(hasSavedContactDetails ? normalizedContactDetails : null);
+        setIsSavedDetailsPromptVisible(Boolean(sessionData.isLoggedIn && hasSavedContactDetails));
+        setIsSavedDetailsConfirmationVisible(false);
+        setIsSavedDetailsConfirmationFading(false);
 
         const localAddresses = sessionData.userId ? loadSavedAddressesFromLocalStorage(sessionData.userId) : [];
         const dbAddresses: SavedAddressCard[] = sessionData.savedAddresses.map((row) => ({
@@ -1198,6 +1218,10 @@ const Checkout = () => {
 
         setIsLoggedIn(false);
         setCurrentUserId(null);
+        setSavedContactDetails(null);
+        setIsSavedDetailsPromptVisible(false);
+        setIsSavedDetailsConfirmationVisible(false);
+        setIsSavedDetailsConfirmationFading(false);
         setSavedAddresses([]);
       } finally {
         if (!cancelled) {
@@ -1218,17 +1242,10 @@ const Checkout = () => {
       return;
     }
 
-    const normalizedPath = location.pathname.replace(/\/+$/, "");
-
-    if (normalizedPath === "/checkout") {
-      navigate(STEP_PATH.contact, { replace: true });
-      return;
-    }
-
     if (pathStep === null) {
       navigate(STEP_PATH.contact, { replace: true });
     }
-  }, [isHydrated, location.pathname, navigate, pathStep]);
+  }, [isHydrated, navigate, pathStep]);
 
   useEffect(() => {
     if (!isHydrated) {
@@ -1299,6 +1316,26 @@ const Checkout = () => {
   useEffect(() => {
     setStepAdvanceError(null);
   }, [currentStep]);
+
+  useEffect(() => {
+    if (!isSavedDetailsConfirmationVisible || typeof window === "undefined") {
+      return;
+    }
+
+    const fadeTimer = window.setTimeout(() => {
+      setIsSavedDetailsConfirmationFading(true);
+    }, 3200);
+
+    const hideTimer = window.setTimeout(() => {
+      setIsSavedDetailsConfirmationVisible(false);
+      setIsSavedDetailsConfirmationFading(false);
+    }, 4000);
+
+    return () => {
+      window.clearTimeout(fadeTimer);
+      window.clearTimeout(hideTimer);
+    };
+  }, [isSavedDetailsConfirmationVisible]);
 
   const updateContactError = useCallback((field: ContactField, error?: string) => {
     setContactErrors((previous) => {
@@ -1387,6 +1424,41 @@ const Checkout = () => {
     },
     [contactValues, updateContactError],
   );
+
+  const handleUseSavedDetails = useCallback(() => {
+    if (!savedContactDetails) {
+      return;
+    }
+
+    setContactValues((previous) => ({
+      ...previous,
+      firstName: savedContactDetails.firstName,
+      lastName: savedContactDetails.lastName,
+      email: savedContactDetails.email,
+      phone: savedContactDetails.phone,
+    }));
+    setContactTouched({});
+    setContactErrors({});
+    setIsSavedDetailsPromptVisible(false);
+    setIsSavedDetailsConfirmationFading(false);
+    setIsSavedDetailsConfirmationVisible(true);
+  }, [savedContactDetails]);
+
+  const handleDismissSavedDetails = useCallback(() => {
+    setIsSavedDetailsPromptVisible(false);
+    setIsSavedDetailsConfirmationVisible(false);
+    setIsSavedDetailsConfirmationFading(false);
+  }, []);
+
+  const handleSignInInstead = useCallback(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.sessionStorage.removeItem(CHECKOUT_MODE_STORAGE_KEY);
+    window.sessionStorage.setItem(REDIRECT_AFTER_LOGIN_KEY, STEP_PATH.contact);
+    setCheckoutMode(null);
+  }, []);
 
   const handleDeliveryBlur = useCallback(
     (field: DeliveryField) => {
@@ -1583,13 +1655,18 @@ const Checkout = () => {
     setSelectedSavedAddressId(address.id);
     setIsManualAddressOpen(false);
 
+    const normalizedState = sanitizeText(address.state);
+    const matchedRegion = GHANA_REGIONS.find(
+      (region) => normalizeStateName(region) === normalizeStateName(normalizedState),
+    );
+
     setDeliveryValues((previous) => ({
       ...previous,
       addressLine1: address.addressLine1,
       addressLine2: address.addressLine2,
       city: address.city,
-      state: address.state,
-      country: address.country || "Nigeria",
+      state: matchedRegion ?? "",
+      country: "Ghana",
       deliveryInstructions: address.deliveryInstructions,
     }));
 
@@ -1652,14 +1729,22 @@ const Checkout = () => {
         marketingOptIn: contactValues.marketingOptIn,
       };
 
-      const sanitizedDelivery = {
-        addressLine1: sanitizeText(deliveryValues.addressLine1),
-        addressLine2: sanitizeText(deliveryValues.addressLine2),
-        city: sanitizeText(deliveryValues.city),
-        state: sanitizeText(deliveryValues.state),
-        country: sanitizeText(deliveryValues.country),
-        deliveryInstructions: sanitizeMultilineText(deliveryValues.deliveryInstructions),
+      const cleanAddress = {
+        addressLine1: sanitizeText(decodeField(deliveryValues.addressLine1 ?? "")),
+        addressLine2: sanitizeText(decodeField(deliveryValues.addressLine2 ?? "")),
+        city: sanitizeText(decodeField(deliveryValues.city ?? "")),
+        state: sanitizeText(decodeField(deliveryValues.state ?? "")),
+        country: sanitizeText(decodeField(deliveryValues.country ?? "Ghana")) || "Ghana",
+        deliveryInstructions: sanitizeMultilineText(decodeField(deliveryValues.deliveryInstructions ?? "")),
       };
+
+      if (!cleanAddress.state) {
+        setSubmissionError("Please select a region before confirming your order.");
+        setStepAdvanceError(ERROR_SUMMARY_TEXT);
+        setSubmissionPhase("idle");
+        navigate(STEP_PATH.delivery);
+        return;
+      }
 
       const sanitizedReview = {
         orderNotes: sanitizeMultilineText(reviewValues.orderNotes),
@@ -1685,14 +1770,9 @@ const Checkout = () => {
         return;
       }
 
-      const customerId = await resolveCustomerIdForOrder({
-        firstName: sanitizedContact.firstName,
-        lastName: sanitizedContact.lastName,
-        email: sanitizedContact.email,
-        phone: sanitizedContact.phone,
-      });
+      const customerId = currentUserId ?? null;
 
-      const shippingRate = await resolveShippingRateForState(sanitizedDelivery.state);
+      const shippingRate = await resolveShippingRateForState(cleanAddress.state);
       const validatedShippingFee = Number(shippingRate.base_rate ?? 0);
       const validatedTotal = Math.max(0, subtotal + validatedShippingFee - discountAmount);
 
@@ -1704,13 +1784,13 @@ const Checkout = () => {
         lastName: sanitizedContact.lastName,
         email: sanitizedContact.email,
         phone: sanitizedContact.phone,
-        addressLine1: sanitizedDelivery.addressLine1,
-        addressLine2: sanitizedDelivery.addressLine2,
-        city: sanitizedDelivery.city,
-        state: sanitizedDelivery.state,
-        country: sanitizedDelivery.country,
-        deliveryInstructions: sanitizedDelivery.deliveryInstructions,
-        saveAddress: deliveryValues.saveForFuture,
+        addressLine1: cleanAddress.addressLine1,
+        addressLine2: cleanAddress.addressLine2,
+        city: cleanAddress.city,
+        state: cleanAddress.state,
+        country: cleanAddress.country,
+        deliveryInstructions: cleanAddress.deliveryInstructions,
+        saveAddress: isLoggedIn && deliveryValues.saveForFuture,
         items: stockValidation.updatedItems,
         subtotal,
         shippingFee: validatedShippingFee,
@@ -1720,7 +1800,7 @@ const Checkout = () => {
         paymentMethod: paymentValues.method,
         mobileMoneyNumber: sanitizedMobileMoneyNumber,
         marketingOptIn: sanitizedContact.marketingOptIn,
-        ipAddress: null,
+        ipAddress: "",
       });
 
       void triggerNewOrderAdminNotification(orderResponse.order_number).catch((notificationError) => {
@@ -1734,12 +1814,12 @@ const Checkout = () => {
           id: `local-${Date.now()}`,
           label: "Saved Address",
           recipientName: `${sanitizedContact.firstName} ${sanitizedContact.lastName}`.trim(),
-          addressLine1: sanitizedDelivery.addressLine1,
-          addressLine2: sanitizedDelivery.addressLine2,
-          city: sanitizedDelivery.city,
-          state: sanitizedDelivery.state,
-          country: sanitizedDelivery.country,
-          deliveryInstructions: sanitizedDelivery.deliveryInstructions,
+          addressLine1: cleanAddress.addressLine1,
+          addressLine2: cleanAddress.addressLine2,
+          city: cleanAddress.city,
+          state: cleanAddress.state,
+          country: cleanAddress.country,
+          deliveryInstructions: cleanAddress.deliveryInstructions,
         };
 
         saveAddressForFutureOrders(savedAddress);
@@ -1749,6 +1829,7 @@ const Checkout = () => {
 
       if (typeof window !== "undefined") {
         window.sessionStorage.removeItem(CHECKOUT_SESSION_STORAGE_KEY);
+        window.sessionStorage.removeItem(CHECKOUT_MODE_STORAGE_KEY);
         window.sessionStorage.setItem("luxuriant_last_order", orderResponse.order_number);
       }
 
@@ -1759,6 +1840,20 @@ const Checkout = () => {
       }
 
       if (error instanceof OrderSubmissionError) {
+        if (import.meta.env.DEV) {
+          const rpcError = error.originalError as
+            | { code?: string; message?: string; details?: string; hint?: string }
+            | null;
+
+          console.error("Checkout submission RPC details", {
+            type: error.type,
+            code: rpcError?.code ?? null,
+            message: rpcError?.message ?? null,
+            details: rpcError?.details ?? null,
+            hint: rpcError?.hint ?? null,
+          });
+        }
+
         setSubmissionError(getOrderErrorMessage(error.type));
         if (error.type === "stock_conflict") {
           try {
@@ -1780,6 +1875,7 @@ const Checkout = () => {
   }, [
     clearCart,
     contactValues,
+    currentUserId,
     deliveryValues,
     discountAmount,
     isLoggedIn,
@@ -1806,10 +1902,13 @@ const Checkout = () => {
           <div key={item.product_id}>
             <div className="flex items-start gap-3">
               <img
-                src={item.image_url}
+                src={item.image_url || "/placeholder.svg"}
                 alt={item.image_alt}
                 className="h-[64px] w-[48px] flex-shrink-0 object-cover"
                 loading="lazy"
+                onError={(event) => {
+                  event.currentTarget.src = "/placeholder.svg";
+                }}
               />
 
               <div className="min-w-0 flex-1">
@@ -1980,8 +2079,74 @@ const Checkout = () => {
             {currentStep === "contact" ? (
               <div>
                 <h1 className="font-display text-[32px] italic text-[#1A1A1A]">Contact Information</h1>
+                {isGuestCheckout ? (
+                  <p className="mt-2 font-body text-[11px] text-[#aaaaaa]">
+                    Checking out as guest &#183;{" "}
+                    <Link
+                      to="/auth/login?redirect=/checkout/contact"
+                      onClick={handleSignInInstead}
+                      className="text-[#C4A882] transition-colors hover:text-[#1A1A1A]"
+                    >
+                      Sign in instead
+                    </Link>
+                  </p>
+                ) : null}
 
-                <div className="mt-5 grid gap-x-6 md:grid-cols-2">
+                {shouldShowSavedDetailsPrompt ? (
+                  <div className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-[2px] border border-[#d4ccc2] bg-[rgba(196,168,130,0.08)] px-5 py-4">
+                    <div className="flex items-center">
+                      <svg
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                        className="h-4 w-4 shrink-0 text-[#C4A882]"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.75"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <circle cx="12" cy="12" r="9" />
+                        <circle cx="12" cy="9.25" r="2.25" />
+                        <path d="M8.9 16.4c.9-1.5 2.03-2.25 3.1-2.25s2.2.75 3.1 2.25" />
+                      </svg>
+                      <p className="ml-2 font-body text-[12px] text-[#1A1A1A]">Use your saved details?</p>
+                    </div>
+
+                    <div className="ml-auto flex items-center">
+                      <button
+                        type="button"
+                        onClick={handleUseSavedDetails}
+                        className="rounded-[2px] bg-[#1A1A1A] px-5 py-2 font-body text-[10px] uppercase tracking-[0.15em] text-[#F5F0E8] transition-all duration-200 ease-in-out hover:bg-[#C4A882] hover:text-[#1A1A1A]"
+                      >
+                        Use Saved Details
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleDismissSavedDetails}
+                        className="ml-4 font-body text-[10px] uppercase tracking-[0.15em] text-[#aaaaaa] transition-colors duration-200 hover:text-[#1A1A1A]"
+                      >
+                        No thanks
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+
+                {isSavedDetailsConfirmationVisible ? (
+                  <p
+                    className={`mb-8 font-body text-[10px] text-[#C4A882] transition-opacity duration-700 ${
+                      isSavedDetailsConfirmationFading ? "opacity-0" : "opacity-100"
+                    }`}
+                  >
+                    Details filled from your profile - edit anything before continuing
+                  </p>
+                ) : null}
+
+                <div
+                  className={`grid gap-x-6 md:grid-cols-2 ${
+                    shouldShowSavedDetailsPrompt || isSavedDetailsConfirmationVisible ? "mt-0" : "mt-5"
+                  }`}
+                >
                   <FloatingInput
                     id="checkout-first-name"
                     label="First Name"
@@ -2045,7 +2210,7 @@ const Checkout = () => {
                   value={contactValues.phone}
                   touched={contactTouched.phone}
                   error={contactErrors.phone}
-                  helperText="For delivery updates only"
+                  helperText={GHANAIAN_PHONE_HELPER_TEXT}
                   onChange={(value) =>
                     setContactValues((previous) => ({
                       ...previous,
@@ -2180,7 +2345,7 @@ const Checkout = () => {
                     <div className="grid gap-x-6 md:grid-cols-2">
                       <FloatingInput
                         id="checkout-city"
-                        label="City"
+                        label="Town / City"
                         required
                         autoComplete="address-level2"
                         value={deliveryValues.city}
@@ -2196,10 +2361,10 @@ const Checkout = () => {
                       />
 
                       <SearchableStateField
-                        label="State"
+                        label="Region"
                         required
                         value={deliveryValues.state}
-                        options={NIGERIA_STATES}
+                        options={GHANA_REGIONS}
                         touched={deliveryTouched.state}
                         error={deliveryErrors.state}
                         onChange={(value) =>
@@ -2413,10 +2578,13 @@ const Checkout = () => {
                   {items.map((item) => (
                     <div key={item.product_id} className="flex items-start gap-4">
                       <img
-                        src={item.image_url}
+                        src={item.image_url || "/placeholder.svg"}
                         alt={item.image_alt}
                         className="h-[96px] w-[72px] flex-shrink-0 object-cover"
                         loading="lazy"
+                        onError={(event) => {
+                          event.currentTarget.src = "/placeholder.svg";
+                        }}
                       />
 
                       <div className="min-w-0 flex-1">
@@ -2437,7 +2605,7 @@ const Checkout = () => {
 
                   <div className="flex items-center justify-between font-body text-[12px] text-[#888888]">
                     <span>Shipping</span>
-                    <span>{shippingQuote ? formatPrice(shippingQuote.fee) : "Select state"}</span>
+                    <span>{shippingQuote ? formatPrice(shippingQuote.fee) : "Select region"}</span>
                   </div>
 
                   {appliedDiscount ? (

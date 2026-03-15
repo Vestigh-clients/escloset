@@ -7,6 +7,7 @@ import {
   updateMarketingPreference,
 } from "@/services/accountService";
 import { AccountInputField, AccountSelectField } from "@/components/account/AccountFields";
+import { GHANAIAN_PHONE_HELPER_TEXT, getGhanaianPhoneError } from "@/lib/phoneValidation";
 import { useAccountLayoutContext } from "./AccountLayout";
 
 type ProfileField = "firstName" | "lastName" | "phone" | "dateOfBirth" | "gender";
@@ -39,6 +40,11 @@ const validateForm = (values: ProfileFormValues): Partial<Record<ProfileField, s
 
   if (!sanitizeInput(values.lastName)) {
     errors.lastName = "Last name is required";
+  }
+
+  const phoneError = getGhanaianPhoneError(values.phone);
+  if (phoneError) {
+    errors.phone = phoneError;
   }
 
   return errors;
@@ -296,6 +302,9 @@ const AccountProfile = () => {
           <AccountInputField
             id="profile-phone"
             label="Phone"
+            type="tel"
+            autoComplete="tel"
+            helperText={GHANAIAN_PHONE_HELPER_TEXT}
             value={formValues.phone}
             touched={touched.phone}
             error={errors.phone}
@@ -341,13 +350,13 @@ const AccountProfile = () => {
                 marketingOptIn: !previous.marketingOptIn,
               }))
             }
-            className={`relative h-[22px] w-[42px] rounded-full transition-colors ${
+            className={`relative h-6 w-11 shrink-0 cursor-pointer overflow-hidden rounded-full border-0 p-0 transition-colors ${
               formValues.marketingOptIn ? "bg-[#1A1A1A]" : "bg-[#d4ccc2]"
             }`}
           >
             <span
-              className={`absolute top-[2px] h-[18px] w-[18px] rounded-full bg-white transition-transform ${
-                formValues.marketingOptIn ? "translate-x-[22px]" : "translate-x-[2px]"
+              className={`pointer-events-none absolute top-[2px] h-5 w-5 rounded-full bg-white transition-[left] duration-200 ease-in ${
+                formValues.marketingOptIn ? "left-[22px]" : "left-[2px]"
               }`}
             />
           </button>

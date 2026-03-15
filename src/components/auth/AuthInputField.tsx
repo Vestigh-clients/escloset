@@ -6,7 +6,7 @@ interface AuthInputFieldProps {
   value: string;
   onChange: (value: string) => void;
   onBlur: () => void;
-  type?: "text" | "email" | "password";
+  type?: "text" | "email" | "tel" | "password";
   required?: boolean;
   autoComplete?: string;
   error?: string;
@@ -76,4 +76,3 @@ const AuthInputField = ({
 };
 
 export default AuthInputField;
-

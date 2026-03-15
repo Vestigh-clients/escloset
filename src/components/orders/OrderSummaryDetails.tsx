@@ -1,4 +1,4 @@
-import { formatPrice } from "@/data/products";
+import { formatPrice } from "@/lib/price";
 import { getAddressLines, getItemCategoryLabel, getPaymentMethodLabel, type DeliveryWindow } from "@/lib/orderPresentation";
 import type { OrderDetails } from "@/services/orderService";
 
@@ -106,3 +106,4 @@ const OrderSummaryDetails = ({ order, deliveryWindow }: OrderSummaryDetailsProps
 };
 
 export default OrderSummaryDetails;
+

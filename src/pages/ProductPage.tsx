@@ -1,22 +1,14 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import {
-  categoryLabels,
-  formatPrice,
-  getProductById,
-  products,
-} from "@/data/products";
-import { productImages } from "@/data/images";
 import ShopProductCard from "@/components/ShopProductCard";
+import ProductFetchErrorState from "@/components/products/ProductFetchErrorState";
+import ProductImagePlaceholder from "@/components/products/ProductImagePlaceholder";
 import { useCart } from "@/contexts/CartContext";
-import {
-  BadgeCheck,
-  Droplets,
-  Package,
-  RefreshCw,
-  ShieldCheck,
-  Sparkles,
-} from "lucide-react";
+import { getCategoryLabel } from "@/lib/categories";
+import { formatPrice } from "@/lib/price";
+import { getProductBySlug, getRelatedProducts } from "@/services/productService";
+import { getPrimaryImage, isInStock, type Product } from "@/types/product";
+import { BadgeCheck, Droplets, Package, RefreshCw, ShieldCheck, Sparkles } from "lucide-react";
 
 const benefitIcons = [Droplets, Sparkles, ShieldCheck, BadgeCheck];
 
@@ -26,47 +18,142 @@ const trustItems = [
   { icon: RefreshCw, label: "Easy Returns" },
 ];
 
-const ProductPage = () => {
-  const { id } = useParams<{ id: string }>();
-  const { addToCart } = useCart();
-  const product = getProductById(id || "");
-  const activeCategory = product?.category ?? "hair-care";
-  const activeProductId = product?.id ?? "";
+const RelatedProductSkeleton = () => (
+  <div className="flex h-full flex-col">
+    <div className="lux-product-shimmer aspect-[4/5] w-full" />
+    <div className="mt-3 space-y-2">
+      <div className="lux-product-shimmer h-4 w-2/3" />
+      <div className="lux-product-shimmer h-3 w-1/3" />
+    </div>
+  </div>
+);
 
-  const categoryProducts = useMemo(
-    () => products.filter((item) => item.category === activeCategory),
-    [activeCategory],
+const ProductPageSkeleton = () => {
+  return (
+    <div className="container mx-auto px-4 py-12">
+      <div className="mb-10 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="lux-product-shimmer h-4 w-28" />
+        <div className="lux-product-shimmer h-4 w-64" />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 xl:gap-16">
+        <div className="space-y-4">
+          <div className="lux-product-shimmer h-[75vh] min-h-[520px] w-full" />
+          <div className="grid gap-3 grid-cols-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={`product-thumbnail-skeleton-${index}`} className="lux-product-shimmer h-20" />
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-col">
+          <div className="lux-product-shimmer mb-3 h-3 w-24" />
+          <div className="lux-product-shimmer mb-5 h-12 w-3/4" />
+          <div className="lux-product-shimmer h-8 w-40" />
+          <div className="mt-7 lux-product-shimmer h-11 w-44" />
+          <div className="my-6 border-b border-[#d4ccc2]" />
+          <div className="space-y-3">
+            <div className="lux-product-shimmer h-4 w-full" />
+            <div className="lux-product-shimmer h-4 w-[90%]" />
+            <div className="lux-product-shimmer h-4 w-[82%]" />
+          </div>
+          <div className="my-8 grid grid-cols-2 gap-[1px]">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={`benefit-skeleton-${index}`} className="lux-product-shimmer h-[108px]" />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <section className="mt-20">
+        <div className="lux-product-shimmer h-3 w-32" />
+        <div className="mt-3 lux-product-shimmer h-10 w-56" />
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <RelatedProductSkeleton key={`related-skeleton-${index}`} />
+          ))}
+        </div>
+      </section>
+    </div>
   );
+};
+
+const ProductPage = () => {
+  const { slug } = useParams<{ slug: string }>();
+  const { addToCart } = useCart();
+
+  const [product, setProduct] = useState<Product | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [activeImage, setActiveImage] = useState<string>("");
+  const [hasActiveImageError, setHasActiveImageError] = useState(false);
+  const [thumbnailErrors, setThumbnailErrors] = useState<Record<string, boolean>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        if (!slug) {
+          setProduct(null);
+          setRelatedProducts([]);
+          setError("Product not found.");
+          return;
+        }
+
+        const data = await getProductBySlug(slug);
+        setProduct(data);
+
+        if (data?.categories?.id) {
+          const related = await getRelatedProducts(data.categories.id, data.id);
+          setRelatedProducts(related ?? []);
+        } else {
+          setRelatedProducts([]);
+        }
+      } catch (err) {
+        console.error(err);
+        setProduct(null);
+        setRelatedProducts([]);
+        setError("Product not found.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void fetchProduct();
+  }, [slug]);
 
   const galleryImages = useMemo(() => {
     if (!product) {
       return [];
     }
 
-    const primary = productImages[activeProductId];
-    const categoryImages = categoryProducts
-      .map((item) => productImages[item.id])
-      .filter((image): image is string => Boolean(image));
-
-    const uniqueImages = [primary, ...categoryImages.filter((image) => image !== primary)].filter(
-      (image, index, array) => array.indexOf(image) === index,
-    );
-
-    return uniqueImages.slice(0, 4);
-  }, [activeProductId, categoryProducts, product]);
-
-  const [activeImage, setActiveImage] = useState<string>(galleryImages[0] ?? "");
+    return product.images
+      .map((image) => image.url)
+      .filter((url): url is string => Boolean(url && url.trim()))
+      .slice(0, 4);
+  }, [product]);
 
   useEffect(() => {
     setActiveImage(galleryImages[0] ?? "");
-  }, [galleryImages]);
+    setHasActiveImageError(false);
+    setThumbnailErrors({});
+  }, [galleryImages, product?.id]);
+
+  const primaryImage = useMemo(() => (product ? getPrimaryImage(product) : ""), [product]);
 
   const benefitTiles = useMemo(() => {
     if (!product) {
       return [];
     }
 
-    const tiles = [...product.benefits.slice(0, 4)];
+    const labels = (product.benefits ?? [])
+      .map((benefit) => benefit.label || benefit.description)
+      .filter((benefit): benefit is string => Boolean(benefit && benefit.trim()));
+
+    const tiles = [...labels.slice(0, 4)];
 
     while (tiles.length < 4) {
       tiles.push("Premium Quality");
@@ -75,47 +162,40 @@ const ProductPage = () => {
     return tiles;
   }, [product]);
 
-  const relatedProducts = useMemo(() => {
-    if (!product) {
-      return [];
-    }
-
-    const sameCategory = categoryProducts.filter((item) => item.id !== product.id);
-
-    if (sameCategory.length >= 3) {
-      return sameCategory.slice(0, 3);
-    }
-
-    return [...sameCategory, ...categoryProducts.filter((item) => item.id === product.id)].slice(0, 3);
-  }, [categoryProducts, product]);
-
-  if (!product) {
-    return (
-      <div className="container mx-auto px-4 py-20 text-center">
-        <h1 className="font-display text-3xl font-bold mb-4">Product Not Found</h1>
-        <Link to="/shop" className="font-body text-accent hover:underline">
-          {"\u2190 Back to Shop"}
-        </Link>
-      </div>
-    );
-  }
-
-  const isOutOfStock = !product.is_available || product.stock_quantity < 1;
+  const categorySlug = product?.categories?.slug ?? "";
+  const categoryLabel = product?.categories?.name || getCategoryLabel(categorySlug);
+  const isOutOfStock = !product || !isInStock(product);
 
   const handleAddToCart = () => {
+    if (!product || isOutOfStock) {
+      return;
+    }
+
     addToCart({
       product_id: product.id,
       name: product.name,
       slug: product.slug,
-      category: categoryLabels[product.category],
+      category: categoryLabel,
       price: product.price,
-      compare_at_price: product.compare_at_price,
-      image_url: productImages[product.id] ?? "",
+      compare_at_price: product.compare_at_price ?? null,
+      image_url: primaryImage,
       image_alt: product.name,
-      sku: product.sku,
+      sku: product.sku ?? null,
       stock_quantity: product.stock_quantity,
     });
   };
+
+  if (loading) {
+    return <ProductPageSkeleton />;
+  }
+
+  if (error || !product) {
+    return (
+      <div className="container mx-auto px-4 py-20">
+        <ProductFetchErrorState />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -136,8 +216,8 @@ const ProductPage = () => {
             Shop
           </Link>
           <span className="text-[#d4ccc2]">/</span>
-          <Link to={`/category/${product.category}`} className="transition-colors hover:text-foreground">
-            {categoryLabels[product.category]}
+          <Link to={`/category/${categorySlug}`} className="transition-colors hover:text-foreground">
+            {categoryLabel}
           </Link>
           <span className="text-[#d4ccc2]">/</span>
           <span>{product.name}</span>
@@ -145,42 +225,71 @@ const ProductPage = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 xl:gap-16">
-        {/* Image Section */}
         <div className="space-y-4">
           <div className="overflow-hidden">
-            <img src={activeImage} alt={product.name} className="h-[75vh] min-h-[520px] w-full object-cover" />
+            {activeImage && !hasActiveImageError ? (
+              <img
+                src={activeImage}
+                alt={product.name}
+                className="h-[75vh] min-h-[520px] w-full object-cover"
+                onError={() => setHasActiveImageError(true)}
+              />
+            ) : (
+              <ProductImagePlaceholder className="h-[75vh] min-h-[520px] w-full" />
+            )}
           </div>
 
-          <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${Math.max(3, galleryImages.length)}, minmax(0, 1fr))` }}>
-            {galleryImages.map((image, index) => (
-              <button
-                key={`${image}-${index}`}
-                type="button"
-                onClick={() => setActiveImage(image)}
-                className={`h-20 overflow-hidden border transition-colors ${
-                  activeImage === image ? "border-foreground" : "border-transparent"
-                }`}
-                aria-label={`View image ${index + 1}`}
-              >
-                <img src={image} alt={`${product.name} thumbnail ${index + 1}`} className="h-full w-full object-cover" />
-              </button>
-            ))}
-          </div>
+          {galleryImages.length > 0 ? (
+            <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${Math.max(3, galleryImages.length)}, minmax(0, 1fr))` }}>
+              {galleryImages.map((image, index) => {
+                const hasThumbError = thumbnailErrors[image] === true;
+                return (
+                  <button
+                    key={`${image}-${index}`}
+                    type="button"
+                    onClick={() => {
+                      setActiveImage(image);
+                      setHasActiveImageError(false);
+                    }}
+                    className={`h-20 overflow-hidden border transition-colors ${
+                      activeImage === image ? "border-foreground" : "border-transparent"
+                    }`}
+                    aria-label={`View image ${index + 1}`}
+                  >
+                    {!hasThumbError ? (
+                      <img
+                        src={image}
+                        alt={`${product.name} thumbnail ${index + 1}`}
+                        className="h-full w-full object-cover"
+                        onError={() =>
+                          setThumbnailErrors((previous) => ({
+                            ...previous,
+                            [image]: true,
+                          }))
+                        }
+                      />
+                    ) : (
+                      <ProductImagePlaceholder className="h-full w-full" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="grid gap-3 grid-cols-3">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <ProductImagePlaceholder key={`empty-thumb-${index}`} className="h-20 w-full" />
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Product Info */}
         <div className="flex flex-col">
-          <span className="mb-3 font-body text-[10px] uppercase tracking-[0.2em] text-accent">
-            {categoryLabels[product.category]}
-          </span>
-          <h1 className="mb-5 font-display text-[42px] font-normal leading-[1.1] text-foreground">
-            {product.name}
-          </h1>
+          <span className="mb-3 font-body text-[10px] uppercase tracking-[0.2em] text-accent">{categoryLabel}</span>
+          <h1 className="mb-5 font-display text-[42px] font-normal leading-[1.1] text-foreground">{product.name}</h1>
           <div className="flex items-end gap-3">
-            {product.compare_at_price !== null && product.compare_at_price > product.price ? (
-              <p className="font-body text-[16px] font-light text-[#aaaaaa] line-through">
-                {formatPrice(product.compare_at_price)}
-              </p>
+            {product.compare_at_price && product.compare_at_price > product.price ? (
+              <p className="font-body text-[16px] font-light text-[#aaaaaa] line-through">{formatPrice(product.compare_at_price)}</p>
             ) : null}
             <p className="font-display text-[28px] font-normal text-foreground">{formatPrice(product.price)}</p>
           </div>
@@ -195,15 +304,13 @@ const ProductPage = () => {
               {isOutOfStock ? "Out of Stock" : "Add to Cart"}
             </button>
             {!isOutOfStock ? (
-              <p className="font-body text-[11px] uppercase tracking-[0.1em] text-[#888888]">
-                {product.stock_quantity} in stock
-              </p>
+              <p className="font-body text-[11px] uppercase tracking-[0.1em] text-[#888888]">{product.stock_quantity} in stock</p>
             ) : null}
           </div>
 
           <div className="my-6 border-b border-[#d4ccc2]" />
 
-          <p className="font-body text-[14px] font-light leading-[1.8] text-[#666666]">{product.description}</p>
+          <p className="font-body text-[14px] font-light leading-[1.8] text-[#666666]">{product.description || product.short_description || ""}</p>
 
           <div className="my-8 border-y border-[#d4ccc2] py-6">
             <div className="grid grid-cols-2">
@@ -218,9 +325,7 @@ const ProductPage = () => {
                     } ${index < 2 ? "border-b border-[#d4ccc2]" : ""}`}
                   >
                     <Icon size={20} className="mb-3 text-foreground" />
-                    <span className="font-body text-[11px] font-light uppercase tracking-[0.1em] text-foreground">
-                      {benefit}
-                    </span>
+                    <span className="font-body text-[11px] font-light uppercase tracking-[0.1em] text-foreground">{benefit}</span>
                   </div>
                 );
               })}
@@ -236,9 +341,7 @@ const ProductPage = () => {
               return (
                 <div key={item.label}>
                   <Icon size={18} className="mx-auto text-accent" />
-                  <p className="mt-2 font-body text-[10px] font-light uppercase tracking-[0.1em] text-[#888888]">
-                    {item.label}
-                  </p>
+                  <p className="mt-2 font-body text-[10px] font-light uppercase tracking-[0.1em] text-[#888888]">{item.label}</p>
                 </div>
               );
             })}

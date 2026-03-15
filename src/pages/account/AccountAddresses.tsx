@@ -11,6 +11,7 @@ import {
   type AccountAddressInput,
 } from "@/services/accountService";
 import { AccountInputField, AccountTextareaField } from "@/components/account/AccountFields";
+import { GHANAIAN_PHONE_HELPER_TEXT, getGhanaianPhoneError } from "@/lib/phoneValidation";
 
 type AddressFormField =
   | "label"
@@ -45,7 +46,7 @@ const DEFAULT_FORM_VALUES: AddressFormValues = {
   addressLine2: "",
   city: "",
   state: "",
-  country: "Nigeria",
+  country: "Ghana",
   postalCode: "",
   deliveryInstructions: "",
 };
@@ -84,6 +85,11 @@ const validateAddressForm = (values: AddressFormValues): Partial<Record<AddressF
     errors.country = "Country is required";
   }
 
+  const phoneError = getGhanaianPhoneError(values.recipientPhone);
+  if (phoneError) {
+    errors.recipientPhone = phoneError;
+  }
+
   return errors;
 };
 
@@ -108,7 +114,7 @@ const toFormValues = (address: AccountAddress): AddressFormValues => ({
   addressLine2: address.address_line2 || "",
   city: address.city || "",
   state: address.state || "",
-  country: address.country || "Nigeria",
+  country: address.country || "Ghana",
   postalCode: address.postal_code || "",
   deliveryInstructions: address.delivery_instructions || "",
 });
@@ -478,6 +484,9 @@ const AccountAddresses = () => {
               <AccountInputField
                 id="address-recipient-phone"
                 label="Recipient Phone"
+                type="tel"
+                autoComplete="tel"
+                helperText={GHANAIAN_PHONE_HELPER_TEXT}
                 value={formValues.recipientPhone}
                 touched={formTouched.recipientPhone}
                 error={formErrors.recipientPhone}

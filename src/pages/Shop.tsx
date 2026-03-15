@@ -1,11 +1,18 @@
-import { useMemo, useState } from "react";
-import { productImages } from "@/data/images";
-import { products, type Category, type Product } from "@/data/products";
+import { useEffect, useMemo, useState } from "react";
+import { categoryImages } from "@/data/images";
 import ShopProductCard from "@/components/ShopProductCard";
+import ProductFetchErrorState from "@/components/products/ProductFetchErrorState";
+import {
+  STOREFRONT_CATEGORY_ORDER,
+  categoryLabels,
+  getCategorySkeletonCount,
+  isStorefrontCategorySlug,
+  type StorefrontCategorySlug,
+} from "@/lib/categories";
+import { getAllProducts } from "@/services/productService";
+import { getPrimaryImage, type Product } from "@/types/product";
 
-type ShopFilter = "all" | Category;
-
-const categoryOrder: Category[] = ["hair-care", "mens-fashion", "womens-fashion", "bags", "shoes"];
+type ShopFilter = "all" | StorefrontCategorySlug;
 
 const filterItems: Array<{ label: string; value: ShopFilter }> = [
   { label: "All", value: "all" },
@@ -16,47 +23,79 @@ const filterItems: Array<{ label: string; value: ShopFilter }> = [
   { label: "Shoes", value: "shoes" },
 ];
 
-const categoryNames: Record<Category, string> = {
-  "hair-care": "Hair Care",
-  "mens-fashion": "Men's Fashion",
-  "womens-fashion": "Women's Fashion",
-  "bags": "Bags",
-  "shoes": "Shoes",
-};
-
-const editorialHeadlines: Record<Category, string> = {
+const editorialHeadlines: Record<StorefrontCategorySlug, string> = {
   "hair-care": "Rituals for your most luxurious self.",
   "mens-fashion": "Dressed with intention. Built to last.",
   "womens-fashion": "Effortless elegance, every day.",
-  "bags": "Carry something worth noticing.",
-  "shoes": "Every step, considered.",
+  bags: "Carry something worth noticing.",
+  shoes: "Every step, considered.",
 };
 
-const bannerImageByCategory: Record<Category, string> = {
-  "hair-care": productImages["hc-001"],
-  "mens-fashion": productImages["mf-001"],
-  "womens-fashion": productImages["wf-001"],
-  "bags": productImages["bg-001"],
-  "shoes": productImages["sh-001"],
+const buildEmptyCategoryMap = (): Record<StorefrontCategorySlug, Product[]> => ({
+  "hair-care": [],
+  "mens-fashion": [],
+  "womens-fashion": [],
+  bags: [],
+  shoes: [],
+});
+
+const ProductCardSkeleton = () => {
+  return (
+    <div className="flex h-full flex-col">
+      <div className="lux-product-shimmer aspect-[4/5] w-full" />
+      <div className="mt-3 space-y-2">
+        <div className="lux-product-shimmer h-4 w-2/3" />
+        <div className="lux-product-shimmer h-3 w-1/3" />
+      </div>
+    </div>
+  );
 };
 
-const groupedProducts = products.reduce<Record<Category, Product[]>>(
-  (acc, product) => {
-    acc[product.category].push(product);
-    return acc;
-  },
-  {
-    "hair-care": [],
-    "mens-fashion": [],
-    "womens-fashion": [],
-    "bags": [],
-    "shoes": [],
-  },
-);
+const ProductBannerSkeleton = () => {
+  return (
+    <article className="bg-transparent">
+      <div className="grid h-[400px] w-full grid-cols-[55fr_45fr]">
+        <div className="lux-product-shimmer h-full w-full" />
+        <div className="bg-[#F5F0E8] p-12">
+          <div className="space-y-3">
+            <div className="lux-product-shimmer h-3 w-1/3" />
+            <div className="lux-product-shimmer h-8 w-3/4" />
+            <div className="lux-product-shimmer h-4 w-1/3" />
+            <div className="lux-product-shimmer mt-6 h-11 w-40" />
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+};
 
-const renderProductRows = (items: Product[]) => {
+const renderProductRows = (items: Product[], loading: boolean, expectedCount = 4) => {
+  if (loading) {
+    const regularCount = Math.max(0, expectedCount - 1);
+
+    return (
+      <>
+        {regularCount > 0 ? (
+          <div className="grid grid-cols-3 gap-[2px]">
+            {Array.from({ length: regularCount }).map((_, index) => (
+              <ProductCardSkeleton key={`shop-card-skeleton-${index}`} />
+            ))}
+          </div>
+        ) : null}
+
+        <div className={regularCount > 0 ? "mt-[2px]" : ""}>
+          <ProductBannerSkeleton />
+        </div>
+      </>
+    );
+  }
+
   if (items.length === 0) {
-    return null;
+    return (
+      <div className="border border-[#d4ccc2] px-6 py-8 text-center">
+        <p className="font-body text-[12px] text-[#888888]">No products available in this category right now.</p>
+      </div>
+    );
   }
 
   const standardProducts = items.slice(0, -1);
@@ -81,16 +120,82 @@ const renderProductRows = (items: Product[]) => {
 
 const Shop = () => {
   const [activeFilter, setActiveFilter] = useState<ShopFilter>("all");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await getAllProducts();
+        setProducts(data ?? []);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load products. Please refresh.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void fetchProducts();
+  }, []);
+
+  const groupedProducts = useMemo(() => {
+    const groups = buildEmptyCategoryMap();
+
+    for (const product of products) {
+      const slug = product.categories?.slug;
+      if (!isStorefrontCategorySlug(slug)) {
+        continue;
+      }
+      groups[slug].push(product);
+    }
+
+    return groups;
+  }, [products]);
+
+  const bannerImageByCategory = useMemo(() => {
+    const result: Record<StorefrontCategorySlug, string> = {
+      "hair-care": categoryImages["hair-care"],
+      "mens-fashion": categoryImages["mens-fashion"],
+      "womens-fashion": categoryImages["womens-fashion"],
+      bags: categoryImages.bags,
+      shoes: categoryImages.shoes,
+    };
+
+    for (const category of STOREFRONT_CATEGORY_ORDER) {
+      const categoryProducts = groupedProducts[category];
+      const firstWithImage = categoryProducts.find((item) => Boolean(getPrimaryImage(item)));
+      if (firstWithImage) {
+        result[category] = getPrimaryImage(firstWithImage);
+      }
+    }
+
+    return result;
+  }, [groupedProducts]);
 
   const categoriesToShow = useMemo(
-    () => (activeFilter === "all" ? categoryOrder : [activeFilter]),
+    () => (activeFilter === "all" ? STOREFRONT_CATEGORY_ORDER : [activeFilter]),
     [activeFilter],
   );
 
-  const visibleProductCount = useMemo(
-    () => categoriesToShow.reduce((total, category) => total + groupedProducts[category].length, 0),
-    [categoriesToShow],
-  );
+  const visibleProductCount = useMemo(() => {
+    if (loading) {
+      return categoriesToShow.reduce((total, category) => total + getCategorySkeletonCount(category), 0);
+    }
+
+    return categoriesToShow.reduce((total, category) => total + groupedProducts[category].length, 0);
+  }, [categoriesToShow, groupedProducts, loading]);
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-14 md:py-16">
+        <ProductFetchErrorState />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-14 md:py-16">
@@ -121,9 +226,7 @@ const Shop = () => {
             })}
           </div>
 
-          <p className="font-body text-[12px] font-normal text-[#888888] md:text-right">
-            Showing {visibleProductCount} products
-          </p>
+          <p className="font-body text-[12px] font-normal text-[#888888] md:text-right">Showing {visibleProductCount} products</p>
         </div>
       </div>
 
@@ -136,15 +239,11 @@ const Shop = () => {
             <section key={category} className={showDivider ? "pt-20" : ""}>
               {showDivider ? (
                 <div className="mt-0 mb-10 border-t border-[#d4ccc2] pt-8">
-                  <p className="font-body text-[10px] font-light uppercase tracking-[0.2em] text-accent">
-                    {categoryNames[category]}
-                  </p>
+                  <p className="font-body text-[10px] font-light uppercase tracking-[0.2em] text-accent">{categoryLabels[category]}</p>
                 </div>
               ) : (
                 <div className="mb-10">
-                  <p className="font-body text-[10px] font-light uppercase tracking-[0.2em] text-accent">
-                    {categoryNames[category]}
-                  </p>
+                  <p className="font-body text-[10px] font-light uppercase tracking-[0.2em] text-accent">{categoryLabels[category]}</p>
                 </div>
               )}
 
@@ -152,7 +251,7 @@ const Shop = () => {
                 <div className="relative left-1/2 right-1/2 my-20 min-h-[60vh] w-screen -translate-x-1/2 overflow-hidden">
                   <img
                     src={bannerImageByCategory[category]}
-                    alt={categoryNames[category]}
+                    alt={categoryLabels[category]}
                     className="absolute inset-0 h-full w-full object-cover"
                     loading="lazy"
                   />
@@ -161,7 +260,7 @@ const Shop = () => {
                   <div className="relative z-10 flex min-h-[60vh] items-center">
                     <div className="max-w-[600px] px-6 md:px-0 md:pl-[80px]">
                       <p className="mb-4 font-body text-[11px] font-light uppercase tracking-[0.2em] text-accent">
-                        {categoryNames[category]}
+                        {categoryLabels[category]}
                       </p>
                       <h2 className="font-display text-[38px] md:text-[52px] font-light italic leading-[1.2] text-white">
                         {editorialHeadlines[category]}
@@ -171,7 +270,7 @@ const Shop = () => {
                 </div>
               )}
 
-              <div>{renderProductRows(categoryProducts)}</div>
+              <div>{renderProductRows(categoryProducts, loading, getCategorySkeletonCount(category))}</div>
             </section>
           );
         })}

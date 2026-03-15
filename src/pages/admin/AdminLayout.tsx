@@ -19,12 +19,50 @@ interface ToastItem {
   description: string | null;
 }
 
-const navLinks = [
-  { label: "Dashboard", to: "/admin" },
-  { label: "Orders", to: "/admin/orders" },
-  { label: "Products", to: "/admin/products" },
-  { label: "Categories", to: "/admin/categories" },
+interface AdminNavLink {
+  label: string;
+  to: string;
+  minRole?: "admin" | "super_admin";
+}
+
+interface AdminNavGroup {
+  label: string;
+  links: AdminNavLink[];
+}
+
+const navGroups: AdminNavGroup[] = [
+  {
+    label: "Store",
+    links: [
+      { label: "Dashboard", to: "/admin" },
+      { label: "Orders", to: "/admin/orders" },
+      { label: "Products", to: "/admin/products" },
+      { label: "Categories", to: "/admin/categories" },
+    ],
+  },
+  {
+    label: "Customers",
+    links: [
+      { label: "Customers", to: "/admin/customers" },
+      { label: "Admin Users", to: "/admin/users", minRole: "super_admin" },
+    ],
+  },
+  {
+    label: "Settings",
+    links: [
+      { label: "Discount Codes", to: "/admin/discounts" },
+      { label: "Shipping Rates", to: "/admin/shipping" },
+      { label: "Site Settings", to: "/admin/settings", minRole: "super_admin" },
+    ],
+  },
 ];
+
+const canAccessNavLink = (link: AdminNavLink, role: "customer" | "admin" | "super_admin" | null): boolean => {
+  if (link.minRole === "super_admin") {
+    return role === "super_admin";
+  }
+  return true;
+};
 
 const readMetadataName = (value: unknown): string => (typeof value === "string" ? value.trim() : "");
 
@@ -170,6 +208,17 @@ const AdminLayout = () => {
   const adminName = `${firstName}${lastInitial ? ` ${lastInitial}.` : ""}`;
   const roleLabel = role ? role.replace("_", " ").toUpperCase() : "ADMIN";
   const avatarInitial = (firstName.slice(0, 1) || user?.email?.slice(0, 1) || "A").toUpperCase();
+  const visibleNavGroups = useMemo(
+    () =>
+      navGroups
+        .map((group) => ({
+          ...group,
+          links: group.links.filter((link) => canAccessNavLink(link, role)),
+        }))
+        .filter((group) => group.links.length > 0),
+    [role],
+  );
+  const mobileNavLinks = useMemo(() => visibleNavGroups.flatMap((group) => group.links), [visibleNavGroups]);
 
   const onNotificationClick = async (notification: AdminNotification) => {
     setIsDropdownOpen(false);
@@ -215,22 +264,26 @@ const AdminLayout = () => {
         </div>
 
         <nav className="flex-1 overflow-y-auto">
-          <p className="px-6 pt-6 pb-2 font-body text-[9px] uppercase tracking-[0.2em] text-[#444444]">Store</p>
-          {navLinks.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              end={link.to === "/admin"}
-              className={({ isActive }) =>
-                `block border-l-2 px-6 py-3 font-body text-[11px] uppercase tracking-[0.1em] transition-all duration-200 ${
-                  isActive
-                    ? "border-[#C4A882] bg-[rgba(255,255,255,0.03)] text-[#F5F0E8]"
-                    : "border-transparent text-[#666666] hover:text-[#F5F0E8]"
-                }`
-              }
-            >
-              {link.label}
-            </NavLink>
+          {visibleNavGroups.map((group) => (
+            <div key={group.label}>
+              <p className="px-6 pt-6 pb-2 font-body text-[9px] uppercase tracking-[0.2em] text-[#444444]">{group.label}</p>
+              {group.links.map((link) => (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  end={link.to === "/admin"}
+                  className={({ isActive }) =>
+                    `block border-l-2 px-6 py-3 font-body text-[11px] uppercase tracking-[0.1em] transition-all duration-200 ${
+                      isActive
+                        ? "border-[#C4A882] bg-[rgba(255,255,255,0.03)] text-[#F5F0E8]"
+                        : "border-transparent text-[#666666] hover:text-[#F5F0E8]"
+                    }`
+                  }
+                >
+                  {link.label}
+                </NavLink>
+              ))}
+            </div>
           ))}
         </nav>
 
@@ -327,7 +380,7 @@ const AdminLayout = () => {
 
         <div className="border-b border-[#d4ccc2] px-6 py-3 lg:hidden">
           <div className="flex items-center gap-3 overflow-x-auto">
-            {navLinks.map((link) => (
+            {mobileNavLinks.map((link) => (
               <NavLink
                 key={`mobile-${link.to}`}
                 to={link.to}

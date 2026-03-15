@@ -51,3 +51,20 @@ export const AdminRoute = ({ children }: RouteGuardProps) => {
   return <>{children}</>;
 };
 
+export const SuperAdminRoute = ({ children }: RouteGuardProps) => {
+  const { isAuthenticated, role, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <GuardLoadingScreen />;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (role !== "super_admin") {
+    return <Navigate to="/admin" replace />;
+  }
+
+  return <>{children}</>;
+};

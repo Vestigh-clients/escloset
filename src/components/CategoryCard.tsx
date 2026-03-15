@@ -1,10 +1,9 @@
 import { Link } from "react-router-dom";
-import type { Category } from "@/data/products";
-import { categoryLabels } from "@/data/products";
 import { categoryImages } from "@/data/images";
+import { categoryLabels, type StorefrontCategorySlug } from "@/lib/categories";
 
 interface CategoryCardProps {
-  category: Category;
+  category: StorefrontCategorySlug;
 }
 
 const CategoryCard = ({ category }: CategoryCardProps) => {

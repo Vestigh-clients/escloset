@@ -5,7 +5,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const fromEmail = "Luxuriant Orders <orders@yourdomain.com>";
+const SITE_URL = Deno.env.get("SITE_URL") ?? "https://luxuriantgh.store";
+const fromEmail = "Luxuriant Orders <orders@luxuriantgh.store>";
 
 interface OrderItemRow {
   product_name: string;
@@ -370,7 +371,7 @@ Deno.serve(async (request: Request) => {
     const addressLines = getAddressLines(shippingSnapshot);
     const deliveryInstructions = safeString(shippingSnapshot?.delivery_instructions);
 
-    const siteUrl = (await getSettingValue(adminClient, "site_url")) || safeString(Deno.env.get("SITE_URL")) || "http://localhost:5173";
+    const siteUrl = (await getSettingValue(adminClient, "site_url")) || SITE_URL;
     const normalizedSiteUrl = siteUrl.replace(/\/+$/, "");
     const adminOrderUrl = `${normalizedSiteUrl}/admin/orders/${encodeURIComponent(order.order_number)}`;
     const instagramUrl = (await getSettingValue(adminClient, "instagram_url")) || "https://instagram.com/luxuriant";

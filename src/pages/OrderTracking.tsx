@@ -1,9 +1,53 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import OrderSummaryDetails from "@/components/orders/OrderSummaryDetails";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { buildLiveStatusSteps, formatStatusLabel, getDeliveryWindow } from "@/lib/orderPresentation";
 import { lookupOrderTrackingDetails, type OrderDetails } from "@/services/orderService";
+
+const ORDER_NOT_FOUND_CODE = "PGRST116";
+
+const ORDER_TRACKING_SELECT = `
+  id,
+  order_number,
+  status,
+  subtotal,
+  shipping_fee,
+  discount_amount,
+  total,
+  payment_method,
+  mobile_money_number,
+  shipping_address_snapshot,
+  created_at,
+  updated_at,
+  confirmation_email_sent,
+  customer_id,
+  customers!orders_customer_id_fkey (
+    id,
+    first_name,
+    last_name,
+    email
+  ),
+  order_items (
+    id,
+    order_id,
+    product_id,
+    product_name,
+    product_sku,
+    product_image_url,
+    unit_price,
+    compare_at_price,
+    quantity,
+    subtotal,
+    created_at
+  ),
+  order_status_history (
+    new_status,
+    note,
+    changed_at
+  )
+`;
 
 const TrackingSkeleton = () => (
   <div className="bg-[#F5F0E8] px-6 py-[80px] sm:px-6">
@@ -20,6 +64,97 @@ const TrackingSkeleton = () => (
     </div>
   </div>
 );
+
+const isPlainRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const readString = (value: unknown): string => (typeof value === "string" ? value : "");
+const readNumber = (value: unknown): number => (typeof value === "number" && Number.isFinite(value) ? value : 0);
+
+const toCustomerEmail = (value: unknown): string => {
+  if (Array.isArray(value)) {
+    const first = value[0];
+    if (isPlainRecord(first)) {
+      return readString(first.email).trim().toLowerCase();
+    }
+    return "";
+  }
+
+  if (isPlainRecord(value)) {
+    return readString(value.email).trim().toLowerCase();
+  }
+
+  return "";
+};
+
+const mapOrderRowToOrderDetails = (value: unknown): OrderDetails | null => {
+  if (!isPlainRecord(value)) {
+    return null;
+  }
+
+  const customerRaw = Array.isArray(value.customers) ? value.customers[0] : value.customers;
+  if (!isPlainRecord(customerRaw)) {
+    return null;
+  }
+
+  const orderItems = Array.isArray(value.order_items)
+    ? value.order_items
+        .filter((entry): entry is Record<string, unknown> => isPlainRecord(entry))
+        .map((entry) => ({
+          id: readString(entry.id),
+          order_id: readString(entry.order_id),
+          product_id: readString(entry.product_id),
+          product_name: readString(entry.product_name),
+          product_sku: readString(entry.product_sku) || null,
+          product_image_url: readString(entry.product_image_url) || null,
+          unit_price: readNumber(entry.unit_price),
+          compare_at_price:
+            typeof entry.compare_at_price === "number" && Number.isFinite(entry.compare_at_price)
+              ? entry.compare_at_price
+              : null,
+          quantity: readNumber(entry.quantity),
+          subtotal: readNumber(entry.subtotal),
+          created_at: readString(entry.created_at),
+        }))
+    : [];
+
+  const statusHistory = Array.isArray(value.order_status_history)
+    ? value.order_status_history
+        .filter((entry): entry is Record<string, unknown> => isPlainRecord(entry))
+        .map((entry) => ({
+          status: readString(entry.new_status),
+          note: readString(entry.note) || null,
+          changed_at: readString(entry.changed_at),
+        }))
+        .filter((entry) => entry.status.length > 0)
+        .sort((a, b) => new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime())
+    : [];
+
+  return {
+    id: readString(value.id),
+    order_number: readString(value.order_number),
+    status: readString(value.status),
+    subtotal: readNumber(value.subtotal),
+    shipping_fee: readNumber(value.shipping_fee),
+    discount_amount:
+      typeof value.discount_amount === "number" && Number.isFinite(value.discount_amount) ? value.discount_amount : 0,
+    total: readNumber(value.total),
+    payment_method: readString(value.payment_method) || null,
+    mobile_money_number: readString(value.mobile_money_number) || null,
+    shipping_address_snapshot: value.shipping_address_snapshot ?? {},
+    created_at: readString(value.created_at),
+    updated_at: readString(value.updated_at) || null,
+    confirmation_email_sent: Boolean(value.confirmation_email_sent),
+    customer: {
+      id: readString(customerRaw.id),
+      first_name: readString(customerRaw.first_name),
+      last_name: readString(customerRaw.last_name),
+      email: readString(customerRaw.email),
+    },
+    order_items: orderItems,
+    order_status_history: statusHistory,
+  };
+};
 
 const formatChangedAt = (value: string | null): string | null => {
   if (!value) {
@@ -65,60 +200,84 @@ const getConnectorClass = (
 
 const OrderTracking = () => {
   const { orderNumber: rawOrderNumber } = useParams();
-  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const navigate = useNavigate();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
 
-  const orderNumber = (rawOrderNumber ?? "").trim();
+  const orderNumberFromPath = (rawOrderNumber ?? "").trim();
   const [isLoading, setIsLoading] = useState(true);
   const [order, setOrder] = useState<OrderDetails | null>(null);
+  const [lookupOrderNumber, setLookupOrderNumber] = useState(orderNumberFromPath);
   const [lookupEmail, setLookupEmail] = useState("");
   const [lookupError, setLookupError] = useState<string | null>(null);
   const [isSubmittingLookup, setIsSubmittingLookup] = useState(false);
+  const [isNotFoundForUser, setIsNotFoundForUser] = useState(false);
+
+  useEffect(() => {
+    setLookupOrderNumber(orderNumberFromPath);
+  }, [orderNumberFromPath]);
 
   useEffect(() => {
     if (isAuthLoading) {
       return;
     }
 
-    if (!orderNumber) {
+    if (!isAuthenticated) {
       setIsLoading(false);
-      setLookupError("Invalid order number.");
+      setIsNotFoundForUser(false);
+      setOrder(null);
+      return;
+    }
+
+    if (!orderNumberFromPath || !user?.id) {
+      setOrder(null);
+      setIsNotFoundForUser(true);
+      setLookupError(null);
+      setIsLoading(false);
       return;
     }
 
     let isMounted = true;
 
-    const initialize = async () => {
+    const loadAuthenticatedOrder = async () => {
       setIsLoading(true);
       setLookupError(null);
-      if (!isAuthenticated) {
-        if (isMounted) {
-          setOrder(null);
-          setLookupError(null);
-          setIsLoading(false);
-        }
-        return;
-      }
+      setIsNotFoundForUser(false);
 
       try {
-        const trackedOrder = await lookupOrderTrackingDetails(orderNumber, null);
+        const { data, error } = await supabase
+          .from("orders")
+          .select(ORDER_TRACKING_SELECT)
+          .eq("order_number", orderNumberFromPath)
+          .eq("customer_id", user.id)
+          .maybeSingle();
+
         if (!isMounted) {
           return;
         }
 
-        if (!trackedOrder) {
-          setLookupError("We couldn't verify this order under your account.");
-          setOrder(null);
-        } else {
-          setOrder(trackedOrder);
+        if (error) {
+          throw error;
         }
+
+        const mapped = mapOrderRowToOrderDetails(data);
+        if (!mapped) {
+          setOrder(null);
+          setIsNotFoundForUser(true);
+          return;
+        }
+
+        setOrder(mapped);
       } catch (lookupFailure) {
         if (import.meta.env.DEV) {
           console.error("Failed to load tracked order for authenticated user", lookupFailure);
         }
-        if (isMounted) {
-          setLookupError("We couldn't verify this order under your account.");
-          setOrder(null);
+
+        if (!isMounted) {
+          return;
         }
+
+        setOrder(null);
+        setIsNotFoundForUser(true);
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -126,19 +285,21 @@ const OrderTracking = () => {
       }
     };
 
-    void initialize();
+    void loadAuthenticatedOrder();
 
     return () => {
       isMounted = false;
     };
-  }, [isAuthenticated, isAuthLoading, orderNumber]);
+  }, [isAuthenticated, isAuthLoading, orderNumberFromPath, user?.id]);
 
   const handleGuestLookup = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    const normalizedOrderNumber = lookupOrderNumber.trim().toUpperCase();
     const normalizedEmail = lookupEmail.trim().toLowerCase();
-    if (!normalizedEmail) {
-      setLookupError("Enter the email used when placing this order.");
+
+    if (!normalizedOrderNumber || !normalizedEmail) {
+      setLookupError("No order found with these details. Please check and try again.");
       return;
     }
 
@@ -146,20 +307,49 @@ const OrderTracking = () => {
     setIsSubmittingLookup(true);
 
     try {
-      const trackedOrder = await lookupOrderTrackingDetails(orderNumber, normalizedEmail);
+      const { data: directData, error: directError } = await supabase
+        .from("orders")
+        .select(ORDER_TRACKING_SELECT)
+        .eq("order_number", normalizedOrderNumber)
+        .maybeSingle();
+
+      let trackedOrder: OrderDetails | null = null;
+
+      if (!directError && directData) {
+        const customerEmail = toCustomerEmail((directData as Record<string, unknown>).customers);
+        if (customerEmail === normalizedEmail) {
+          trackedOrder = mapOrderRowToOrderDetails(directData);
+        }
+      }
+
       if (!trackedOrder) {
-        setLookupError("No order found for this order number and email combination.");
+        const fallbackOrder = await lookupOrderTrackingDetails(normalizedOrderNumber, normalizedEmail);
+        trackedOrder = fallbackOrder;
+      }
+
+      if (!trackedOrder) {
+        setLookupError("No order found with these details. Please check and try again.");
         setOrder(null);
-        setIsLoading(false);
         return;
       }
 
       setOrder(trackedOrder);
+      setIsNotFoundForUser(false);
+
+      if (normalizedOrderNumber !== orderNumberFromPath) {
+        navigate(`/orders/${encodeURIComponent(normalizedOrderNumber)}`, { replace: true });
+      }
     } catch (lookupFailure) {
       if (import.meta.env.DEV) {
         console.error("Guest order lookup failed", lookupFailure);
       }
-      setLookupError("We couldn't verify your order right now. Please try again.");
+
+      const code = (lookupFailure as { code?: string }).code;
+      if (code === ORDER_NOT_FOUND_CODE) {
+        setLookupError("No order found with these details. Please check and try again.");
+      } else {
+        setLookupError("No order found with these details. Please check and try again.");
+      }
       setOrder(null);
     } finally {
       setIsSubmittingLookup(false);
@@ -184,44 +374,75 @@ const OrderTracking = () => {
     return (
       <div className="bg-[#F5F0E8] px-6 py-[80px] sm:px-6">
         <div className="mx-auto max-w-[640px]">
-          <p className="font-body text-[10px] uppercase tracking-[0.2em] text-[#C4A882]">Order Tracking</p>
-          <h1 className="mt-3 font-display text-[38px] italic font-light text-[#1A1A1A] sm:text-[48px]">
-            Track your order
-          </h1>
-          <p className="mt-3 font-body text-[13px] font-light text-[#888888]">
-            Enter the email used for order <span className="text-[#1A1A1A]">{orderNumber || "-"}</span> to view status.
-          </p>
+          <h1 className="font-display text-[38px] italic font-light text-[#1A1A1A] sm:text-[48px]">Track Your Order</h1>
 
-          <form onSubmit={handleGuestLookup} className="mt-8 space-y-4">
+          <form onSubmit={handleGuestLookup} className="mt-8">
+            <div className="mb-5">
+              <label
+                htmlFor="order-tracking-order-number"
+                className="mb-2 block font-body text-[10px] uppercase tracking-[0.12em] text-[#888888]"
+              >
+                Order Number
+              </label>
+              <input
+                id="order-tracking-order-number"
+                type="text"
+                value={lookupOrderNumber}
+                onChange={(event) => setLookupOrderNumber(event.target.value)}
+                placeholder="LUX-2026-00001"
+                className="w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-[10px] font-body text-[14px] text-[#1A1A1A] placeholder:text-[#aaaaaa] outline-none transition-colors focus:border-[#1A1A1A]"
+                autoComplete="off"
+              />
+            </div>
+
             <div>
               <label
                 htmlFor="order-tracking-email"
-                className="mb-2 block font-body text-[10px] uppercase tracking-[0.2em] text-[#C4A882]"
+                className="mb-2 block font-body text-[10px] uppercase tracking-[0.12em] text-[#888888]"
               >
-                Email
+                Email Address
               </label>
               <input
                 id="order-tracking-email"
                 type="email"
                 value={lookupEmail}
                 onChange={(event) => setLookupEmail(event.target.value)}
-                placeholder="you@example.com"
-                className="h-[48px] w-full border border-[#d4ccc2] bg-transparent px-4 font-body text-[14px] text-[#1A1A1A] outline-none transition-colors focus:border-[#1A1A1A]"
+                placeholder="Email used at checkout"
+                className="w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-[10px] font-body text-[14px] text-[#1A1A1A] placeholder:text-[#aaaaaa] outline-none transition-colors focus:border-[#1A1A1A]"
                 autoComplete="email"
-                required
               />
             </div>
 
-            {lookupError ? <p className="font-body text-[12px] text-[#C0392B]">{lookupError}</p> : null}
+            {lookupError ? <p className="mt-4 font-body text-[12px] text-[#C0392B]">{lookupError}</p> : null}
 
             <button
               type="submit"
               disabled={isSubmittingLookup}
-              className="h-[48px] w-full bg-[#1A1A1A] px-6 font-body text-[11px] uppercase tracking-[0.15em] text-[#F5F0E8] transition-colors duration-200 hover:bg-[#C4A882] hover:text-[#1A1A1A] disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-7 w-full rounded-[2px] bg-[#1A1A1A] px-6 py-4 font-body text-[11px] uppercase tracking-[0.15em] text-[#F5F0E8] transition-colors duration-200 hover:bg-[#C4A882] hover:text-[#1A1A1A] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isSubmittingLookup ? "Checking..." : "View Order"}
+              {isSubmittingLookup ? "Finding..." : "Find Order"}
             </button>
           </form>
+        </div>
+      </div>
+    );
+  }
+
+  if (!order && isAuthenticated && isNotFoundForUser) {
+    return (
+      <div className="bg-[#F5F0E8] px-6 py-[80px] sm:px-6">
+        <div className="mx-auto max-w-[640px] text-center">
+          <p className="font-body text-[10px] uppercase tracking-[0.2em] text-[#C4A882]">404</p>
+          <h1 className="mt-3 font-display text-[38px] italic font-light text-[#1A1A1A] sm:text-[48px]">Order not found</h1>
+          <p className="mt-4 font-body text-[13px] font-light text-[#888888]">
+            We could not find this order under your account.
+          </p>
+          <Link
+            to="/shop"
+            className="mt-8 inline-block font-body text-[11px] uppercase tracking-[0.15em] text-[#1A1A1A] transition-colors duration-200 hover:text-[#C4A882]"
+          >
+            Go to Shop
+          </Link>
         </div>
       </div>
     );
@@ -231,9 +452,7 @@ const OrderTracking = () => {
     return (
       <div className="bg-[#F5F0E8] px-6 py-[80px] sm:px-6">
         <div className="mx-auto max-w-[640px] text-center">
-          <p className="font-body text-[13px] text-[#888888]">
-            {lookupError || "We couldn't load your order details right now."}
-          </p>
+          <p className="font-body text-[13px] text-[#888888]">{lookupError || "We couldn't load your order details right now."}</p>
           <Link
             to="/shop"
             className="mt-6 inline-block font-body text-[11px] uppercase tracking-[0.15em] text-[#1A1A1A] transition-colors duration-200 hover:text-[#C4A882]"
@@ -285,7 +504,11 @@ const OrderTracking = () => {
 
                     <div className="pt-[1px]">
                       <p className={`font-body text-[13px] ${labelColor}`}>{step.label}</p>
-                      <p className={`mt-1 font-body text-[11px] font-light ${step.state === "upcoming" ? "text-[#aaaaaa]" : "text-[#888888]"}`}>
+                      <p
+                        className={`mt-1 font-body text-[11px] font-light ${
+                          step.state === "upcoming" ? "text-[#aaaaaa]" : "text-[#888888]"
+                        }`}
+                      >
                         {step.note || step.description}
                       </p>
                       {step.changedAt ? (

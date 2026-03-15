@@ -25,9 +25,17 @@ export interface CheckoutSavedAddressRow {
   delivery_instructions: string | null;
 }
 
+export interface CheckoutContactProfile {
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+  phone: string | null;
+}
+
 export interface CheckoutSessionData {
   isLoggedIn: boolean;
   userId: string | null;
+  contactProfile: CheckoutContactProfile | null;
   savedAddresses: CheckoutSavedAddressRow[];
 }
 
@@ -129,7 +137,7 @@ export interface OrderDetails {
   order_status_history: OrderStatusSummary[];
 }
 
-export type OrderSubmissionErrorType = "generic" | "stock_conflict" | "timeout";
+export type OrderSubmissionErrorType = "generic" | "stock_conflict" | "timeout" | "service_unavailable";
 
 export class OrderSubmissionError extends Error {
   type: OrderSubmissionErrorType;
@@ -181,8 +189,60 @@ const isTimeoutError = (error: unknown) => {
   );
 };
 
+const isServiceUnavailableError = (error: unknown) => {
+  const candidate = error as { code?: string } | null;
+  if (candidate?.code === "42702" || candidate?.code === "PGRST202") {
+    return true;
+  }
+
+  const message = getErrorMessage(error).toLowerCase();
+  return (
+    message.includes("column reference \"created_at\" is ambiguous") ||
+    message.includes("could not find the function public.submit_order") ||
+    message.includes("schema cache")
+  );
+};
+
 const isPlainRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
+
+const decodeMaybeEncoded = (value: string): string => {
+  const normalized = value.replace(/\+/g, " ");
+
+  try {
+    return decodeURIComponent(normalized);
+  } catch {
+    return normalized;
+  }
+};
+
+const normalizeShippingStateName = (value: string): string =>
+  decodeMaybeEncoded(value).toLowerCase().replace(/[().,-]/g, " ").replace(/\s+/g, " ").trim();
+
+const parseShippingStateListFromJson = (value: Json | null): string[] => {
+  if (Array.isArray(value)) {
+    return value
+      .filter((entry): entry is string => typeof entry === "string")
+      .map((entry) => normalizeShippingStateName(entry))
+      .filter((entry) => entry.length > 0);
+  }
+
+  if (typeof value === "string" && value.trim()) {
+    try {
+      const parsed = JSON.parse(value) as unknown;
+      if (Array.isArray(parsed)) {
+        return parsed
+          .filter((entry): entry is string => typeof entry === "string")
+          .map((entry) => normalizeShippingStateName(entry))
+          .filter((entry) => entry.length > 0);
+      }
+    } catch {
+      return [];
+    }
+  }
+
+  return [];
+};
 
 const normalizeOrderDetails = (value: Json | null): OrderDetails | null => {
   if (!isPlainRecord(value)) {
@@ -195,6 +255,10 @@ const normalizeOrderDetails = (value: Json | null): OrderDetails | null => {
 export const getOrderErrorMessage = (type: OrderSubmissionErrorType): string => {
   if (type === "stock_conflict") {
     return "One or more items in your cart just sold out. Your cart has been updated.";
+  }
+
+  if (type === "service_unavailable") {
+    return "Checkout is temporarily unavailable. Please try again shortly.";
   }
 
   if (type === "timeout") {
@@ -224,6 +288,7 @@ export const fetchCheckoutSessionData = async (): Promise<CheckoutSessionData> =
     return {
       isLoggedIn: false,
       userId: null,
+      contactProfile: null,
       savedAddresses: [],
     };
   }
@@ -232,13 +297,14 @@ export const fetchCheckoutSessionData = async (): Promise<CheckoutSessionData> =
     return {
       isLoggedIn: true,
       userId: session.user.id,
+      contactProfile: null,
       savedAddresses: [],
     };
   }
 
   const { data: customerData, error: customerError } = await supabase
     .from("customers")
-    .select("id")
+    .select("id,first_name,last_name,email,phone")
     .eq("email", userEmail)
     .maybeSingle();
 
@@ -246,9 +312,17 @@ export const fetchCheckoutSessionData = async (): Promise<CheckoutSessionData> =
     return {
       isLoggedIn: true,
       userId: session.user.id,
+      contactProfile: null,
       savedAddresses: [],
     };
   }
+
+  const contactProfile: CheckoutContactProfile = {
+    first_name: customerData.first_name,
+    last_name: customerData.last_name,
+    email: customerData.email,
+    phone: customerData.phone,
+  };
 
   const { data: addressData, error: addressError } = await supabase
     .from("addresses")
@@ -260,6 +334,7 @@ export const fetchCheckoutSessionData = async (): Promise<CheckoutSessionData> =
     return {
       isLoggedIn: true,
       userId: session.user.id,
+      contactProfile,
       savedAddresses: [],
     };
   }
@@ -267,6 +342,7 @@ export const fetchCheckoutSessionData = async (): Promise<CheckoutSessionData> =
   return {
     isLoggedIn: true,
     userId: session.user.id,
+    contactProfile,
     savedAddresses: addressData as CheckoutSavedAddressRow[],
   };
 };
@@ -347,34 +423,39 @@ export const resolveCustomerIdForOrder = async (input: ResolveCustomerInput): Pr
 };
 
 export const resolveShippingRateForState = async (selectedState: string): Promise<ShippingRateRow> => {
+  const normalizedSelectedState = normalizeShippingStateName(selectedState);
+  if (!normalizedSelectedState) {
+    throw new Error("State is required to resolve shipping rate");
+  }
+
   const { data, error } = await supabase
     .from("shipping_rates")
     .select("*")
-    .eq("is_active", true)
-    .contains("states", [selectedState])
-    .single();
+    .eq("is_active", true);
 
-  if (!error && data) {
-    return data as ShippingRateRow;
-  }
-
-  if (error && !isNoRowsError(error)) {
+  if (error) {
     throw error;
   }
 
-  const { data: fallbackData, error: fallbackError } = await supabase
-    .from("shipping_rates")
-    .select("*")
-    .eq("is_active", true)
-    .filter("states", "eq", "[]")
-    .single();
+  const activeRates = (data ?? []) as ShippingRateRow[];
+  let fallbackRate: ShippingRateRow | null = null;
 
-  if (!fallbackError && fallbackData) {
-    return fallbackData as ShippingRateRow;
+  for (const rate of activeRates) {
+    const normalizedStates = parseShippingStateListFromJson(rate.states);
+    if (normalizedStates.length === 0) {
+      if (!fallbackRate) {
+        fallbackRate = rate;
+      }
+      continue;
+    }
+
+    if (normalizedStates.includes(normalizedSelectedState)) {
+      return rate;
+    }
   }
 
-  if (fallbackError && !isNoRowsError(fallbackError)) {
-    throw fallbackError;
+  if (fallbackRate) {
+    return fallbackRate;
   }
 
   throw new Error("No active shipping rate configured");
@@ -414,6 +495,10 @@ export const submitOrderRpc = async (input: SubmitOrderInput): Promise<SubmitOrd
   if (error) {
     if (isStockConflictError(error)) {
       throw new OrderSubmissionError("stock_conflict", error);
+    }
+
+    if (isServiceUnavailableError(error)) {
+      throw new OrderSubmissionError("service_unavailable", error);
     }
 
     if (isTimeoutError(error)) {
