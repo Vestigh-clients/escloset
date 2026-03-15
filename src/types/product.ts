@@ -58,6 +58,8 @@ export type Product = {
   price: number;
   compare_at_price?: number;
   stock_quantity: number;
+  total_stock_quantity?: number;
+  in_stock?: boolean;
   is_available: boolean;
   is_featured?: boolean;
   images: ProductImage[];
@@ -82,5 +84,17 @@ export const isOnSale = (product: Product): boolean => {
 };
 
 export const isInStock = (product: Product): boolean => {
+  if ("in_stock" in product && typeof product.in_stock === "boolean") {
+    return product.in_stock;
+  }
+
   return product.is_available && product.stock_quantity > 0;
+};
+
+export const getStockQuantity = (product: Product): number => {
+  if ("total_stock_quantity" in product && typeof product.total_stock_quantity === "number") {
+    return product.total_stock_quantity;
+  }
+
+  return product.stock_quantity;
 };

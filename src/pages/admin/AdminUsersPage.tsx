@@ -180,20 +180,22 @@ const AdminUsersPage = () => {
   }
 
   return (
-    <div className="bg-[#F5F0E8] px-6 py-10 lg:px-[60px] lg:py-12">
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-        <h1 className="font-display text-[36px] italic text-[#1A1A1A]">Admin Users</h1>
-        <button
-          type="button"
-          onClick={openPanel}
-          className="rounded-[2px] bg-[#1A1A1A] px-7 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[#F5F0E8] transition-colors hover:bg-[#C4A882] hover:text-[#1A1A1A]"
-        >
-          Promote Customer
-        </button>
+    <div className="admin-page">
+      <div className="admin-page-header">
+        <h1 className="admin-page-title font-display text-[36px] italic text-[#1A1A1A]">Admin Users</h1>
+        <div className="admin-page-actions">
+          <button
+            type="button"
+            onClick={openPanel}
+            className="rounded-[2px] bg-[#1A1A1A] px-7 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[#F5F0E8] transition-colors hover:bg-[#C4A882] hover:text-[#1A1A1A]"
+          >
+            Promote Customer
+          </button>
+        </div>
       </div>
 
       <div className="mb-8 rounded-[2px] border border-[#d4ccc2] bg-[rgba(196,168,130,0.08)] px-5 py-4">
-        <p className="font-body text-[12px] leading-[1.8] text-[#888888]">
+        <p className="font-body text-[12px] leading-[1.8] text-[#555555]">
           Admin users can manage products, orders and customers. Super Admins have full access including this page, site settings and
           role management. Role changes are logged and cannot be undone without super admin access.
         </p>
@@ -201,14 +203,14 @@ const AdminUsersPage = () => {
 
       {message ? <p className="mb-4 font-body text-[12px] text-[#C4A882]">{message}</p> : null}
 
-      <div className="overflow-x-auto">
+      <div className="hidden overflow-x-auto md:block">
         <table className="min-w-[980px] w-full border-collapse">
           <thead>
             <tr className="border-b border-[#d4ccc2]">
               {["User", "Email", "Role", "Promoted By", "Date Promoted", "Actions"].map((heading) => (
                 <th
                   key={heading}
-                  className="px-2 py-3 text-left font-body text-[10px] uppercase tracking-[0.12em] text-[#aaaaaa] first:pl-0 last:pr-0"
+                  className="px-2 py-3 text-left font-body text-[10px] uppercase tracking-[0.12em] text-[#777777] first:pl-0 last:pr-0"
                 >
                   {heading}
                 </th>
@@ -218,7 +220,7 @@ const AdminUsersPage = () => {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={6} className="px-0 py-8 text-center font-body text-[12px] text-[#aaaaaa]">
+                <td colSpan={6} className="px-0 py-8 text-center font-body text-[12px] text-[#777777]">
                   Loading admin users...
                 </td>
               </tr>
@@ -230,7 +232,7 @@ const AdminUsersPage = () => {
               </tr>
             ) : sortedRows.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-0 py-8 text-center font-body text-[12px] text-[#aaaaaa]">
+                <td colSpan={6} className="px-0 py-8 text-center font-body text-[12px] text-[#777777]">
                   No admin users found.
                 </td>
               </tr>
@@ -253,20 +255,20 @@ const AdminUsersPage = () => {
                         <p className="font-body text-[12px] text-[#1A1A1A]">{`${row.customer.first_name} ${row.customer.last_name}`.trim()}</p>
                       </div>
                     </td>
-                    <td className="px-2 py-4 font-body text-[11px] text-[#aaaaaa]">{row.customer.email}</td>
+                    <td className="px-2 py-4 font-body text-[11px] text-[#777777]">{row.customer.email}</td>
                     <td className="px-2 py-4">
                       <span className={`inline-block rounded-[2px] px-3 py-1 font-body text-[9px] uppercase tracking-[0.12em] ${roleBadgeClass[row.role]}`}>
                         {row.role === "super_admin" ? "Super Admin" : "Admin"}
                       </span>
                     </td>
-                    <td className="px-2 py-4 font-body text-[11px] text-[#aaaaaa]">{row.promoted_by_name || "System"}</td>
-                    <td className="px-2 py-4 font-body text-[11px] text-[#aaaaaa]">{formatDateShort(dateValue)}</td>
+                    <td className="px-2 py-4 font-body text-[11px] text-[#777777]">{row.promoted_by_name || "System"}</td>
+                    <td className="px-2 py-4 font-body text-[11px] text-[#777777]">{formatDateShort(dateValue)}</td>
                     <td className="px-0 py-4">
                       {canDemote ? (
                         <button
                           type="button"
                           onClick={() => setDemoteConfirmId(row.customer_id)}
-                          className="font-body text-[10px] uppercase tracking-[0.1em] text-[#aaaaaa] transition-colors hover:text-[#C0392B]"
+                          className="font-body text-[10px] uppercase tracking-[0.1em] text-[#777777] transition-colors hover:text-[#C0392B]"
                         >
                           Demote to Customer
                         </button>
@@ -278,7 +280,7 @@ const AdminUsersPage = () => {
                   demoteConfirmId === row.customer_id ? (
                     <tr key={`${row.customer_id}-confirm`} className="border-b border-[#d4ccc2] bg-[rgba(255,255,255,0.24)]">
                       <td colSpan={6} className="px-4 py-4">
-                        <p className="mb-3 font-body text-[11px] text-[#888888]">
+                        <p className="mb-3 font-body text-[11px] text-[#555555]">
                           Demote {`${row.customer.first_name} ${row.customer.last_name}`.trim()} to customer? They will lose all admin access.
                         </p>
                         <button
@@ -292,7 +294,7 @@ const AdminUsersPage = () => {
                         <button
                           type="button"
                           onClick={() => setDemoteConfirmId(null)}
-                          className="mt-2 font-body text-[10px] text-[#aaaaaa]"
+                          className="mt-2 font-body text-[10px] text-[#777777]"
                         >
                           Cancel
                         </button>
@@ -304,6 +306,69 @@ const AdminUsersPage = () => {
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="border-t border-[#d4ccc2] md:hidden">
+        {isLoading ? (
+          <p className="py-8 text-center font-body text-[12px] text-[#777777]">Loading admin users...</p>
+        ) : loadError ? (
+          <p className="py-8 text-center font-body text-[12px] text-[#C0392B]">{loadError}</p>
+        ) : sortedRows.length === 0 ? (
+          <p className="py-8 text-center font-body text-[12px] text-[#777777]">No admin users found.</p>
+        ) : (
+          sortedRows.map((row) => {
+            const initials = (row.customer.first_name.slice(0, 1) || row.customer.email.slice(0, 1) || "A").toUpperCase();
+            const dateValue = row.assigned_at || row.created_at;
+            const canDemote = row.role === "admin" && row.customer_id !== user?.id;
+            return (
+              <div key={`mobile-${row.customer_id}`} className="admin-mobile-card">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-[10px]">
+                    <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-[#1A1A1A] font-body text-[12px] text-[#F5F0E8]">
+                      {row.customer.avatar_url ? (
+                        <img src={row.customer.avatar_url} alt={row.customer.first_name} className="h-full w-full object-cover" />
+                      ) : (
+                        initials
+                      )}
+                    </div>
+                    <p className="truncate font-body text-[12px] text-[#1A1A1A]">{`${row.customer.first_name} ${row.customer.last_name}`.trim()}</p>
+                  </div>
+                  <span className={`inline-block rounded-[2px] px-3 py-1 font-body text-[9px] uppercase tracking-[0.12em] ${roleBadgeClass[row.role]}`}>
+                    {row.role === "super_admin" ? "Super Admin" : "Admin"}
+                  </span>
+                </div>
+
+                <p className="admin-mobile-ellipsis mt-2 font-body text-[11px] text-[#777777]">{row.customer.email}</p>
+                <p className="mt-1 font-body text-[11px] text-[#777777]">{row.promoted_by_name || "System"} · {formatDateShort(dateValue)}</p>
+
+                <div className="mt-2 flex justify-end font-body text-[10px] uppercase tracking-[0.1em]">
+                  {canDemote ? (
+                    demoteConfirmId === row.customer_id ? (
+                      <div className="flex gap-3">
+                        <button type="button" onClick={() => void demote(row)} disabled={isDemoting} className="text-[#C0392B]">
+                          {isDemoting ? "Updating..." : "Confirm"}
+                        </button>
+                        <button type="button" onClick={() => setDemoteConfirmId(null)} className="text-[#555555]">
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setDemoteConfirmId(row.customer_id)}
+                        className="text-[#777777] hover:text-[#C0392B]"
+                      >
+                        Demote to Customer
+                      </button>
+                    )
+                  ) : (
+                    <span className="text-[#cccccc]">-</span>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
 
       {isPanelOpen ? (
@@ -319,7 +384,7 @@ const AdminUsersPage = () => {
                   setSelectedCustomer(null);
                 }}
                 placeholder="Search customer by email..."
-                className="w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[13px] text-[#1A1A1A] outline-none placeholder:text-[#aaaaaa] focus:border-[#1A1A1A]"
+                className="w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[13px] text-[#1A1A1A] outline-none placeholder:text-[#999999] focus:border-[#1A1A1A]"
               />
 
               {!selectedCustomer && searchTerm.length >= 2 && searchResults.length > 0 ? (
@@ -335,12 +400,12 @@ const AdminUsersPage = () => {
                       className="block w-full border-b border-[#e4dbd1] px-4 py-3 text-left hover:bg-[rgba(196,168,130,0.05)]"
                     >
                       <p className="font-body text-[12px] text-[#1A1A1A]">{`${candidate.first_name} ${candidate.last_name}`.trim()}</p>
-                      <p className="font-body text-[11px] text-[#888888]">{candidate.email}</p>
+                      <p className="font-body text-[11px] text-[#555555]">{candidate.email}</p>
                     </button>
                   ))}
                 </div>
               ) : null}
-              {isSearching ? <p className="mt-2 font-body text-[11px] text-[#aaaaaa]">Searching...</p> : null}
+              {isSearching ? <p className="mt-2 font-body text-[11px] text-[#777777]">Searching...</p> : null}
             </div>
 
             {selectedCustomer ? (
@@ -354,7 +419,7 @@ const AdminUsersPage = () => {
                 </div>
                 <div>
                   <p className="font-body text-[12px] text-[#1A1A1A]">{`${selectedCustomer.first_name} ${selectedCustomer.last_name}`.trim()}</p>
-                  <p className="font-body text-[11px] text-[#888888]">{selectedCustomer.email}</p>
+                  <p className="font-body text-[11px] text-[#555555]">{selectedCustomer.email}</p>
                 </div>
               </div>
             ) : null}
@@ -404,7 +469,7 @@ const AdminUsersPage = () => {
               <button
                 type="button"
                 onClick={closePanel}
-                className="mt-3 block w-full font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa] transition-colors hover:text-[#1A1A1A]"
+                className="mt-3 block w-full font-body text-[11px] uppercase tracking-[0.1em] text-[#777777] transition-colors hover:text-[#1A1A1A]"
               >
                 Cancel
               </button>
@@ -417,4 +482,5 @@ const AdminUsersPage = () => {
 };
 
 export default AdminUsersPage;
+
 

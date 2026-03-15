@@ -75,7 +75,7 @@ export const AccountInputField = ({
             setIsFocused(false);
             onBlur();
           }}
-          className={`w-full border-0 border-b ${borderClass} bg-transparent pb-[10px] pt-[16px] pr-8 font-body text-[14px] text-[#1A1A1A] transition-colors duration-200 placeholder:text-transparent focus:border-[#1A1A1A] focus:outline-none ${readOnly ? "cursor-not-allowed text-[#888888]" : ""}`}
+          className={`w-full border-0 border-b ${borderClass} bg-transparent pb-[10px] pt-[16px] pr-8 font-body text-[14px] text-[#1A1A1A] transition-colors duration-200 placeholder:text-transparent focus:border-[#1A1A1A] focus:outline-none ${readOnly ? "cursor-not-allowed text-[#555555]" : ""}`}
         />
 
         <label
@@ -83,7 +83,7 @@ export const AccountInputField = ({
           className={`pointer-events-none absolute left-0 font-body transition-all duration-200 ${
             shouldFloatLabel
               ? "top-[2px] text-[10px] uppercase tracking-[0.12em] text-[#C4A882]"
-              : "top-[20px] text-[14px] text-[#888888]"
+              : "top-[20px] text-[14px] text-[#555555]"
           }`}
         >
           {label}
@@ -93,7 +93,7 @@ export const AccountInputField = ({
         {trailingControl ? <div className="absolute right-0 top-[17px]">{trailingControl}</div> : null}
       </div>
 
-      {helperText ? <p className="mt-[6px] font-body text-[11px] text-[#aaaaaa]">{helperText}</p> : null}
+      {helperText ? <p className="mt-[6px] font-body text-[11px] text-[#666666]">{helperText}</p> : null}
       {error ? <p className="mt-[6px] font-body text-[11px] text-[#C0392B]">{error}</p> : null}
     </div>
   );
@@ -135,7 +135,7 @@ export const AccountSelectField = ({
         ))}
       </select>
 
-      {helperText ? <p className="mt-[6px] font-body text-[11px] text-[#aaaaaa]">{helperText}</p> : null}
+      {helperText ? <p className="mt-[6px] font-body text-[11px] text-[#666666]">{helperText}</p> : null}
       {error ? <p className="mt-[6px] font-body text-[11px] text-[#C0392B]">{error}</p> : null}
     </div>
   );
@@ -173,16 +173,17 @@ export const AccountTextareaField = ({
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
         onBlur={onBlur}
-        className={`mt-[8px] w-full border-0 border-b ${borderClass} bg-transparent pb-[10px] font-body text-[14px] text-[#1A1A1A] outline-none transition-colors placeholder:text-[#aaaaaa] focus:border-[#1A1A1A]`}
+        className={`mt-[8px] w-full border-0 border-b ${borderClass} bg-transparent pb-[10px] font-body text-[14px] text-[#1A1A1A] outline-none transition-colors placeholder:text-[#999999] focus:border-[#1A1A1A]`}
       />
 
       {maxLength ? (
-        <p className="mt-[6px] text-right font-body text-[10px] text-[#aaaaaa]">
+        <p className="mt-[6px] text-right font-body text-[10px] text-[#777777]">
           {value.length}/{maxLength}
         </p>
       ) : null}
-      {helperText ? <p className="mt-[6px] font-body text-[11px] text-[#aaaaaa]">{helperText}</p> : null}
+      {helperText ? <p className="mt-[6px] font-body text-[11px] text-[#666666]">{helperText}</p> : null}
       {error ? <p className="mt-[6px] font-body text-[11px] text-[#C0392B]">{error}</p> : null}
     </div>
   );
 };
+

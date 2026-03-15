@@ -371,15 +371,13 @@ const Index = () => {
             Our Collections
           </p>
           <h2 className="font-display text-[42px] font-normal italic text-center text-foreground mb-2">Shop by Category</h2>
-          <p className="font-body font-light text-[14px] text-[#888888] text-center mb-[60px] max-w-2xl mx-auto">
+          <p className="font-body font-light text-[14px] text-[#555555] text-center mb-[60px] max-w-2xl mx-auto">
             Considered categories for wardrobe staples, elevated accessories, and restorative hair care.
           </p>
-          <div className="overflow-x-auto">
-            <div className="grid grid-cols-5 gap-8 min-w-[920px]">
-              {categories.map((cat) => (
-                <CategoryCard key={cat} category={cat} />
-              ))}
-            </div>
+          <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-5 lg:gap-8">
+            {categories.map((cat) => (
+              <CategoryCard key={cat} category={cat} />
+            ))}
           </div>
         </div>
       </section>
@@ -388,3 +386,4 @@ const Index = () => {
 };
 
 export default Index;
+

@@ -213,14 +213,14 @@ const TryOnModal = ({ product, isOpen, onClose }: TryOnModalProps) => {
         <button
           type="button"
           onClick={handleClose}
-          className="absolute right-5 top-5 text-[#888888] transition-colors duration-200 hover:text-[#1A1A1A]"
+          className="absolute right-5 top-5 text-[#555555] transition-colors duration-200 hover:text-[#1A1A1A]"
           aria-label="Close try-on modal"
         >
           <X size={20} strokeWidth={1.4} />
         </button>
 
-        <h2 className="mb-1 font-display text-[28px] italic text-[#1A1A1A]">Virtual Try-On</h2>
-        <p className="mb-8 font-body text-[12px] text-[#aaaaaa]">{product.name}</p>
+        <h2 className="mb-1 font-display text-[28px] italic text-[#1A1A1A]">Try it On</h2>
+        <p className="mb-8 font-body text-[12px] text-[#777777]">{product.name}</p>
 
         {tryOnState === "upload" ? (
           <div>
@@ -233,8 +233,8 @@ const TryOnModal = ({ product, isOpen, onClose }: TryOnModalProps) => {
                 className="w-full rounded-[2px] border-2 border-dashed border-[#d4ccc2] px-6 py-10 text-center transition-colors duration-200 hover:border-[#1A1A1A]"
               >
                 <Camera size={32} strokeWidth={1.25} className="mx-auto mb-3 text-[#d4ccc2]" />
-                <p className="font-body text-[13px] text-[#888888]">Upload a photo of yourself</p>
-                <p className="mt-2 font-body text-[10px] text-[#aaaaaa]">JPG or PNG - Max 5MB</p>
+                <p className="font-body text-[13px] text-[#555555]">Upload a photo of yourself</p>
+                <p className="mt-2 font-body text-[10px] text-[#777777]">JPG or PNG - Max 5MB</p>
               </button>
             ) : (
               <div>
@@ -307,7 +307,7 @@ const TryOnModal = ({ product, isOpen, onClose }: TryOnModalProps) => {
             </div>
 
             {isRetrying ? (
-              <p className="mt-4 text-center font-body text-[11px] text-[#888888]">
+              <p className="mt-4 text-center font-body text-[11px] text-[#555555]">
                 {`Retrying (${retryCount}): ${retryReason ?? "request retry in progress"}`}
               </p>
             ) : null}
@@ -328,7 +328,7 @@ const TryOnModal = ({ product, isOpen, onClose }: TryOnModalProps) => {
 
             {compositeImage ? (
               <div>
-                <p className="mb-2 mt-4 font-body text-[10px] uppercase tracking-[0.15em] text-[#aaaaaa]">Outfit Preview</p>
+                <p className="mb-2 mt-4 font-body text-[10px] uppercase tracking-[0.15em] text-[#777777]">Outfit Preview</p>
                 <img src={compositeImage} alt="Outfit preview" className="h-[120px] w-full object-contain" />
               </div>
             ) : null}
@@ -381,3 +381,4 @@ const TryOnModal = ({ product, isOpen, onClose }: TryOnModalProps) => {
 };
 
 export default TryOnModal;
+

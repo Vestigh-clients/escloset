@@ -9,7 +9,7 @@ interface RouteGuardProps {
 
 const GuardLoadingScreen = () => (
   <div className="flex min-h-screen items-center justify-center bg-[#F5F0E8] px-6">
-    <p className="font-body text-[12px] uppercase tracking-[0.14em] text-[#888888]">Loading...</p>
+    <p className="font-body text-[12px] uppercase tracking-[0.14em] text-[#555555]">Loading...</p>
   </div>
 );
 
@@ -68,3 +68,4 @@ export const SuperAdminRoute = ({ children }: RouteGuardProps) => {
 
   return <>{children}</>;
 };
+

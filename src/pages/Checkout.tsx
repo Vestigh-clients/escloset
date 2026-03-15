@@ -717,7 +717,7 @@ const FloatingInput = ({
             setIsFocused(false);
             onBlur();
           }}
-          className={`w-full border-0 border-b ${borderClass} bg-transparent pb-[10px] pt-[16px] font-body text-[16px] text-[#1A1A1A] transition-colors duration-200 placeholder:text-transparent focus:placeholder:text-[#aaaaaa] focus:border-[#1A1A1A] focus:outline-none md:text-[14px]`}
+          className={`w-full border-0 border-b ${borderClass} bg-transparent pb-[10px] pt-[16px] font-body text-[16px] text-[#1A1A1A] transition-colors duration-200 placeholder:text-transparent focus:placeholder:text-[#999999] focus:border-[#1A1A1A] focus:outline-none md:text-[14px]`}
         />
 
         <label
@@ -725,7 +725,7 @@ const FloatingInput = ({
           className={`pointer-events-none absolute left-0 font-body transition-all duration-200 ${
             shouldFloatLabel
               ? "top-[2px] text-[10px] uppercase tracking-[0.12em] text-[#C4A882]"
-              : "top-[20px] text-[14px] text-[#888888]"
+              : "top-[20px] text-[14px] text-[#555555]"
           }`}
         >
           {label}
@@ -733,7 +733,7 @@ const FloatingInput = ({
         </label>
       </div>
 
-      {helperText ? <p className="mt-[6px] font-body text-[11px] text-[#aaaaaa]">{helperText}</p> : null}
+      {helperText ? <p className="mt-[6px] font-body text-[11px] text-[#666666]">{helperText}</p> : null}
       {error ? <p className="mt-[6px] font-body text-[11px] text-[#C0392B]">{error}</p> : null}
     </div>
   );
@@ -772,7 +772,7 @@ const FloatingTextarea = ({
             setIsFocused(false);
             onBlur();
           }}
-          className={`w-full resize-none border-0 border-b ${borderClass} bg-transparent pb-[10px] pt-[20px] font-body text-[16px] text-[#1A1A1A] transition-colors duration-200 placeholder:text-transparent focus:placeholder:text-[#aaaaaa] focus:border-[#1A1A1A] focus:outline-none md:text-[14px]`}
+          className={`w-full resize-none border-0 border-b ${borderClass} bg-transparent pb-[10px] pt-[20px] font-body text-[16px] text-[#1A1A1A] transition-colors duration-200 placeholder:text-transparent focus:placeholder:text-[#999999] focus:border-[#1A1A1A] focus:outline-none md:text-[14px]`}
           rows={4}
         />
 
@@ -781,7 +781,7 @@ const FloatingTextarea = ({
           className={`pointer-events-none absolute left-0 font-body transition-all duration-200 ${
             shouldFloatLabel
               ? "top-[2px] text-[10px] uppercase tracking-[0.12em] text-[#C4A882]"
-              : "top-[22px] text-[14px] text-[#888888]"
+              : "top-[22px] text-[14px] text-[#555555]"
           }`}
         >
           {label}
@@ -790,7 +790,7 @@ const FloatingTextarea = ({
       </div>
 
       {showCharacterCount && typeof maxLength === "number" ? (
-        <p className="mt-[6px] text-right font-body text-[10px] text-[#aaaaaa]">
+        <p className="mt-[6px] text-right font-body text-[10px] text-[#666666]">
           {value.length}/{maxLength}
         </p>
       ) : null}
@@ -842,14 +842,14 @@ const FloatingSelect = ({
           ))}
         </select>
 
-        <ChevronDown className="pointer-events-none absolute right-0 top-[31px] h-4 w-4 text-[#888888]" />
+        <ChevronDown className="pointer-events-none absolute right-0 top-[31px] h-4 w-4 text-[#555555]" />
 
         <label
           htmlFor={id}
           className={`pointer-events-none absolute left-0 font-body transition-all duration-200 ${
             shouldFloatLabel
               ? "top-[2px] text-[10px] uppercase tracking-[0.12em] text-[#C4A882]"
-              : "top-[20px] text-[14px] text-[#888888]"
+              : "top-[20px] text-[14px] text-[#555555]"
           }`}
         >
           {label}
@@ -900,7 +900,7 @@ const SearchableStateField = ({
               className={`flex w-full items-center justify-between border-0 border-b ${borderClass} bg-transparent pb-[10px] pt-[16px] text-left font-body text-[16px] text-[#1A1A1A] transition-colors duration-200 focus:border-[#1A1A1A] focus:outline-none md:text-[14px]`}
             >
               <span className="truncate">{value || " "}</span>
-              <ChevronDown className="h-4 w-4 text-[#888888]" />
+              <ChevronDown className="h-4 w-4 text-[#555555]" />
             </button>
           </PopoverTrigger>
           <PopoverContent
@@ -911,10 +911,10 @@ const SearchableStateField = ({
             <Command className="bg-[#F5F0E8]">
               <CommandInput
                 placeholder="Search region..."
-                className="font-body text-[13px] placeholder:text-[#aaaaaa] focus:ring-0"
+                className="font-body text-[13px] placeholder:text-[#999999] focus:ring-0"
               />
               <CommandList>
-                <CommandEmpty className="font-body text-[12px] text-[#888888]">No region found.</CommandEmpty>
+                <CommandEmpty className="font-body text-[12px] text-[#555555]">No region found.</CommandEmpty>
                 <CommandGroup>
                   {options.map((stateName) => (
                     <CommandItem
@@ -942,7 +942,7 @@ const SearchableStateField = ({
           className={`pointer-events-none absolute left-0 font-body transition-all duration-200 ${
             shouldFloatLabel
               ? "top-[2px] text-[10px] uppercase tracking-[0.12em] text-[#C4A882]"
-              : "top-[20px] text-[14px] text-[#888888]"
+              : "top-[20px] text-[14px] text-[#555555]"
           }`}
         >
           {label}
@@ -2110,13 +2110,13 @@ const Checkout = () => {
               />
 
               <div className="min-w-0 flex-1">
-                <p className="truncate font-display text-[14px] italic text-[#1A1A1A]">{item.name}</p>
+                <p className="truncate font-display text-[14px] italic text-[#555555]">{item.name}</p>
                 {item.variant_label ? (
-                  <p className="mt-[3px] mb-[6px] font-body text-[10px] tracking-[0.05em] text-[#888888]">
+                  <p className="mt-[3px] mb-[6px] font-body text-[10px] tracking-[0.05em] text-[#555555]">
                     {item.variant_label}
                   </p>
                 ) : null}
-                <p className="font-body text-[11px] text-[#888888]">Qty: {item.quantity}</p>
+                <p className="font-body text-[11px] text-[#555555]">Qty: {item.quantity}</p>
               </div>
 
               <p className="text-right font-body text-[12px] text-[#1A1A1A]">
@@ -2129,12 +2129,12 @@ const Checkout = () => {
       </div>
 
       <div className="mt-4 space-y-2 font-body text-[12px]">
-        <div className="flex items-center justify-between text-[#888888]">
+        <div className="flex items-center justify-between text-[#555555]">
           <span>Subtotal</span>
           <span>{formatPrice(subtotal)}</span>
         </div>
 
-        <div className="flex items-center justify-between text-[#888888]">
+        <div className="flex items-center justify-between text-[#555555]">
           <span>Shipping</span>
           <span>{shippingSidebarValue}</span>
         </div>
@@ -2172,7 +2172,7 @@ const Checkout = () => {
             className={`pointer-events-none absolute left-0 font-body transition-all duration-200 ${
               discountInput.trim().length > 0
                 ? "top-[2px] text-[10px] uppercase tracking-[0.12em] text-[#C4A882]"
-                : "top-[20px] text-[14px] text-[#888888]"
+                : "top-[20px] text-[14px] text-[#555555]"
             }`}
           >
             Discount code
@@ -2193,7 +2193,7 @@ const Checkout = () => {
       </div>
 
       {isValidating ? (
-        <p className="mt-5 font-body text-[11px] text-[#888888]">Verifying latest prices and stock...</p>
+        <p className="mt-5 font-body text-[11px] text-[#555555]">Verifying latest prices and stock...</p>
       ) : null}
     </div>
   );
@@ -2242,7 +2242,7 @@ const Checkout = () => {
                               ? "border-[#1A1A1A] bg-[#1A1A1A] text-[#F5F0E8]"
                               : isCompleted
                                 ? "border-[#C4A882] bg-[#C4A882] text-[#1A1A1A]"
-                                : "border-[#d4ccc2] bg-transparent text-[#aaaaaa]"
+                                : "border-[#d4ccc2] bg-transparent text-[#777777]"
                           }`}
                         >
                           {isCompleted && !isActive ? <Check className="h-3.5 w-3.5" /> : index + 1}
@@ -2250,7 +2250,7 @@ const Checkout = () => {
 
                         <span
                           className={`mt-2 font-body text-[10px] uppercase tracking-[0.12em] ${
-                            isActive ? "text-[#1A1A1A]" : isCompleted ? "text-[#C4A882]" : "text-[#aaaaaa]"
+                            isActive ? "text-[#1A1A1A]" : isCompleted ? "text-[#C4A882]" : "text-[#777777]"
                           }`}
                         >
                           {STEP_LABEL[step]}
@@ -2274,7 +2274,7 @@ const Checkout = () => {
               <p className="font-body text-[10px] uppercase tracking-[0.12em] text-[#1A1A1A]">
                 {STEP_LABEL[currentStep]}
               </p>
-              <p className="font-body text-[10px] uppercase tracking-[0.12em] text-[#888888]">
+              <p className="font-body text-[10px] uppercase tracking-[0.12em] text-[#555555]">
                 Step {currentStepIndex + 1} of {CHECKOUT_STEPS.length}
               </p>
             </div>
@@ -2283,7 +2283,7 @@ const Checkout = () => {
               <div>
                 <h1 className="font-display text-[32px] italic text-[#1A1A1A]">Contact Information</h1>
                 {isGuestCheckout ? (
-                  <p className="mt-2 font-body text-[11px] text-[#aaaaaa]">
+                  <p className="mt-2 font-body text-[11px] text-[#666666]">
                     Checking out as guest &#183;{" "}
                     <Link
                       to="/auth/login?redirect=/checkout/contact"
@@ -2327,7 +2327,7 @@ const Checkout = () => {
                       <button
                         type="button"
                         onClick={handleDismissSavedDetails}
-                        className="ml-4 font-body text-[10px] uppercase tracking-[0.15em] text-[#aaaaaa] transition-colors duration-200 hover:text-[#1A1A1A]"
+                        className="ml-4 font-body text-[10px] uppercase tracking-[0.15em] text-[#777777] transition-colors duration-200 hover:text-[#1A1A1A]"
                       >
                         No thanks
                       </button>
@@ -2442,7 +2442,7 @@ const Checkout = () => {
                   >
                     {contactValues.marketingOptIn ? <Check className="h-3 w-3 text-white" /> : null}
                   </span>
-                  <span className="font-body text-[12px] text-[#888888]">
+                  <span className="font-body text-[12px] text-[#555555]">
                     Send me updates on new arrivals and offers
                   </span>
                 </label>
@@ -2456,7 +2456,7 @@ const Checkout = () => {
                     <button
                       type="button"
                       onClick={handleBack}
-                      className="self-start font-body text-[11px] uppercase tracking-[0.12em] text-[#888888] transition-colors hover:text-[#1A1A1A]"
+                      className="self-start font-body text-[11px] uppercase tracking-[0.12em] text-[#555555] transition-colors hover:text-[#1A1A1A]"
                     >
                       &larr; Back
                     </button>
@@ -2493,7 +2493,7 @@ const Checkout = () => {
                           >
                             <p className="font-body text-[12px] text-[#1A1A1A]">{address.label}</p>
                             <p className="font-body text-[12px] text-[#1A1A1A]">{address.recipientName || "Saved recipient"}</p>
-                            <p className="truncate font-body text-[12px] text-[#888888]">{address.addressLine1}</p>
+                            <p className="truncate font-body text-[12px] text-[#555555]">{address.addressLine1}</p>
                           </button>
                         );
                       })}
@@ -2581,7 +2581,7 @@ const Checkout = () => {
                     </div>
 
                     {deliveryValues.state && shippingQuote ? (
-                      <p className="mt-2 font-body text-[11px] text-[#888888]">
+                      <p className="mt-2 font-body text-[11px] text-[#555555]">
                         Delivery to {deliveryValues.state}: {formatPrice(shippingQuote.fee)} {"\u00B7"}{" "}
                         {shippingQuote.minDays}-
                         {shippingQuote.maxDays} business days
@@ -2645,7 +2645,7 @@ const Checkout = () => {
                     >
                       {deliveryValues.saveForFuture ? <Check className="h-3 w-3 text-white" /> : null}
                     </span>
-                    <span className="font-body text-[12px] text-[#888888]">Save this address for future orders</span>
+                    <span className="font-body text-[12px] text-[#555555]">Save this address for future orders</span>
                   </label>
                 ) : null}
 
@@ -2658,7 +2658,7 @@ const Checkout = () => {
                     <button
                       type="button"
                       onClick={handleBack}
-                      className="self-start font-body text-[11px] uppercase tracking-[0.12em] text-[#888888] transition-colors hover:text-[#1A1A1A]"
+                      className="self-start font-body text-[11px] uppercase tracking-[0.12em] text-[#555555] transition-colors hover:text-[#1A1A1A]"
                     >
                       &larr; Back
                     </button>
@@ -2695,7 +2695,7 @@ const Checkout = () => {
                   >
                     <Smartphone size={28} strokeWidth={1.25} className="mb-4 text-[#C4A882]" />
                     <p className="font-display text-[18px] italic text-[#1A1A1A]">Mobile Money</p>
-                    <p className="mt-1 font-body text-[11px] font-light text-[#888888]">
+                    <p className="mt-1 font-body text-[11px] font-light text-[#555555]">
                       Pay via MTN MoMo, Telecel Cash or AirtelTigo
                     </p>
                   </button>
@@ -2718,7 +2718,7 @@ const Checkout = () => {
                   >
                     <Banknote size={28} strokeWidth={1.25} className="mb-4 text-[#C4A882]" />
                     <p className="font-display text-[18px] italic text-[#1A1A1A]">Cash on Delivery</p>
-                    <p className="mt-1 font-body text-[11px] font-light text-[#888888]">
+                    <p className="mt-1 font-body text-[11px] font-light text-[#555555]">
                       Pay in cash when your order arrives
                     </p>
                   </button>
@@ -2757,7 +2757,7 @@ const Checkout = () => {
                     <button
                       type="button"
                       onClick={handleBack}
-                      className="self-start font-body text-[11px] uppercase tracking-[0.12em] text-[#888888] transition-colors hover:text-[#1A1A1A]"
+                      className="self-start font-body text-[11px] uppercase tracking-[0.12em] text-[#555555] transition-colors hover:text-[#1A1A1A]"
                     >
                       &larr; Back
                     </button>
@@ -2792,13 +2792,13 @@ const Checkout = () => {
                       />
 
                       <div className="min-w-0 flex-1">
-                        <p className="font-display text-[16px] italic text-[#1A1A1A]">{item.name}</p>
+                        <p className="font-display text-[16px] italic text-[#555555]">{item.name}</p>
                         {item.variant_label ? (
-                          <p className="mt-[3px] mb-[6px] font-body text-[10px] tracking-[0.05em] text-[#888888]">
+                          <p className="mt-[3px] mb-[6px] font-body text-[10px] tracking-[0.05em] text-[#555555]">
                             {item.variant_label}
                           </p>
                         ) : null}
-                        <p className="font-body text-[12px] text-[#888888]">Qty: {item.quantity}</p>
+                        <p className="font-body text-[12px] text-[#555555]">Qty: {item.quantity}</p>
                       </div>
 
                       <p className="font-body text-[13px] text-[#1A1A1A]">{formatPrice(item.price * item.quantity)}</p>
@@ -2807,12 +2807,12 @@ const Checkout = () => {
                 </div>
 
                 <div className="mt-5 space-y-2 border-b border-[#d4ccc2] pb-6">
-                  <div className="flex items-center justify-between font-body text-[12px] text-[#888888]">
+                  <div className="flex items-center justify-between font-body text-[12px] text-[#555555]">
                     <span>Subtotal</span>
                     <span>{formatPrice(subtotal)}</span>
                   </div>
 
-                  <div className="flex items-center justify-between font-body text-[12px] text-[#888888]">
+                  <div className="flex items-center justify-between font-body text-[12px] text-[#555555]">
                     <span>Shipping</span>
                     <span>{shippingQuote ? formatPrice(shippingQuote.fee) : "Select region"}</span>
                   </div>
@@ -2836,13 +2836,13 @@ const Checkout = () => {
                     <button
                       type="button"
                       onClick={() => navigate(STEP_PATH.delivery)}
-                      className="font-body text-[11px] uppercase tracking-[0.1em] text-[#888888] transition-colors hover:text-[#1A1A1A]"
+                      className="font-body text-[11px] uppercase tracking-[0.1em] text-[#555555] transition-colors hover:text-[#1A1A1A]"
                     >
                       Edit
                     </button>
                   </div>
 
-                  <p className="font-body text-[13px] text-[#888888]">
+                  <p className="font-body text-[13px] text-[#555555]">
                     {deliveryValues.addressLine1}
                     {deliveryValues.addressLine2 ? `, ${deliveryValues.addressLine2}` : ""}
                     <br />
@@ -2858,13 +2858,13 @@ const Checkout = () => {
                     <button
                       type="button"
                       onClick={() => navigate(STEP_PATH.contact)}
-                      className="font-body text-[11px] uppercase tracking-[0.1em] text-[#888888] transition-colors hover:text-[#1A1A1A]"
+                      className="font-body text-[11px] uppercase tracking-[0.1em] text-[#555555] transition-colors hover:text-[#1A1A1A]"
                     >
                       Edit
                     </button>
                   </div>
 
-                  <p className="font-body text-[13px] text-[#888888]">
+                  <p className="font-body text-[13px] text-[#555555]">
                     {contactValues.firstName} {contactValues.lastName}
                     <br />
                     {contactValues.email}
@@ -2877,13 +2877,13 @@ const Checkout = () => {
                     <button
                       type="button"
                       onClick={() => navigate(STEP_PATH.payment)}
-                      className="font-body text-[11px] uppercase tracking-[0.1em] text-[#888888] transition-colors hover:text-[#1A1A1A]"
+                      className="font-body text-[11px] uppercase tracking-[0.1em] text-[#555555] transition-colors hover:text-[#1A1A1A]"
                     >
                       Edit
                     </button>
                   </div>
 
-                  <p className="font-body text-[13px] text-[#888888]">
+                  <p className="font-body text-[13px] text-[#555555]">
                     {selectedPaymentLabel}
                     {paymentValues.method === "mobile_money" && paymentValues.mobileMoneyNumber
                       ? ` (${paymentValues.mobileMoneyNumber})`
@@ -2909,18 +2909,18 @@ const Checkout = () => {
                   <button
                     type="button"
                     onClick={handleBack}
-                    className="mb-4 font-body text-[11px] uppercase tracking-[0.12em] text-[#888888] transition-colors hover:text-[#1A1A1A]"
+                    className="mb-4 font-body text-[11px] uppercase tracking-[0.12em] text-[#555555] transition-colors hover:text-[#1A1A1A]"
                   >
                     &larr; Back
                   </button>
 
-                  <p className="mb-4 font-body text-[11px] text-[#aaaaaa]">
+                  <p className="mb-4 font-body text-[11px] text-[#777777]">
                     By placing your order you agree to our{" "}
-                    <Link to="/contact" className="text-[#888888] transition-colors hover:text-[#1A1A1A]">
+                    <Link to="/contact" className="text-[#555555] transition-colors hover:text-[#1A1A1A]">
                       Terms &amp; Conditions
                     </Link>{" "}
                     and{" "}
-                    <Link to="/contact" className="text-[#888888] transition-colors hover:text-[#1A1A1A]">
+                    <Link to="/contact" className="text-[#555555] transition-colors hover:text-[#1A1A1A]">
                       Privacy Policy
                     </Link>
                   </p>
@@ -2979,13 +2979,13 @@ const Checkout = () => {
 
           <div className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto bg-[#F5F0E8] px-5 pb-6 pt-5">
             <div className="mb-4 flex items-center justify-between">
-              <p className="font-body text-[10px] uppercase tracking-[0.14em] text-[#888888]">
+              <p className="font-body text-[10px] uppercase tracking-[0.14em] text-[#555555]">
                 {orderItemCountLabel} {"\u00B7"} {formatPrice(subtotal)}
               </p>
               <button
                 type="button"
                 onClick={() => setIsMobileSummaryOpen(false)}
-                className="text-[#888888] transition-colors hover:text-[#1A1A1A]"
+                className="text-[#555555] transition-colors hover:text-[#1A1A1A]"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -3000,4 +3000,5 @@ const Checkout = () => {
 };
 
 export default Checkout;
+
 

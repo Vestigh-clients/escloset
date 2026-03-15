@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Bell } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -43,15 +43,15 @@ const navGroups: AdminNavGroup[] = [
   {
     label: "Customers",
     links: [
-      { label: "Customers", to: "/admin/customers" },
-      { label: "Admin Users", to: "/admin/users", minRole: "super_admin" },
+      { label: "All Customers", to: "/admin/customers" },
+      { label: "Discount Codes", to: "/admin/discounts" },
     ],
   },
   {
     label: "Settings",
     links: [
-      { label: "Discount Codes", to: "/admin/discounts" },
       { label: "Shipping Rates", to: "/admin/shipping" },
+      { label: "Admin Users", to: "/admin/users", minRole: "super_admin" },
       { label: "Site Settings", to: "/admin/settings", minRole: "super_admin" },
     ],
   },
@@ -90,8 +90,21 @@ const AdminLayout = () => {
   const [notifications, setNotifications] = useState<AdminNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
-  const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const desktopDropdownRef = useRef<HTMLDivElement | null>(null);
+  const mobileDropdownRef = useRef<HTMLDivElement | null>(null);
+
+  const openDrawer = useCallback(() => {
+    setDrawerOpen(true);
+    setIsDropdownOpen(false);
+    document.body.style.overflow = "hidden";
+  }, []);
+
+  const closeDrawer = useCallback(() => {
+    setDrawerOpen(false);
+    document.body.style.overflow = "";
+  }, []);
 
   useEffect(() => {
     const metadata = (user?.user_metadata ?? {}) as Record<string, unknown>;
@@ -183,8 +196,11 @@ const AdminLayout = () => {
 
   useEffect(() => {
     const onClickOutside = (event: MouseEvent) => {
-      if (!dropdownRef.current) return;
-      if (!dropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      const clickedDesktopDropdown = desktopDropdownRef.current?.contains(target) ?? false;
+      const clickedMobileDropdown = mobileDropdownRef.current?.contains(target) ?? false;
+
+      if (!clickedDesktopDropdown && !clickedMobileDropdown) {
         setIsDropdownOpen(false);
       }
     };
@@ -197,6 +213,30 @@ const AdminLayout = () => {
       document.removeEventListener("mousedown", onClickOutside);
     };
   }, [isDropdownOpen]);
+
+  useEffect(() => {
+    closeDrawer();
+    setIsDropdownOpen(false);
+  }, [closeDrawer, location.pathname]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeDrawer();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [closeDrawer]);
+
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
 
   const breadcrumb = useMemo(() => {
     const segments = location.pathname.split("/").filter(Boolean).slice(1);
@@ -218,7 +258,7 @@ const AdminLayout = () => {
         .filter((group) => group.links.length > 0),
     [role],
   );
-  const mobileNavLinks = useMemo(() => visibleNavGroups.flatMap((group) => group.links), [visibleNavGroups]);
+  const compactNavLinks = useMemo(() => visibleNavGroups.flatMap((group) => group.links), [visibleNavGroups]);
 
   const onNotificationClick = async (notification: AdminNotification) => {
     setIsDropdownOpen(false);
@@ -254,7 +294,159 @@ const AdminLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F0E8]">
+    <div
+      className="admin-layout-root min-h-screen bg-[#F5F0E8]"
+      style={{
+        overflowX: "hidden",
+        maxWidth: "100vw",
+      }}
+    >
+      <div className="fixed inset-x-0 top-0 z-[100] flex h-14 items-center justify-between bg-[#1A1A1A] px-5 md:hidden">
+        <button
+          type="button"
+          onClick={openDrawer}
+          aria-label="Open navigation menu"
+          className="flex h-9 w-9 items-center justify-center"
+        >
+          <span className="flex flex-col gap-[5px]">
+            <span className="block h-px w-[22px] bg-[#F5F0E8]" />
+            <span className="block h-px w-[22px] bg-[#F5F0E8]" />
+            <span className="block h-px w-[22px] bg-[#F5F0E8]" />
+          </span>
+        </button>
+
+        <p className="font-body text-[11px] uppercase tracking-[0.2em] text-[#F5F0E8]">LUXURIANT</p>
+
+        <div className="relative" ref={mobileDropdownRef}>
+          <button
+            type="button"
+            onClick={() => setIsDropdownOpen((open) => !open)}
+            className="relative p-1 text-[#F5F0E8] transition-colors hover:text-[#C4A882]"
+            aria-label="Notifications"
+          >
+            <Bell size={20} strokeWidth={1.5} />
+            {unreadCount > 0 ? (
+              <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#C0392B] px-[3px] font-body text-[9px] text-white">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            ) : null}
+          </button>
+
+          {isDropdownOpen ? (
+            <div className="absolute right-0 mt-3 w-[340px] max-h-[440px] max-w-[calc(100vw-24px)] overflow-y-auto border border-[#d4ccc2] bg-[#F5F0E8] shadow-[0_8px_32px_rgba(0,0,0,0.08)]">
+              <div className="flex items-center justify-between border-b border-[#d4ccc2] px-5 py-4">
+                <p className="font-display text-[18px] italic text-[#1A1A1A]">Notifications</p>
+                <button
+                  type="button"
+                  onClick={onMarkAllRead}
+                  className="font-body text-[10px] uppercase tracking-[0.1em] text-[#C4A882] transition-colors hover:text-[#1A1A1A]"
+                >
+                  Mark all read
+                </button>
+              </div>
+
+              {notifications.length === 0 ? (
+                <div className="px-5 py-8 text-center font-body text-[12px] text-[#777777]">No notifications yet.</div>
+              ) : (
+                notifications.map((notification) => (
+                  <button
+                    key={notification.id}
+                    type="button"
+                    onClick={() => void onNotificationClick(notification)}
+                    className={`w-full border-b border-[#d4ccc2] px-5 py-4 text-left transition-colors hover:bg-[rgba(196,168,130,0.05)] ${
+                      notification.is_read ? "border-l-2 border-l-transparent" : "border-l-2 border-l-[#C4A882]"
+                    }`}
+                  >
+                    <p className="font-body text-[12px] text-[#1A1A1A]">{notification.title}</p>
+                    <p className="mt-0.5 font-body text-[11px] font-light text-[#555555]">
+                      {notification.description || "Tap to view details."}
+                    </p>
+                    <p className="mt-1 font-body text-[10px] text-[#777777]">{formatRelativeDate(notification.created_at)}</p>
+                  </button>
+                ))
+              )}
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      <div
+        className={`fixed inset-0 z-[200] bg-[rgba(0,0,0,0.5)] transition-opacity duration-300 md:hidden ${
+          drawerOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+        }`}
+        onClick={closeDrawer}
+      />
+
+      <aside
+        className={`fixed inset-y-0 left-0 z-[300] flex h-screen w-[280px] transform flex-col overflow-y-auto bg-[#1A1A1A] transition-transform duration-300 [transition-timing-function:cubic-bezier(0.77,0,0.175,1)] md:hidden ${
+          drawerOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+        aria-hidden={!drawerOpen}
+      >
+        <div className="flex items-center justify-between border-b border-[#2a2a2a] px-5 pb-5 pt-6">
+          <p className="font-display text-[20px] italic text-[#F5F0E8]">LUXURIANT</p>
+          <button
+            type="button"
+            onClick={closeDrawer}
+            aria-label="Close menu"
+            className="text-[20px] text-[#666666] transition-colors hover:text-[#F5F0E8]"
+          >
+            &times;
+          </button>
+        </div>
+
+        <div className="border-b border-[#2a2a2a] px-5 py-4">
+          <p className="font-body text-[12px] text-[#888888]">{adminName}</p>
+          <p className="mt-1 font-body text-[9px] uppercase tracking-[0.1em] text-[#C4A882]">{roleLabel}</p>
+        </div>
+
+        <nav className="flex-1 py-2">
+          {visibleNavGroups.map((group) => (
+            <div key={`mobile-drawer-${group.label}`}>
+              <p className="px-5 pb-2 pt-5 font-body text-[9px] uppercase tracking-[0.2em] text-[#444444]">{group.label}</p>
+              {group.links.map((link) => (
+                <NavLink
+                  key={`mobile-drawer-link-${link.to}`}
+                  to={link.to}
+                  end={link.to === "/admin"}
+                  onClick={closeDrawer}
+                  className={({ isActive }) =>
+                    `block border-l-2 px-5 py-[14px] font-body text-[11px] uppercase tracking-[0.1em] transition-all duration-200 ${
+                      isActive
+                        ? "border-l-[#C4A882] bg-[rgba(255,255,255,0.03)] text-[#F5F0E8]"
+                        : "border-l-transparent text-[#666666] hover:text-[#F5F0E8]"
+                    }`
+                  }
+                >
+                  {link.label}
+                </NavLink>
+              ))}
+            </div>
+          ))}
+        </nav>
+
+        <div className="mt-auto border-t border-[#2a2a2a] p-5">
+          <a
+            href="/"
+            target="_blank"
+            rel="noreferrer"
+            className="mb-3 block font-body text-[10px] uppercase tracking-[0.12em] text-[#555555] transition-colors hover:text-[#888888]"
+          >
+            View Store &rarr;
+          </a>
+          <button
+            type="button"
+            onClick={() => {
+              closeDrawer();
+              void onSignOut();
+            }}
+            className="font-body text-[10px] uppercase tracking-[0.12em] text-[#555555] transition-colors hover:text-[#C0392B]"
+          >
+            Sign Out
+          </button>
+        </div>
+      </aside>
+
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-[240px] flex-col bg-[#1A1A1A] lg:flex">
         <div className="border-b border-[#2a2a2a] px-6 pb-4">
           <Link to="/" className="block pt-8 font-display text-[22px] italic text-[#F5F0E8]">
@@ -308,9 +500,9 @@ const AdminLayout = () => {
         </div>
       </aside>
 
-      <div className="min-h-screen lg:ml-[240px]">
-        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-[#d4ccc2] bg-[#F5F0E8] px-6 lg:px-[60px]">
-          <div className="flex flex-wrap items-center gap-2 font-body text-[11px] text-[#888888]">
+      <div className="min-h-screen pt-14 md:pt-0 lg:ml-[240px]">
+        <header className="sticky top-0 z-20 hidden h-16 items-center justify-between border-b border-[#d4ccc2] bg-[#F5F0E8] px-6 md:flex lg:px-[60px]">
+          <div className="flex flex-wrap items-center gap-2 font-body text-[11px] text-[#555555]">
             {breadcrumb.map((item, index) => (
               <span key={`${item}-${index}`} className="flex items-center gap-2">
                 {index > 0 ? <span className="text-[#d4ccc2]">/</span> : null}
@@ -320,7 +512,7 @@ const AdminLayout = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="relative" ref={dropdownRef}>
+            <div className="relative" ref={desktopDropdownRef}>
               <button
                 type="button"
                 onClick={() => setIsDropdownOpen((open) => !open)}
@@ -349,7 +541,7 @@ const AdminLayout = () => {
                   </div>
 
                   {notifications.length === 0 ? (
-                    <div className="px-5 py-8 text-center font-body text-[12px] text-[#aaaaaa]">No notifications yet.</div>
+                    <div className="px-5 py-8 text-center font-body text-[12px] text-[#777777]">No notifications yet.</div>
                   ) : (
                     notifications.map((notification) => (
                       <button
@@ -361,10 +553,10 @@ const AdminLayout = () => {
                         }`}
                       >
                         <p className="font-body text-[12px] text-[#1A1A1A]">{notification.title}</p>
-                        <p className="mt-0.5 font-body text-[11px] font-light text-[#888888]">
+                        <p className="mt-0.5 font-body text-[11px] font-light text-[#555555]">
                           {notification.description || "Tap to view details."}
                         </p>
-                        <p className="mt-1 font-body text-[10px] text-[#aaaaaa]">{formatRelativeDate(notification.created_at)}</p>
+                        <p className="mt-1 font-body text-[10px] text-[#777777]">{formatRelativeDate(notification.created_at)}</p>
                       </button>
                     ))
                   )}
@@ -378,16 +570,16 @@ const AdminLayout = () => {
           </div>
         </header>
 
-        <div className="border-b border-[#d4ccc2] px-6 py-3 lg:hidden">
-          <div className="flex items-center gap-3 overflow-x-auto">
-            {mobileNavLinks.map((link) => (
+        <div className="hidden border-b border-[#d4ccc2] md:block lg:hidden">
+          <div className="admin-filter-scroll flex items-center gap-3 overflow-x-auto px-6 py-3">
+            {compactNavLinks.map((link) => (
               <NavLink
-                key={`mobile-${link.to}`}
+                key={`compact-${link.to}`}
                 to={link.to}
                 end={link.to === "/admin"}
                 className={({ isActive }) =>
                   `whitespace-nowrap border-b pb-1 font-body text-[10px] uppercase tracking-[0.1em] ${
-                    isActive ? "border-[#1A1A1A] text-[#1A1A1A]" : "border-transparent text-[#888888]"
+                    isActive ? "border-[#1A1A1A] text-[#1A1A1A]" : "border-transparent text-[#555555]"
                   }`
                 }
               >
@@ -397,7 +589,7 @@ const AdminLayout = () => {
             <button
               type="button"
               onClick={onSignOut}
-              className="whitespace-nowrap border-b border-transparent pb-1 font-body text-[10px] uppercase tracking-[0.1em] text-[#888888] hover:text-[#C0392B]"
+              className="whitespace-nowrap border-b border-transparent pb-1 font-body text-[10px] uppercase tracking-[0.1em] text-[#555555] hover:text-[#C0392B]"
             >
               Sign Out
             </button>
@@ -407,20 +599,22 @@ const AdminLayout = () => {
             href="/"
             target="_blank"
             rel="noreferrer"
-            className="mt-3 inline-block font-body text-[10px] uppercase tracking-[0.1em] text-[#555555] transition-colors hover:text-[#888888]"
+            className="mb-3 ml-6 inline-block font-body text-[10px] uppercase tracking-[0.1em] text-[#555555] transition-colors hover:text-[#888888]"
           >
             View Store &rarr;
           </a>
         </div>
 
-        <Outlet />
+        <div className="admin-content-area">
+          <Outlet />
+        </div>
       </div>
 
       <div className="pointer-events-none fixed top-6 right-6 z-50 space-y-2">
         {toasts.map((toastItem) => (
           <div
             key={toastItem.id}
-            className="w-[320px] border-l-[3px] border-[#C4A882] bg-[#1A1A1A] px-5 py-[14px] text-[#F5F0E8] shadow-[0_8px_24px_rgba(0,0,0,0.18)]"
+            className="w-[320px] max-w-[calc(100vw-3rem)] border-l-[3px] border-[#C4A882] bg-[#1A1A1A] px-5 py-[14px] text-[#F5F0E8] shadow-[0_8px_24px_rgba(0,0,0,0.18)]"
           >
             <p className="font-body text-[12px]">{toastItem.title}</p>
             {toastItem.description ? <p className="mt-1 font-body text-[11px] text-[#c6c0b7]">{toastItem.description}</p> : null}
@@ -432,3 +626,4 @@ const AdminLayout = () => {
 };
 
 export default AdminLayout;
+

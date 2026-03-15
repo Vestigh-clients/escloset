@@ -345,7 +345,7 @@ const AccountAddresses = () => {
             >
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex rounded-[2px] border border-[#d4ccc2] px-[10px] py-[3px] font-body text-[9px] uppercase tracking-[0.1em] text-[#888888]">
+                  <span className="inline-flex rounded-[2px] border border-[#d4ccc2] px-[10px] py-[3px] font-body text-[9px] uppercase tracking-[0.1em] text-[#555555]">
                     {(address.label || "Other").toUpperCase()}
                   </span>
 
@@ -358,10 +358,10 @@ const AccountAddresses = () => {
 
                 <p className="mt-5 font-body text-[13px] font-medium text-[#1A1A1A]">{address.recipient_name}</p>
                 {address.recipient_phone ? (
-                  <p className="mt-1 font-body text-[12px] text-[#888888]">{address.recipient_phone}</p>
+                  <p className="mt-1 font-body text-[12px] text-[#555555]">{address.recipient_phone}</p>
                 ) : null}
 
-                <div className="mt-2 space-y-[2px] font-body text-[12px] leading-[1.8] text-[#888888]">
+                <div className="mt-2 space-y-[2px] font-body text-[12px] leading-[1.8] text-[#555555]">
                   {getAddressLines(address).map((line) => (
                     <p key={line}>{line}</p>
                   ))}
@@ -385,14 +385,14 @@ const AccountAddresses = () => {
                       <button
                         type="button"
                         onClick={() => setDeleteConfirmId(null)}
-                        className="text-[#aaaaaa] transition-colors hover:text-[#1A1A1A]"
+                        className="text-[#777777] transition-colors hover:text-[#1A1A1A]"
                       >
                         Cancel
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div className="flex flex-wrap items-center gap-3 font-body text-[10px] uppercase tracking-[0.12em] text-[#aaaaaa]">
+                  <div className="flex flex-wrap items-center gap-3 font-body text-[10px] uppercase tracking-[0.12em] text-[#777777]">
                     <button
                       type="button"
                       onClick={() => openEditForm(address)}
@@ -436,7 +436,7 @@ const AccountAddresses = () => {
             className="group flex min-h-[248px] flex-col items-center justify-center gap-3 border border-dashed border-[#d4ccc2] p-5 transition-colors duration-200 hover:border-[#1A1A1A]"
           >
             <Plus className="h-6 w-6 text-[#d4ccc2] transition-colors group-hover:text-[#1A1A1A]" strokeWidth={1.2} />
-            <p className="font-body text-[11px] uppercase tracking-[0.12em] text-[#aaaaaa] transition-colors group-hover:text-[#1A1A1A]">
+            <p className="font-body text-[11px] uppercase tracking-[0.12em] text-[#777777] transition-colors group-hover:text-[#1A1A1A]">
               Add New Address
             </p>
           </button>
@@ -444,7 +444,7 @@ const AccountAddresses = () => {
       )}
 
       {!hasAddresses && !isLoading ? (
-        <p className="mt-5 font-body text-[12px] text-[#888888]">You don't have any saved addresses yet.</p>
+        <p className="mt-5 font-body text-[12px] text-[#555555]">You don't have any saved addresses yet.</p>
       ) : null}
 
       <div
@@ -585,7 +585,7 @@ const AccountAddresses = () => {
               <button
                 type="button"
                 onClick={closeForm}
-                className="font-body text-[11px] uppercase tracking-[0.12em] text-[#888888] transition-colors hover:text-[#1A1A1A]"
+                className="font-body text-[11px] uppercase tracking-[0.12em] text-[#555555] transition-colors hover:text-[#1A1A1A]"
               >
                 Cancel
               </button>
@@ -598,3 +598,4 @@ const AccountAddresses = () => {
 };
 
 export default AccountAddresses;
+

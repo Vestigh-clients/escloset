@@ -126,30 +126,32 @@ const AdminCustomersPage = () => {
   };
 
   return (
-    <div className="bg-[#F5F0E8] px-6 py-10 lg:px-[60px] lg:py-12">
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-        <h1 className="font-display text-[36px] italic text-[#1A1A1A]">Customers</h1>
-        <button
-          type="button"
-          onClick={() => void onExport()}
-          disabled={isExporting}
-          className="rounded-[2px] border border-[#d4ccc2] bg-transparent px-6 py-2.5 font-body text-[11px] uppercase tracking-[0.1em] text-[#1A1A1A] transition-colors hover:border-[#1A1A1A] disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {isExporting ? "Exporting..." : "Export CSV"}
-        </button>
+    <div className="admin-page">
+      <div className="admin-page-header">
+        <h1 className="admin-page-title font-display text-[36px] italic text-[#1A1A1A]">Customers</h1>
+        <div className="admin-page-actions">
+          <button
+            type="button"
+            onClick={() => void onExport()}
+            disabled={isExporting}
+            className="rounded-[2px] border border-[#d4ccc2] bg-transparent px-6 py-2.5 font-body text-[11px] uppercase tracking-[0.1em] text-[#1A1A1A] transition-colors hover:border-[#1A1A1A] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isExporting ? "Exporting..." : "Export CSV"}
+          </button>
+        </div>
       </div>
 
       <div className="mb-5 flex flex-wrap items-end gap-4 border-b border-[#d4ccc2] pb-5">
-        <div className="w-full max-w-[320px]">
+        <div className="admin-search-wrap w-full max-w-[320px]">
           <input
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             placeholder="Search by name, email or phone..."
-            className="w-full border-0 border-b border-[#d4ccc2] bg-transparent px-0 pb-2 font-body text-[12px] text-[#1A1A1A] outline-none placeholder:text-[#aaaaaa] focus:border-[#1A1A1A]"
+            className="w-full border-0 border-b border-[#d4ccc2] bg-transparent px-0 pb-2 font-body text-[12px] text-[#1A1A1A] outline-none placeholder:text-[#999999] focus:border-[#1A1A1A]"
           />
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="admin-filter-pills flex flex-wrap gap-2">
           {statusTabs.map((tab) => {
             const isActive = tab.value === statusFilter;
             return (
@@ -163,7 +165,7 @@ const AdminCustomersPage = () => {
                 className={`border px-7 py-[10px] font-body text-[11px] uppercase tracking-[0.1em] transition-colors duration-300 ${
                   isActive
                     ? "border-[#1A1A1A] bg-[#1A1A1A] text-[#F5F0E8]"
-                    : "border-[#d4ccc2] text-[#888888] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
+                    : "border-[#d4ccc2] text-[#555555] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
                 }`}
               >
                 {tab.label}
@@ -193,14 +195,14 @@ const AdminCustomersPage = () => {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="hidden overflow-x-auto md:block">
         <table className="min-w-[1080px] w-full border-collapse">
           <thead>
             <tr className="border-b border-[#d4ccc2]">
               {["Customer", "Email", "Phone", "Orders", "Spent", "Joined", "Status", "Actions"].map((heading) => (
                 <th
                   key={heading}
-                  className="px-2 py-3 text-left font-body text-[10px] uppercase tracking-[0.12em] text-[#aaaaaa] first:pl-0 last:pr-0"
+                  className="px-2 py-3 text-left font-body text-[10px] uppercase tracking-[0.12em] text-[#777777] first:pl-0 last:pr-0"
                 >
                   {heading}
                 </th>
@@ -210,7 +212,7 @@ const AdminCustomersPage = () => {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={8} className="px-0 py-8 text-center font-body text-[12px] text-[#aaaaaa]">
+                <td colSpan={8} className="px-0 py-8 text-center font-body text-[12px] text-[#777777]">
                   Loading customers...
                 </td>
               </tr>
@@ -222,7 +224,7 @@ const AdminCustomersPage = () => {
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-0 py-8 text-center font-body text-[12px] text-[#aaaaaa]">
+                <td colSpan={8} className="px-0 py-8 text-center font-body text-[12px] text-[#777777]">
                   No customers found.
                 </td>
               </tr>
@@ -244,11 +246,11 @@ const AdminCustomersPage = () => {
                         <p className="ml-[10px] font-body text-[12px] text-[#1A1A1A]">{`${row.first_name} ${row.last_name}`.trim()}</p>
                       </div>
                     </td>
-                    <td className="px-2 py-4 font-body text-[11px] text-[#aaaaaa]">{row.email}</td>
-                    <td className="px-2 py-4 font-body text-[11px] text-[#aaaaaa]">{row.phone || "—"}</td>
+                    <td className="px-2 py-4 font-body text-[11px] text-[#777777]">{row.email}</td>
+                    <td className="px-2 py-4 font-body text-[11px] text-[#777777]">{row.phone || "-"}</td>
                     <td className="px-2 py-4 font-body text-[12px] text-[#1A1A1A]">{(row.total_orders ?? 0).toLocaleString("en-GH")}</td>
                     <td className="px-2 py-4 font-body text-[12px] text-[#1A1A1A]">{formatCurrency(row.total_spent ?? 0)}</td>
-                    <td className="px-2 py-4 font-body text-[11px] text-[#aaaaaa]">{formatDateShort(row.created_at)}</td>
+                    <td className="px-2 py-4 font-body text-[11px] text-[#777777]">{formatDateShort(row.created_at)}</td>
                     <td className="px-2 py-4">
                       <span
                         className={`inline-block rounded-[2px] border px-[10px] py-[4px] font-body text-[9px] uppercase tracking-[0.12em] ${
@@ -267,8 +269,7 @@ const AdminCustomersPage = () => {
                         }}
                         className="font-body text-[10px] uppercase tracking-[0.1em] text-[#C4A882] transition-colors hover:text-[#1A1A1A]"
                       >
-                        View →
-                      </button>
+                        View &rarr;</button>
                     </td>
                   </tr>
                 );
@@ -278,15 +279,67 @@ const AdminCustomersPage = () => {
         </table>
       </div>
 
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-4 font-body text-[11px] text-[#888888]">
+      <div className="border-t border-[#d4ccc2] md:hidden">
+        {isLoading ? (
+          <p className="py-8 text-center font-body text-[12px] text-[#777777]">Loading customers...</p>
+        ) : loadError ? (
+          <p className="py-8 text-center font-body text-[12px] text-[#C0392B]">{loadError}</p>
+        ) : rows.length === 0 ? (
+          <p className="py-8 text-center font-body text-[12px] text-[#777777]">No customers found.</p>
+        ) : (
+          rows.map((row) => {
+            const initials = (row.first_name?.slice(0, 1) || row.email.slice(0, 1) || "C").toUpperCase();
+            const isActive = row.is_active ?? true;
+            return (
+              <div key={row.id} className="admin-mobile-card" onClick={() => navigate(`/admin/customers/${row.id}`)}>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-[10px]">
+                    <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-[#1A1A1A] font-body text-[12px] text-[#F5F0E8]">
+                      {row.avatar_url ? <img src={row.avatar_url} alt={row.first_name} className="h-full w-full object-cover" /> : initials}
+                    </div>
+                    <p className="truncate font-body text-[12px] text-[#1A1A1A]">{`${row.first_name} ${row.last_name}`.trim()}</p>
+                  </div>
+                  <span
+                    className={`inline-block rounded-[2px] border px-[10px] py-[4px] font-body text-[9px] uppercase tracking-[0.12em] ${
+                      isActive ? "border-[#C4A882] text-[#C4A882]" : "border-[#C0392B] text-[#C0392B]"
+                    }`}
+                  >
+                    {isActive ? "Active" : "Inactive"}
+                  </span>
+                </div>
+
+                <p className="admin-mobile-ellipsis mt-2 font-body text-[11px] text-[#777777]">{row.email}</p>
+
+                <div className="mt-2 flex items-center justify-between gap-3">
+                  <p className="font-body text-[12px] text-[#1A1A1A]">{(row.total_orders ?? 0).toLocaleString("en-GH")} orders</p>
+                  <p className="font-body text-[12px] text-[#1A1A1A]">{formatCurrency(row.total_spent ?? 0)}</p>
+                </div>
+
+                <div className="mt-2 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      navigate(`/admin/customers/${row.id}`);
+                    }}
+                    className="font-body text-[10px] uppercase tracking-[0.1em] text-[#C4A882]"
+                  >
+                    View &rarr;
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-4 font-body text-[11px] text-[#555555]">
         <button
           type="button"
           onClick={() => setPage((current) => Math.max(1, current - 1))}
           disabled={page <= 1}
           className="transition-colors hover:text-[#1A1A1A] disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          ← Previous
-        </button>
+        >&larr; Previous</button>
 
         <div className="flex items-center gap-3">
           {pageNumbers.map((pageNumber) => (
@@ -297,7 +350,7 @@ const AdminCustomersPage = () => {
               className={`border-b pb-1 ${
                 pageNumber === page
                   ? "border-[#1A1A1A] font-medium text-[#1A1A1A]"
-                  : "border-transparent text-[#888888] hover:text-[#1A1A1A]"
+                  : "border-transparent text-[#555555] hover:text-[#1A1A1A]"
               }`}
             >
               {pageNumber}
@@ -310,13 +363,13 @@ const AdminCustomersPage = () => {
           onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
           disabled={page >= totalPages}
           className="transition-colors hover:text-[#1A1A1A] disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          Next →
-        </button>
+        >Next &rarr;</button>
       </div>
     </div>
   );
 };
 
 export default AdminCustomersPage;
+
+
 

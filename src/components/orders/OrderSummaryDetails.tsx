@@ -34,14 +34,14 @@ const OrderSummaryDetails = ({ order, deliveryWindow }: OrderSummaryDetailsProps
                 <div className="min-w-0">
                   <p className="truncate font-display text-[16px] italic text-[#1A1A1A]">{item.product_name}</p>
                   {item.variant_label ? (
-                    <p className="mt-[3px] mb-[6px] font-body text-[10px] tracking-[0.05em] text-[#888888]">
+                    <p className="mt-[3px] mb-[6px] font-body text-[10px] tracking-[0.05em] text-[#555555]">
                       {item.variant_label}
                     </p>
                   ) : null}
                   <p className="mt-1 font-body text-[10px] uppercase tracking-[0.1em] text-[#C4A882]">
                     {getItemCategoryLabel(item)}
                   </p>
-                  <p className="mt-1 font-body text-[11px] text-[#888888]">Qty: {item.quantity}</p>
+                  <p className="mt-1 font-body text-[11px] text-[#555555]">Qty: {item.quantity}</p>
                 </div>
 
                 <p className="whitespace-nowrap text-right font-body text-[13px] text-[#1A1A1A]">
@@ -54,12 +54,12 @@ const OrderSummaryDetails = ({ order, deliveryWindow }: OrderSummaryDetailsProps
       </div>
 
       <div className="space-y-2 border-b border-[#d4ccc2] py-6">
-        <div className="flex items-center justify-between font-body text-[12px] text-[#888888]">
+        <div className="flex items-center justify-between font-body text-[12px] text-[#555555]">
           <span>Subtotal</span>
           <span>{formatPrice(order.subtotal)}</span>
         </div>
 
-        <div className="flex items-center justify-between font-body text-[12px] text-[#888888]">
+        <div className="flex items-center justify-between font-body text-[12px] text-[#555555]">
           <span>Shipping</span>
           <span>{formatPrice(order.shipping_fee)}</span>
         </div>
@@ -84,23 +84,23 @@ const OrderSummaryDetails = ({ order, deliveryWindow }: OrderSummaryDetailsProps
       <div className="space-y-7">
         <div>
           <p className="mb-3 font-body text-[10px] uppercase tracking-[0.2em] text-[#C4A882]">Delivering To</p>
-          <div className="space-y-[2px] font-body text-[13px] font-light leading-[1.8] text-[#888888]">
+          <div className="space-y-[2px] font-body text-[13px] font-light leading-[1.8] text-[#555555]">
             {addressLines.length > 0 ? (
               addressLines.map((line) => <p key={line}>{line}</p>)
             ) : (
               <p>Address not available.</p>
             )}
           </div>
-          <p className="mt-2 font-body text-[11px] text-[#aaaaaa]">
+          <p className="mt-2 font-body text-[11px] text-[#777777]">
             {deliveryWindow.minDays}-{deliveryWindow.maxDays} business days
           </p>
         </div>
 
         <div>
           <p className="mb-3 font-body text-[10px] uppercase tracking-[0.2em] text-[#C4A882]">Payment</p>
-          <p className="font-body text-[13px] font-light text-[#888888]">{paymentLabel}</p>
+          <p className="font-body text-[13px] font-light text-[#555555]">{paymentLabel}</p>
           {order.payment_method === "mobile_money" && order.mobile_money_number ? (
-            <p className="mt-1 font-body text-[12px] text-[#aaaaaa]">{order.mobile_money_number}</p>
+            <p className="mt-1 font-body text-[12px] text-[#777777]">{order.mobile_money_number}</p>
           ) : null}
         </div>
       </div>
@@ -111,4 +111,5 @@ const OrderSummaryDetails = ({ order, deliveryWindow }: OrderSummaryDetailsProps
 };
 
 export default OrderSummaryDetails;
+
 

@@ -1584,28 +1584,28 @@ const AdminProductEditorPage = () => {
   const aiDisabledByName = !name.trim();
   const aiButtonDisabled = aiDisabledByName || aiLoading;
   const hasImageForAI = Boolean(selectedProductImageForAI || pendingProductImageFiles.length > 0);
-  const aiButtonLabel = aiLoading ? "✦ Filling..." : hasImageForAI ? "✦ AI Fill with Image" : "✦ AI Fill";
+  const aiButtonLabel = aiLoading ? "AI Filling..." : hasImageForAI ? "AI Fill with Image" : "AI Fill";
 
   if (isLoading) {
-    return <div className="px-6 py-10 lg:px-[60px] lg:py-12 font-body text-[12px] text-[#888888]">Loading product...</div>;
+    return <div className="admin-page font-body text-[12px] text-[#555555]">Loading product...</div>;
   }
 
   if (loadError) {
     return (
-      <div className="px-6 py-10 lg:px-[60px] lg:py-12">
+      <div className="admin-page">
         <p className="font-body text-[12px] text-[#C0392B]">{loadError}</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-[#F5F0E8] px-6 py-10 lg:px-[60px] lg:py-12">
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
-        <h1 className="font-display text-[34px] italic text-[#1A1A1A]">
+    <div className="admin-page">
+      <div className="admin-page-header mb-6 flex flex-wrap items-start justify-between gap-3">
+        <h1 className="admin-page-title font-display text-[34px] italic text-[#1A1A1A]">
           {isEditMode ? "Edit Product" : "Add Product"}
         </h1>
 
-        <div className="flex flex-col items-start gap-2 sm:items-end">
+        <div className="admin-page-actions flex flex-col items-start gap-2 md:items-end">
           <div className="flex flex-wrap items-center justify-end gap-2">
             <Link
               to="/admin/products"
@@ -1662,19 +1662,19 @@ const AdminProductEditorPage = () => {
         </div>
       </div>
 
-      <div className="grid gap-10 lg:grid-cols-[58%_42%] lg:gap-[60px]">
-        <div>
+      <div className="product-form-layout flex flex-col gap-10 lg:grid lg:grid-cols-[58%_42%] lg:gap-[60px]">
+        <div className="product-form-left">
           <p className={sectionLabelClass}>Basic Information</p>
 
           <div>
-            <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Product Name *</label>
+            <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Product Name *</label>
             <input
               value={name}
               onChange={(event) => setName(event.target.value)}
               className="mt-2 w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[14px] text-[#1A1A1A] outline-none focus:border-[#1A1A1A]"
             />
             <div className="mt-2 flex items-center justify-between gap-4">
-              <p className="font-body text-[10px] text-[#aaaaaa]">luxuriant.com/shop/{slug || "product-slug"}</p>
+              <p className="font-body text-[10px] text-[#777777]">luxuriant.com/shop/{slug || "product-slug"}</p>
               <button
                 type="button"
                 onClick={() => setIsSlugEditable((value) => !value)}
@@ -1693,13 +1693,13 @@ const AdminProductEditorPage = () => {
           </div>
 
           <div id="field-shortDescription" className="mt-6 rounded-[2px]">
-            <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Short Description *</label>
+            <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Short Description *</label>
             <textarea
               value={shortDescription}
               onChange={(event) => setShortDescription(event.target.value.slice(0, 500))}
               className="mt-2 min-h-20 w-full resize-y border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[13px] text-[#1A1A1A] outline-none focus:border-[#1A1A1A]"
             />
-            <p className="mt-1 text-right font-body text-[10px] text-[#aaaaaa]">{shortDescription.length}/500</p>
+            <p className="mt-1 text-right font-body text-[10px] text-[#777777]">{shortDescription.length}/500</p>
           </div>
 
           <div id="field-fullDescription" className="mt-6 rounded-[2px]">
@@ -1713,11 +1713,11 @@ const AdminProductEditorPage = () => {
 
           <p className={`${sectionLabelClass} mt-10`}>Pricing & Inventory</p>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Selling Price *</label>
+              <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Selling Price *</label>
               <div className="mt-2 flex items-center border-b border-[#d4ccc2] pb-2">
-                <span className="mr-2 font-body text-[14px] text-[#aaaaaa]">GH&#8373;</span>
+                <span className="mr-2 font-body text-[14px] text-[#777777]">GH&#8373;</span>
                 <input
                   value={price}
                   onChange={(event) => setPrice(event.target.value.replace(/[^\d.]/g, ""))}
@@ -1726,34 +1726,34 @@ const AdminProductEditorPage = () => {
               </div>
             </div>
             <div>
-              <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Compare At Price</label>
+              <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Compare At Price</label>
               <div className="mt-2 flex items-center border-b border-[#d4ccc2] pb-2">
-                <span className="mr-2 font-body text-[14px] text-[#aaaaaa]">GH&#8373;</span>
+                <span className="mr-2 font-body text-[14px] text-[#777777]">GH&#8373;</span>
                 <input
                   value={compareAtPrice}
                   onChange={(event) => setCompareAtPrice(event.target.value.replace(/[^\d.]/g, ""))}
                   className="w-full border-0 bg-transparent font-body text-[14px] text-[#1A1A1A] outline-none"
                 />
               </div>
-              <p className="mt-1 font-body text-[10px] text-[#aaaaaa]">Original price shown crossed out</p>
+              <p className="mt-1 font-body text-[10px] text-[#777777]">Original price shown crossed out</p>
             </div>
           </div>
 
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
             <div>
-              <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Cost Price</label>
+              <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Cost Price</label>
               <div className="mt-2 flex items-center border-b border-[#d4ccc2] pb-2">
-                <span className="mr-2 font-body text-[14px] text-[#aaaaaa]">GH&#8373;</span>
+                <span className="mr-2 font-body text-[14px] text-[#777777]">GH&#8373;</span>
                 <input
                   value={costPrice}
                   onChange={(event) => setCostPrice(event.target.value.replace(/[^\d.]/g, ""))}
                   className="w-full border-0 bg-transparent font-body text-[14px] text-[#1A1A1A] outline-none"
                 />
               </div>
-              <p className="mt-1 font-body text-[10px] text-[#aaaaaa]">Internal only. Never shown publicly.</p>
+              <p className="mt-1 font-body text-[10px] text-[#777777]">Internal only. Never shown publicly.</p>
             </div>
             <div id="field-sku" className="rounded-[2px]">
-              <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">SKU</label>
+              <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">SKU</label>
               <div className="mt-2 flex items-center border-b border-[#d4ccc2] pb-2">
                 <input
                   value={sku}
@@ -1771,15 +1771,15 @@ const AdminProductEditorPage = () => {
             </div>
           </div>
 
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
             <div>
-              <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Stock Quantity *</label>
+              <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Stock Quantity *</label>
               <input
                 value={stockQuantity}
                 onChange={(event) => setStockQuantity(event.target.value.replace(/[^\d]/g, ""))}
                 disabled={hasVariants}
                 className={`mt-2 w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[14px] text-[#1A1A1A] outline-none ${
-                  hasVariants ? "cursor-not-allowed text-[#aaaaaa]" : "focus:border-[#1A1A1A]"
+                  hasVariants ? "cursor-not-allowed text-[#777777]" : "focus:border-[#1A1A1A]"
                 }`}
               />
               {hasVariants ? (
@@ -1789,13 +1789,13 @@ const AdminProductEditorPage = () => {
               ) : null}
             </div>
             <div>
-              <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Low Stock Threshold</label>
+              <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Low Stock Threshold</label>
               <input
                 value={lowStockThreshold}
                 onChange={(event) => setLowStockThreshold(event.target.value.replace(/[^\d]/g, ""))}
                 disabled={hasVariants}
                 className={`mt-2 w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[14px] text-[#1A1A1A] outline-none ${
-                  hasVariants ? "cursor-not-allowed text-[#aaaaaa]" : "focus:border-[#1A1A1A]"
+                  hasVariants ? "cursor-not-allowed text-[#777777]" : "focus:border-[#1A1A1A]"
                 }`}
               />
               {hasVariants ? (
@@ -1803,25 +1803,25 @@ const AdminProductEditorPage = () => {
                   Stock is managed per variant when variants are enabled
                 </p>
               ) : (
-                <p className="mt-1 font-body text-[10px] text-[#aaaaaa]">Alert when stock falls below this</p>
+                <p className="mt-1 font-body text-[10px] text-[#777777]">Alert when stock falls below this</p>
               )}
             </div>
           </div>
 
           <div id="field-weight" className="mt-4 rounded-[2px]">
-            <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Weight (grams)</label>
+            <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Weight (grams)</label>
             <input
               value={weightGrams}
               onChange={(event) => setWeightGrams(event.target.value.replace(/[^\d]/g, ""))}
               className="mt-2 w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[14px] text-[#1A1A1A] outline-none focus:border-[#1A1A1A]"
             />
-            <p className="mt-1 font-body text-[10px] text-[#aaaaaa]">Used for shipping calculations</p>
+            <p className="mt-1 font-body text-[10px] text-[#777777]">Used for shipping calculations</p>
           </div>
 
           <p className={`${sectionLabelClass} mt-10`}>Organisation</p>
 
           <div>
-            <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Category *</label>
+            <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Category *</label>
             <select
               value={categoryId}
               onChange={(event) => setCategoryId(event.target.value)}
@@ -1837,7 +1837,7 @@ const AdminProductEditorPage = () => {
           </div>
 
           <div id="field-tags" className="mt-4 rounded-[2px]">
-            <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Tags</label>
+            <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Tags</label>
             <input
               value={tagInput}
               onChange={(event) => setTagInput(event.target.value)}
@@ -1868,23 +1868,23 @@ const AdminProductEditorPage = () => {
           </div>
 
           <div id="field-metaTitle" className="mt-4 rounded-[2px]">
-            <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Meta Title</label>
+            <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Meta Title</label>
             <input
               value={metaTitle}
               onChange={(event) => setMetaTitle(event.target.value.slice(0, 255))}
               className="mt-2 w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[13px] text-[#1A1A1A] outline-none focus:border-[#1A1A1A]"
             />
-            <p className="mt-1 font-body text-[10px] text-[#aaaaaa]">Defaults to product name if empty</p>
+            <p className="mt-1 font-body text-[10px] text-[#777777]">Defaults to product name if empty</p>
           </div>
 
           <div id="field-metaDescription" className="mt-4 rounded-[2px]">
-            <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Meta Description</label>
+            <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Meta Description</label>
             <textarea
               value={metaDescription}
               onChange={(event) => setMetaDescription(event.target.value.slice(0, 500))}
               className="mt-2 min-h-20 w-full resize-y border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[13px] text-[#1A1A1A] outline-none focus:border-[#1A1A1A]"
             />
-            <p className="mt-1 text-right font-body text-[10px] text-[#aaaaaa]">{metaDescription.length}/500</p>
+            <p className="mt-1 text-right font-body text-[10px] text-[#777777]">{metaDescription.length}/500</p>
           </div>
 
           <p className={`${sectionLabelClass} mt-10`}>Product Benefits</p>
@@ -1900,7 +1900,7 @@ const AdminProductEditorPage = () => {
 
           <div id="field-benefits" className="mt-4 rounded-[2px]">
             {benefits.map((benefit, index) => (
-              <div key={benefit.id} className="grid gap-2 border-b border-[#d4ccc2] py-3 sm:grid-cols-[120px_1fr_1.4fr_auto]">
+              <div key={benefit.id} className="grid gap-2 border-b border-[#d4ccc2] py-3 md:grid-cols-[120px_1fr_1.4fr_auto]">
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
@@ -1941,9 +1941,9 @@ const AdminProductEditorPage = () => {
                   value={benefit.description}
                   onChange={(event) => onUpdateBenefit(benefit.id, "description", event.target.value)}
                   placeholder="Brief description..."
-                  className="border-0 border-b border-[#d4ccc2] bg-transparent pb-1 font-body text-[12px] text-[#888888] outline-none"
+                  className="border-0 border-b border-[#d4ccc2] bg-transparent pb-1 font-body text-[12px] text-[#555555] outline-none"
                 />
-                <button type="button" onClick={() => onRemoveBenefit(benefit.id)} className="text-[#aaaaaa] hover:text-[#C0392B]">
+                <button type="button" onClick={() => onRemoveBenefit(benefit.id)} className="text-[#777777] hover:text-[#C0392B]">
                   &times;
                 </button>
               </div>
@@ -1953,7 +1953,7 @@ const AdminProductEditorPage = () => {
           {hasVariants ? (
             <div>
               <p className="mb-6 mt-12 border-t border-[#d4ccc2] pt-8 font-body text-[10px] uppercase tracking-[0.2em] text-[#C4A882]">Option Types</p>
-              <p className="mb-5 font-body text-[11px] leading-[1.7] text-[#aaaaaa]">
+              <p className="mb-5 font-body text-[11px] leading-[1.7] text-[#777777]">
                 Define what makes this product&apos;s variants different. Use any option names that fit this product.
               </p>
 
@@ -1968,7 +1968,7 @@ const AdminProductEditorPage = () => {
                   return (
                     <div key={optionType.local_id} className="rounded-[2px] border border-[#d4ccc2] p-4">
                       <div className="flex items-center gap-2">
-                        <span className="font-body text-[12px] text-[#888888]">&#10303;</span>
+                        <span className="font-body text-[12px] text-[#555555]">&#10303;</span>
                         <input
                           value={optionType.name}
                           onChange={(event) => onUpdateOptionTypeName(optionType.local_id, event.target.value)}
@@ -1977,13 +1977,13 @@ const AdminProductEditorPage = () => {
                         <button
                           type="button"
                           onClick={() => onRemoveOptionType(optionType.local_id)}
-                          className="font-body text-[12px] text-[#aaaaaa] transition-colors hover:text-[#C0392B]"
+                          className="font-body text-[12px] text-[#777777] transition-colors hover:text-[#C0392B]"
                         >
                           &times;
                         </button>
                       </div>
 
-                      <p className="mt-3 font-body text-[11px] text-[#888888]">Add values for {optionType.name || "option"}:</p>
+                      <p className="mt-3 font-body text-[11px] text-[#555555]">Add values for {optionType.name || "option"}:</p>
 
                       <div className="mt-2 flex flex-wrap items-end gap-3">
                         <input
@@ -1992,10 +1992,10 @@ const AdminProductEditorPage = () => {
                             onUpdateValueDraft(optionType.local_id, (current) => ({ ...current, value: event.target.value }))
                           }
                           placeholder="e.g. Small, Medium, Large..."
-                          className="w-[170px] border-0 border-b border-[#d4ccc2] bg-transparent pb-1.5 font-body text-[13px] text-[#1A1A1A] outline-none focus:border-[#1A1A1A]"
+                          className="w-full md:w-[170px] border-0 border-b border-[#d4ccc2] bg-transparent pb-1.5 font-body text-[13px] text-[#1A1A1A] outline-none focus:border-[#1A1A1A]"
                         />
 
-                        <label className="flex items-center gap-2 font-body text-[10px] text-[#aaaaaa]">
+                        <label className="flex items-center gap-2 font-body text-[10px] text-[#777777]">
                           <input
                             type="checkbox"
                             checked={draft.withColor}
@@ -2046,7 +2046,7 @@ const AdminProductEditorPage = () => {
                               <button
                                 type="button"
                                 onClick={() => onRemoveOptionValue(optionType.local_id, optionValue.local_id)}
-                                className="text-[#aaaaaa] transition-colors hover:text-[#C0392B]"
+                                className="text-[#777777] transition-colors hover:text-[#C0392B]"
                               >
                                 &times;
                               </button>
@@ -2066,7 +2066,7 @@ const AdminProductEditorPage = () => {
                   value={newOptionTypeName}
                   onChange={(event) => setNewOptionTypeName(event.target.value)}
                   placeholder="Option name e.g. Size, Color, Material, Fit..."
-                  className="w-[240px] border-0 border-b border-[#d4ccc2] bg-transparent pb-1.5 font-body text-[13px] text-[#1A1A1A] outline-none focus:border-[#1A1A1A]"
+                  className="w-full md:w-[240px] border-0 border-b border-[#d4ccc2] bg-transparent pb-1.5 font-body text-[13px] text-[#1A1A1A] outline-none focus:border-[#1A1A1A]"
                 />
                 <button
                   type="button"
@@ -2085,12 +2085,12 @@ const AdminProductEditorPage = () => {
               >
                 Generate Variants
               </button>
-              <p className="mt-2 font-body text-[10px] text-[#aaaaaa]">
+              <p className="mt-2 font-body text-[10px] text-[#777777]">
                 Automatically creates combinations from option values. Existing variants are preserved.
               </p>
 
-              <div className="mt-6 overflow-x-auto">
-                <div className="grid min-w-[780px] grid-cols-[1.6fr_80px_130px_1.2fr_90px_85px] gap-3 border-b border-[#d4ccc2] pb-3 font-body text-[9px] uppercase tracking-[0.15em] text-[#aaaaaa]">
+              <div className="mt-6 hidden overflow-x-auto md:block">
+                <div className="grid min-w-[780px] grid-cols-[1.6fr_80px_130px_1.2fr_90px_85px] gap-3 border-b border-[#d4ccc2] pb-3 font-body text-[9px] uppercase tracking-[0.15em] text-[#777777]">
                   <span>Variant</span>
                   <span>Stock</span>
                   <span>Price</span>
@@ -2100,7 +2100,7 @@ const AdminProductEditorPage = () => {
                 </div>
 
                 {activeVariants.length === 0 ? (
-                  <p className="py-8 text-center font-body text-[12px] text-[#aaaaaa]">
+                  <p className="py-8 text-center font-body text-[12px] text-[#777777]">
                     No variants added yet. Add option types and generate variants above.
                   </p>
                 ) : (
@@ -2131,7 +2131,7 @@ const AdminProductEditorPage = () => {
                               return (
                                 <span
                                   key={[variant.local_id, optionSelection.option_type_local_id, optionSelection.option_value_local_id].join("-")}
-                                  className="inline-flex items-center gap-1 rounded-[2px] border border-[#e8e2d9] bg-[rgba(26,26,26,0.04)] px-2 py-0.5 font-body text-[9px] text-[#888888]"
+                                  className="inline-flex items-center gap-1 rounded-[2px] border border-[#e8e2d9] bg-[rgba(26,26,26,0.04)] px-2 py-0.5 font-body text-[9px] text-[#555555]"
                                 >
                                   {optionMeta.optionValue.color_hex ? (
                                     <span
@@ -2155,7 +2155,7 @@ const AdminProductEditorPage = () => {
                         {isEditingPrice ? (
                           <div>
                             <div className="flex items-center border-b border-[#d4ccc2] pb-1">
-                              <span className="mr-1 font-body text-[11px] text-[#aaaaaa]">GH&#8373;</span>
+                              <span className="mr-1 font-body text-[11px] text-[#777777]">GH&#8373;</span>
                               <input
                                 autoFocus
                                 value={editingPriceValue}
@@ -2173,7 +2173,7 @@ const AdminProductEditorPage = () => {
                             <button
                               type="button"
                               onClick={() => onClearVariantPrice(variant.local_id)}
-                              className="mt-1 font-body text-[10px] text-[#aaaaaa] hover:text-[#1A1A1A]"
+                              className="mt-1 font-body text-[10px] text-[#777777] hover:text-[#1A1A1A]"
                             >
                               Clear
                             </button>
@@ -2185,7 +2185,7 @@ const AdminProductEditorPage = () => {
                             className="text-left font-body text-[12px] text-[#1A1A1A]"
                           >
                             {variant.price === null
-                              ? <span className="font-body text-[11px] text-[#aaaaaa]">Base</span>
+                              ? <span className="font-body text-[11px] text-[#777777]">Base</span>
                               : "GH\u20B5" + variant.price.toFixed(2)}
                           </button>
                         )}
@@ -2193,7 +2193,7 @@ const AdminProductEditorPage = () => {
                         <input
                           value={variant.sku}
                           onChange={(event) => onChangeVariantSku(variant.local_id, event.target.value)}
-                          className="w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-1 font-body text-[11px] text-[#aaaaaa] outline-none focus:border-[#1A1A1A]"
+                          className="w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-1 font-body text-[11px] text-[#777777] outline-none focus:border-[#1A1A1A]"
                         />
 
                         <button
@@ -2208,7 +2208,7 @@ const AdminProductEditorPage = () => {
 
                         {confirmDeleteVariantId === variant.local_id ? (
                           <div>
-                            <p className="font-body text-[10px] uppercase tracking-[0.08em] text-[#aaaaaa]">Delete this variant?</p>
+                            <p className="font-body text-[10px] uppercase tracking-[0.08em] text-[#777777]">Delete this variant?</p>
                             <div className="mt-1 flex items-center gap-2">
                               <button
                                 type="button"
@@ -2220,7 +2220,7 @@ const AdminProductEditorPage = () => {
                               <button
                                 type="button"
                                 onClick={() => setConfirmDeleteVariantId(null)}
-                                className="font-body text-[10px] uppercase tracking-[0.08em] text-[#888888]"
+                                className="font-body text-[10px] uppercase tracking-[0.08em] text-[#555555]"
                               >
                                 No
                               </button>
@@ -2230,7 +2230,7 @@ const AdminProductEditorPage = () => {
                           <button
                             type="button"
                             onClick={() => setConfirmDeleteVariantId(variant.local_id)}
-                            className="font-body text-[10px] uppercase tracking-[0.1em] text-[#aaaaaa] transition-colors hover:text-[#C0392B]"
+                            className="font-body text-[10px] uppercase tracking-[0.1em] text-[#777777] transition-colors hover:text-[#C0392B]"
                           >
                             Delete
                           </button>
@@ -2241,9 +2241,123 @@ const AdminProductEditorPage = () => {
                 )}
               </div>
 
+              <div className="mt-6 border-t border-[#d4ccc2] md:hidden">
+                {activeVariants.length === 0 ? (
+                  <p className="py-8 text-center font-body text-[12px] text-[#777777]">
+                    No variants added yet. Add option types and generate variants above.
+                  </p>
+                ) : (
+                  activeVariants.map((variant) => {
+                    const isEditingPrice = editingPriceVariantId === variant.local_id;
+                    const stockColorClass =
+                      variant.stock_quantity === 0
+                        ? "text-[#C0392B]"
+                        : variant.stock_quantity <= variant.low_stock_threshold
+                          ? "text-[#C4A882]"
+                          : "text-[#1A1A1A]";
+
+                    return (
+                      <div key={`mobile-${variant.local_id}`} className="admin-mobile-card">
+                        <input
+                          value={variant.label}
+                          onChange={(event) => onChangeVariantLabel(variant.local_id, event.target.value)}
+                          className="w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-1 font-body text-[13px] text-[#1A1A1A] outline-none focus:border-[#1A1A1A]"
+                        />
+
+                        <div className="mt-2 grid grid-cols-2 gap-3">
+                          <input
+                            value={variant.stock_quantity}
+                            onChange={(event) => onChangeVariantStock(variant.local_id, event.target.value.replace(/[^\d]/g, ""))}
+                            className={["w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-1 font-body text-[13px] outline-none focus:border-[#1A1A1A]", stockColorClass].join(" ")}
+                            placeholder="Stock"
+                          />
+
+                          {isEditingPrice ? (
+                            <div>
+                              <div className="flex items-center border-b border-[#d4ccc2] pb-1">
+                                <span className="mr-1 font-body text-[11px] text-[#777777]">GH&#8373;</span>
+                                <input
+                                  autoFocus
+                                  value={editingPriceValue}
+                                  onChange={(event) => setEditingPriceValue(event.target.value.replace(/[^\d.]/g, ""))}
+                                  onBlur={() => onSaveEditingVariantPrice(variant.local_id)}
+                                  onKeyDown={(event) => {
+                                    if (event.key === "Enter") {
+                                      event.preventDefault();
+                                      onSaveEditingVariantPrice(variant.local_id);
+                                    }
+                                  }}
+                                  className="w-full border-0 bg-transparent font-body text-[12px] text-[#1A1A1A] outline-none"
+                                  placeholder="Price"
+                                />
+                              </div>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => onStartEditingVariantPrice(variant)}
+                              className="text-left border-b border-[#d4ccc2] pb-1 font-body text-[12px] text-[#1A1A1A]"
+                            >
+                              {variant.price === null ? "Base price" : "GH\u20B5" + variant.price.toFixed(2)}
+                            </button>
+                          )}
+                        </div>
+
+                        <div className="mt-2 flex items-center justify-between gap-3">
+                          <input
+                            value={variant.sku}
+                            onChange={(event) => onChangeVariantSku(variant.local_id, event.target.value)}
+                            className="w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-1 font-body text-[11px] text-[#777777] outline-none focus:border-[#1A1A1A]"
+                            placeholder="SKU"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => onToggleVariantAvailable(variant.local_id)}
+                            className={"relative h-5 w-10 shrink-0 overflow-hidden rounded-full border-0 p-0 transition-colors " + (variant.is_available ? "bg-[#1A1A1A]" : "bg-[#d4ccc2]")}
+                          >
+                            <span
+                              className={"pointer-events-none absolute top-[2px] h-4 w-4 rounded-full bg-white transition-[left] duration-200 ease-in " + (variant.is_available ? "left-[22px]" : "left-[2px]")}
+                            />
+                          </button>
+                        </div>
+
+                        <div className="mt-2 flex justify-end font-body text-[10px] uppercase tracking-[0.1em]">
+                          {confirmDeleteVariantId === variant.local_id ? (
+                            <div className="flex items-center gap-3">
+                              <button
+                                type="button"
+                                onClick={() => onConfirmDeleteVariant(variant.local_id)}
+                                className="text-[#C0392B]"
+                              >
+                                Yes
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setConfirmDeleteVariantId(null)}
+                                className="text-[#555555]"
+                              >
+                                No
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setConfirmDeleteVariantId(variant.local_id)}
+                              className="text-[#777777] transition-colors hover:text-[#C0392B]"
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
               <div className="mt-4">
-                <p className="font-body text-[12px] text-[#888888]">Total stock across all variants: {totalVariantStock}</p>
-                <p className="mt-1 font-body text-[11px] text-[#aaaaaa]">
+                <p className="font-body text-[12px] text-[#555555]">Total stock across all variants: {totalVariantStock}</p>
+                <p className="mt-1 font-body text-[11px] text-[#777777]">
                   {availableVariantCount} variants available {" - "}
                   <span className={outOfStockVariantCount > 0 ? "text-[#C0392B]" : ""}>
                     {outOfStockVariantCount} variants out of stock
@@ -2254,9 +2368,9 @@ const AdminProductEditorPage = () => {
           ) : null}
         </div>
 
-        <div>
+        <div className="product-form-right">
           <p className="mb-4 font-body text-[10px] uppercase tracking-[0.2em] text-[#C4A882]">Product Images</p>
-          <p className="mb-4 font-body text-[10px] text-[#aaaaaa]">
+          <p className="mb-4 font-body text-[10px] text-[#777777]">
             First image is primary. Max 6 images, 2MB each.
           </p>
 
@@ -2266,7 +2380,7 @@ const AdminProductEditorPage = () => {
             disabled={isUploadingImage}
             className="block w-full border-2 border-dashed border-[#d4ccc2] p-8 text-center transition-colors hover:border-[#1A1A1A] disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <p className="font-body text-[12px] text-[#aaaaaa]">Drag images here</p>
+            <p className="font-body text-[12px] text-[#777777]">Drag images here</p>
             <p className="mt-1 font-body text-[11px] text-[#C4A882]">or click to upload</p>
           </button>
           <input
@@ -2282,7 +2396,7 @@ const AdminProductEditorPage = () => {
             className="hidden"
           />
           {!isEditMode ? (
-            <p className="mt-2 font-body text-[10px] text-[#aaaaaa]">
+            <p className="mt-2 font-body text-[10px] text-[#777777]">
               Selected images are queued now and uploaded automatically after first save.
             </p>
           ) : null}
@@ -2339,7 +2453,7 @@ const AdminProductEditorPage = () => {
           <label className="mb-2 flex items-center justify-between gap-4">
             <div>
               <p className="font-body text-[12px] text-[#1A1A1A]">This product has variants</p>
-              <p className="font-body text-[10px] leading-[1.7] text-[#aaaaaa]">
+              <p className="font-body text-[10px] leading-[1.7] text-[#777777]">
                 Enable if this product comes in multiple option combinations. Stock and pricing will be managed per
                 variant.
               </p>
@@ -2370,7 +2484,7 @@ const AdminProductEditorPage = () => {
           <label className="mb-4 mt-4 flex items-center justify-between gap-4">
             <div>
               <p className="font-body text-[12px] text-[#1A1A1A]">Available for purchase</p>
-              <p className="font-body text-[11px] text-[#888888]">Make this product available to customers</p>
+              <p className="font-body text-[11px] text-[#555555]">Make this product available to customers</p>
             </div>
             <button
               type="button"
@@ -2390,7 +2504,7 @@ const AdminProductEditorPage = () => {
           <label className="mb-6 flex items-center justify-between gap-4">
             <div>
               <p className="font-body text-[12px] text-[#1A1A1A]">Featured product</p>
-              <p className="font-body text-[11px] text-[#888888]">Show in featured sections on homepage</p>
+              <p className="font-body text-[11px] text-[#555555]">Show in featured sections on homepage</p>
             </div>
             <button
               type="button"
@@ -2419,7 +2533,7 @@ const AdminProductEditorPage = () => {
           <button
             type="button"
             onClick={() => void save(true)}
-            className="mt-3 font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa] hover:text-[#1A1A1A]"
+            className="mt-3 font-body text-[11px] uppercase tracking-[0.1em] text-[#777777] hover:text-[#1A1A1A]"
           >
             Save as Draft
           </button>
@@ -2429,7 +2543,7 @@ const AdminProductEditorPage = () => {
           {isEditMode ? (
             <div className="mt-8 border-t border-[#d4ccc2] pt-6">
               {hasOrderUsage && hasOrderUsage > 0 ? (
-                <p className="font-body text-[11px] text-[#888888]">
+                <p className="font-body text-[11px] text-[#555555]">
                   This product has {hasOrderUsage} orders and cannot be deleted. Set it to unavailable instead.
                 </p>
               ) : (
@@ -2438,13 +2552,13 @@ const AdminProductEditorPage = () => {
                     <button
                       type="button"
                       onClick={() => setIsDeleteOpen(true)}
-                      className="font-body text-[10px] uppercase tracking-[0.1em] text-[#aaaaaa] hover:text-[#C0392B]"
+                      className="font-body text-[10px] uppercase tracking-[0.1em] text-[#777777] hover:text-[#C0392B]"
                     >
                       Delete Product
                     </button>
                   ) : (
                     <div>
-                      <p className="font-body text-[11px] text-[#888888]">Type the product name to confirm:</p>
+                      <p className="font-body text-[11px] text-[#555555]">Type the product name to confirm:</p>
                       <input
                         value={confirmDeleteValue}
                         onChange={(event) => setConfirmDeleteValue(event.target.value)}
@@ -2464,7 +2578,7 @@ const AdminProductEditorPage = () => {
                           setIsDeleteOpen(false);
                           setConfirmDeleteValue("");
                         }}
-                        className="mt-2 font-body text-[10px] text-[#aaaaaa]"
+                        className="mt-2 font-body text-[10px] text-[#777777]"
                       >
                         Cancel
                       </button>
@@ -2481,3 +2595,4 @@ const AdminProductEditorPage = () => {
 };
 
 export default AdminProductEditorPage;
+

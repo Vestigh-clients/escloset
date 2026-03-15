@@ -46,6 +46,7 @@ const AdminCategoriesPage = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isReordering, setIsReordering] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -159,22 +160,65 @@ const AdminCategoriesPage = () => {
     await load();
   };
 
+  const onMoveCategory = async (categoryId: string, direction: "up" | "down") => {
+    const sorted = [...categories].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
+    const currentIndex = sorted.findIndex((entry) => entry.id === categoryId);
+    if (currentIndex < 0) return;
+
+    const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+    if (targetIndex < 0 || targetIndex >= sorted.length) return;
+
+    const current = sorted[currentIndex];
+    const target = sorted[targetIndex];
+    const currentOrder = current.display_order ?? currentIndex;
+    const targetOrder = target.display_order ?? targetIndex;
+
+    setIsReordering(true);
+    setCategories((existing) =>
+      existing.map((entry) => {
+        if (entry.id === current.id) {
+          return { ...entry, display_order: targetOrder };
+        }
+        if (entry.id === target.id) {
+          return { ...entry, display_order: currentOrder };
+        }
+        return entry;
+      }),
+    );
+
+    try {
+      await Promise.all([
+        updateAdminCategory(current.id, { display_order: targetOrder }, current as never),
+        updateAdminCategory(target.id, { display_order: currentOrder }, target as never),
+      ]);
+      setMessage("Display order updated.");
+      await load();
+    } catch {
+      setMessage("Unable to reorder category.");
+      await load();
+    } finally {
+      setIsReordering(false);
+    }
+  };
+
   const renderedCategories = useMemo(
     () => [...categories].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)),
     [categories],
   );
 
   return (
-    <div className="bg-[#F5F0E8] px-6 py-10 lg:px-[60px] lg:py-12">
-      <div className="mb-8 flex items-center justify-between gap-4">
-        <h1 className="font-display text-[36px] italic text-[#1A1A1A]">Categories</h1>
-        <button
-          type="button"
-          onClick={openNewForm}
-          className="rounded-[2px] bg-[#1A1A1A] px-7 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[#F5F0E8] transition-colors hover:bg-[#C4A882] hover:text-[#1A1A1A]"
-        >
-          Add Category
-        </button>
+    <div className="admin-page">
+      <div className="admin-page-header">
+        <h1 className="admin-page-title font-display text-[36px] italic text-[#1A1A1A]">Categories</h1>
+        <div className="admin-page-actions">
+          <button
+            type="button"
+            onClick={openNewForm}
+            className="rounded-[2px] bg-[#1A1A1A] px-7 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[#F5F0E8] transition-colors hover:bg-[#C4A882] hover:text-[#1A1A1A]"
+          >
+            Add Category
+          </button>
+        </div>
       </div>
 
       {message ? <p className="mb-4 font-body text-[12px] text-[#C4A882]">{message}</p> : null}
@@ -186,14 +230,14 @@ const AdminCategoriesPage = () => {
         </div>
       ) : null}
 
-      <div className="overflow-x-auto">
+      <div className="hidden overflow-x-auto md:block">
         <table className="min-w-[940px] w-full border-collapse">
           <thead>
             <tr className="border-b border-[#d4ccc2]">
               {["Image", "Name", "Slug", "Products", "Order", "Status", "Actions"].map((heading) => (
                 <th
                   key={heading}
-                  className="px-2 py-3 text-left font-body text-[10px] uppercase tracking-[0.12em] text-[#aaaaaa] first:pl-0 last:pr-0"
+                  className="px-2 py-3 text-left font-body text-[10px] uppercase tracking-[0.12em] text-[#777777] first:pl-0 last:pr-0"
                 >
                   {heading}
                 </th>
@@ -203,7 +247,7 @@ const AdminCategoriesPage = () => {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={7} className="py-8 text-center font-body text-[12px] text-[#aaaaaa]">
+                <td colSpan={7} className="py-8 text-center font-body text-[12px] text-[#777777]">
                   Loading categories...
                 </td>
               </tr>
@@ -215,7 +259,7 @@ const AdminCategoriesPage = () => {
               </tr>
             ) : renderedCategories.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-8 text-center font-body text-[12px] text-[#aaaaaa]">
+                <td colSpan={7} className="py-8 text-center font-body text-[12px] text-[#777777]">
                   No categories yet.
                 </td>
               </tr>
@@ -232,10 +276,10 @@ const AdminCategoriesPage = () => {
                     </div>
                   </td>
                   <td className="px-2 py-4 font-body text-[13px] text-[#1A1A1A]">{category.name}</td>
-                  <td className="px-2 py-4 font-body text-[11px] text-[#aaaaaa]">{category.slug}</td>
-                  <td className="px-2 py-4 font-body text-[12px] text-[#888888]">{category.products_count}</td>
+                  <td className="px-2 py-4 font-body text-[11px] text-[#777777]">{category.slug}</td>
+                  <td className="px-2 py-4 font-body text-[12px] text-[#555555]">{category.products_count}</td>
                   <td className="px-2 py-4">
-                    <span className="font-body text-[12px] text-[#888888]">{category.display_order ?? 0}</span>
+                    <span className="font-body text-[12px] text-[#555555]">{category.display_order ?? 0}</span>
                   </td>
                   <td className="px-2 py-4">
                     <span
@@ -248,7 +292,7 @@ const AdminCategoriesPage = () => {
                   </td>
                   <td className="px-0 py-4">
                     <div className="flex items-center gap-2 font-body text-[10px] uppercase tracking-[0.1em]">
-                      <button type="button" onClick={() => openEditForm(category)} className="text-[#888888] hover:text-[#1A1A1A]">
+                      <button type="button" onClick={() => openEditForm(category)} className="text-[#555555] hover:text-[#1A1A1A]">
                         Edit
                       </button>
                       <span className="text-[#d4ccc2]">|</span>
@@ -260,7 +304,7 @@ const AdminCategoriesPage = () => {
                           <button type="button" onClick={() => void onDelete(category)} className="uppercase text-[#C0392B]">
                             Yes Delete
                           </button>{" "}
-                          <button type="button" onClick={() => setDeleteConfirmId(null)} className="uppercase text-[#888888]">
+                          <button type="button" onClick={() => setDeleteConfirmId(null)} className="uppercase text-[#555555]">
                             Cancel
                           </button>
                         </span>
@@ -268,7 +312,7 @@ const AdminCategoriesPage = () => {
                         <button
                           type="button"
                           onClick={() => setDeleteConfirmId(category.id)}
-                          className="text-[#888888] hover:text-[#C0392B]"
+                          className="text-[#555555] hover:text-[#C0392B]"
                         >
                           Delete
                         </button>
@@ -296,6 +340,102 @@ const AdminCategoriesPage = () => {
           </tbody>
         </table>
       </div>
+
+      <div className="border-t border-[#d4ccc2] md:hidden">
+        {isLoading ? (
+          <p className="py-8 text-center font-body text-[12px] text-[#777777]">Loading categories...</p>
+        ) : loadError ? (
+          <p className="py-8 text-center font-body text-[12px] text-[#C0392B]">{loadError}</p>
+        ) : renderedCategories.length === 0 ? (
+          <p className="py-8 text-center font-body text-[12px] text-[#777777]">No categories yet.</p>
+        ) : (
+          renderedCategories.map((category, index) => (
+            <div key={`mobile-${category.id}`} className="admin-mobile-card">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="h-8 w-8 overflow-hidden bg-[#ede5db]">
+                    {category.image_url ? (
+                      <img src={category.image_url} alt={category.name} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="h-full w-full bg-[#e2d9cf]" />
+                    )}
+                  </div>
+                  <p className="truncate font-body text-[12px] text-[#1A1A1A]">{category.name}</p>
+                </div>
+                <span
+                  className={`inline-block rounded-[2px] px-2 py-1 font-body text-[9px] uppercase tracking-[0.12em] ${
+                    category.is_active ? "border border-[#C4A882] text-[#C4A882]" : "border border-[#C0392B] text-[#C0392B]"
+                  }`}
+                >
+                  {category.is_active ? "Active" : "Inactive"}
+                </span>
+              </div>
+
+              <div className="mt-2 flex items-center justify-between gap-3">
+                <p className="font-body text-[10px] text-[#777777]">{category.slug}</p>
+                <p className="font-body text-[11px] text-[#555555]">{category.products_count} products</p>
+              </div>
+
+              <div className="mt-2 flex items-center justify-end gap-3 font-body text-[10px] uppercase tracking-[0.1em] text-[#888888]">
+                <button
+                  type="button"
+                  disabled={isReordering || index === 0}
+                  onClick={() => void onMoveCategory(category.id, "up")}
+                  className="normal-case text-[14px] text-[#888888] disabled:opacity-40"
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  disabled={isReordering || index === renderedCategories.length - 1}
+                  onClick={() => void onMoveCategory(category.id, "down")}
+                  className="normal-case text-[14px] text-[#888888] disabled:opacity-40"
+                >
+                  ↓
+                </button>
+                <button type="button" onClick={() => openEditForm(category)} className="text-[#555555] hover:text-[#1A1A1A]">
+                  Edit
+                </button>
+                <span className="text-[#d4ccc2]">|</span>
+                {category.products_count > 0 ? (
+                  <span className="normal-case text-[#C0392B]">Delete locked ({category.products_count})</span>
+                ) : deleteConfirmId === category.id ? (
+                  <span className="normal-case">
+                    <button type="button" onClick={() => void onDelete(category)} className="uppercase text-[#C0392B]">
+                      Yes Delete
+                    </button>{" "}
+                    <button type="button" onClick={() => setDeleteConfirmId(null)} className="uppercase text-[#555555]">
+                      Cancel
+                    </button>
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setDeleteConfirmId(category.id)}
+                    className="text-[#555555] hover:text-[#C0392B]"
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
+
+              {isFormOpen && editingId === category.id ? (
+                <div className="mt-4 border-t border-[#d4ccc2] pt-4">
+                  <p className="mb-3 font-body text-[10px] uppercase tracking-[0.2em] text-[#C4A882]">Edit Category</p>
+                  <CategoryForm
+                    form={form}
+                    setForm={setForm}
+                    onUploadImage={onUploadImage}
+                    onSave={onSave}
+                    onCancel={resetForm}
+                    isSaving={isSaving}
+                  />
+                </div>
+              ) : null}
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 };
@@ -318,7 +458,7 @@ const CategoryForm = ({
   return (
     <div className="grid gap-4">
       <div>
-        <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Category Name *</label>
+        <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Category Name *</label>
         <input
           value={form.name}
           onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
@@ -328,7 +468,7 @@ const CategoryForm = ({
 
       <div>
         <div className="flex items-center justify-between">
-          <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Slug</label>
+          <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Slug</label>
           <button
             type="button"
             onClick={() => setForm((current) => ({ ...current, slugManual: !current.slugManual }))}
@@ -351,7 +491,7 @@ const CategoryForm = ({
       </div>
 
       <div>
-        <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Description</label>
+        <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Description</label>
         <textarea
           value={form.description}
           onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
@@ -360,9 +500,9 @@ const CategoryForm = ({
       </div>
 
       <div>
-        <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Image</label>
+        <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Image</label>
         <label className="mt-2 block cursor-pointer border-2 border-dashed border-[#d4ccc2] p-6 text-center">
-          <p className="font-body text-[12px] text-[#aaaaaa]">Upload hero image (16:9)</p>
+          <p className="font-body text-[12px] text-[#777777]">Upload hero image (16:9)</p>
           <input
             type="file"
             accept="image/jpeg,image/png,image/webp"
@@ -379,7 +519,7 @@ const CategoryForm = ({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Display Order</label>
+          <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Display Order</label>
           <input
             value={form.displayOrder}
             onChange={(event) =>
@@ -408,7 +548,7 @@ const CategoryForm = ({
         >
           {isSaving ? "Saving..." : "Save Category"}
         </button>
-        <button type="button" onClick={onCancel} className="font-body text-[10px] uppercase tracking-[0.1em] text-[#888888]">
+        <button type="button" onClick={onCancel} className="font-body text-[10px] uppercase tracking-[0.1em] text-[#555555]">
           Cancel
         </button>
       </div>
@@ -417,3 +557,4 @@ const CategoryForm = ({
 };
 
 export default AdminCategoriesPage;
+

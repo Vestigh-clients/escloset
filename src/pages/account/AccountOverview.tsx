@@ -90,19 +90,19 @@ const AccountOverview = () => {
       <div className="mt-10 grid gap-8 md:grid-cols-3">
         <div className="border-b-2 border-[#C4A882] pb-4">
           <p className="font-display text-[32px] text-[#1A1A1A]">{totalOrders}</p>
-          <p className="mt-1 font-body text-[10px] uppercase tracking-[0.12em] text-[#aaaaaa]">Total Orders</p>
+          <p className="mt-1 font-body text-[10px] uppercase tracking-[0.12em] text-[#666666]">Total Orders</p>
         </div>
 
         <div className="border-b-2 border-[#C4A882] pb-4">
           <p className="font-display text-[32px] text-[#1A1A1A]">{formatPrice(totalSpent)}</p>
-          <p className="mt-1 font-body text-[10px] uppercase tracking-[0.12em] text-[#aaaaaa]">
+          <p className="mt-1 font-body text-[10px] uppercase tracking-[0.12em] text-[#666666]">
             Total Spent (GH&#8373;)
           </p>
         </div>
 
         <div className="border-b-2 border-[#C4A882] pb-4">
           <p className="font-display text-[32px] text-[#1A1A1A]">{formatMemberSince(profile?.created_at)}</p>
-          <p className="mt-1 font-body text-[10px] uppercase tracking-[0.12em] text-[#aaaaaa]">Member Since</p>
+          <p className="mt-1 font-body text-[10px] uppercase tracking-[0.12em] text-[#666666]">Member Since</p>
         </div>
       </div>
 
@@ -127,7 +127,7 @@ const AccountOverview = () => {
           <p className="font-body text-[12px] text-[#C0392B]">{ordersError}</p>
         ) : recentOrders.length === 0 ? (
           <div className="border-t border-[#d4ccc2] pt-8">
-            <p className="font-display text-[24px] italic text-[#888888]">You haven't placed any orders yet.</p>
+            <p className="font-display text-[24px] italic text-[#555555]">You haven't placed any orders yet.</p>
             <Link
               to="/shop"
               className="mt-5 inline-block font-body text-[10px] uppercase tracking-[0.12em] text-[#C4A882] transition-colors hover:text-[#1A1A1A]"
@@ -144,4 +144,5 @@ const AccountOverview = () => {
 };
 
 export default AccountOverview;
+
 

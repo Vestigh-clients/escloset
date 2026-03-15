@@ -48,7 +48,7 @@ const ForgotPassword = () => {
   return (
     <AuthPageLayout>
       <h1 className="font-display text-[42px] italic leading-none text-[#1A1A1A]">Forgot password?</h1>
-      <p className="mt-3 font-body text-[13px] font-light leading-[1.8] text-[#888888]">
+      <p className="mt-3 font-body text-[13px] font-light leading-[1.8] text-[#555555]">
         Enter your email and we&apos;ll send a link to reset your password.
       </p>
 
@@ -75,9 +75,9 @@ const ForgotPassword = () => {
         </button>
       </form>
 
-      {successMessage ? <p className="mt-6 font-body text-[13px] text-[#888888]">{successMessage}</p> : null}
+      {successMessage ? <p className="mt-6 font-body text-[13px] text-[#555555]">{successMessage}</p> : null}
 
-      <p className="mt-6 font-body text-[12px] text-[#888888]">
+      <p className="mt-6 font-body text-[12px] text-[#555555]">
         Remembered your password?{" "}
         <Link to="/auth/login" className="text-[#1A1A1A] transition-colors hover:text-[#C4A882]">
           Sign in
@@ -88,3 +88,4 @@ const ForgotPassword = () => {
 };
 
 export default ForgotPassword;
+

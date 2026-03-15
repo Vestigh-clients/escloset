@@ -97,7 +97,7 @@ const CartDrawer = () => {
           type="button"
           aria-label="Close cart drawer"
           onClick={closeCart}
-          className="absolute right-8 top-8 text-[#888888] transition-colors hover:text-[#1A1A1A]"
+          className="absolute right-8 top-8 text-[#555555] transition-colors hover:text-[#1A1A1A]"
         >
           <X size={18} strokeWidth={1.5} />
         </button>
@@ -106,7 +106,7 @@ const CartDrawer = () => {
           <div className="mb-6 border-b border-[#d4ccc2] pb-4 pr-8">
             <div className="flex items-end justify-between gap-3">
               <h2 className="font-display text-[28px] italic text-[#1A1A1A]">Your Cart</h2>
-              <p className="font-body text-[11px] uppercase tracking-[0.14em] text-[#888888]">
+              <p className="font-body text-[11px] uppercase tracking-[0.14em] text-[#555555]">
                 {totalItems} {totalItems === 1 ? "ITEM" : "ITEMS"}
               </p>
             </div>
@@ -115,8 +115,8 @@ const CartDrawer = () => {
           {items.length === 0 ? (
             <div className="flex flex-1 flex-col items-center justify-center px-4 text-center">
               <ShoppingBag size={40} strokeWidth={1.35} className="mb-4 text-[#d4ccc2]" />
-              <p className="mb-2 font-display text-[24px] italic text-[#888888]">Your cart is empty</p>
-              <p className="mb-6 font-body text-[13px] font-light text-[#aaaaaa]">
+              <p className="mb-2 font-display text-[24px] italic text-[#555555]">Your cart is empty</p>
+              <p className="mb-6 font-body text-[13px] font-light text-[#777777]">
                 Looks like you haven&apos;t added anything yet.
               </p>
               <Link
@@ -144,15 +144,15 @@ const CartDrawer = () => {
 
                         <p className="mt-1 font-body text-[10px] uppercase tracking-[0.1em] text-[#C4A882]">{item.category}</p>
                         {item.variant_label ? (
-                          <p className="mt-[3px] mb-[6px] font-body text-[10px] tracking-[0.05em] text-[#888888]">
+                          <p className="mt-[3px] mb-[6px] font-body text-[10px] tracking-[0.05em] text-[#555555]">
                             {item.variant_label}
                           </p>
                         ) : null}
 
-                        <div className="mt-2 flex items-center gap-2 font-body text-[12px] text-[#1A1A1A]">
+                        <div className="mt-2 flex items-center gap-2 font-body text-[12px] text-[#555555]">
                           {item.compare_at_price !== null && item.compare_at_price > item.price ? (
                             <>
-                              <span className="text-[#aaaaaa] line-through">{formatPrice(item.compare_at_price)}</span>
+                              <span className="text-[#777777] line-through">{formatPrice(item.compare_at_price)}</span>
                               <span>{formatPrice(item.price)}</span>
                             </>
                           ) : (
@@ -186,7 +186,7 @@ const CartDrawer = () => {
                           <button
                             type="button"
                             onClick={() => removeFromCart(item.product_id, item.variant_id)}
-                            className="font-body text-[10px] uppercase tracking-[0.1em] text-[#aaaaaa] transition-colors hover:text-[#C0392B]"
+                            className="font-body text-[10px] uppercase tracking-[0.1em] text-[#777777] transition-colors hover:text-[#C0392B]"
                           >
                             Remove
                           </button>
@@ -202,12 +202,12 @@ const CartDrawer = () => {
                   <p className="mb-2 text-right font-body text-[11px] text-[#C4A882]">You save {formatPrice(savings)}</p>
                 ) : null}
 
-                <div className="mb-1 flex items-center justify-between font-body text-[13px] font-medium text-[#1A1A1A]">
+                <div className="mb-1 flex items-center justify-between font-body text-[13px] font-medium text-[#555555]">
                   <span>Subtotal</span>
                   <span>{formatPrice(subtotal)}</span>
                 </div>
 
-                <div className="mb-6 flex items-center justify-between font-body text-[11px] text-[#888888]">
+                <div className="mb-6 flex items-center justify-between font-body text-[11px] text-[#666666]">
                   <span>Shipping</span>
                   <span>Calculated at checkout</span>
                 </div>
@@ -221,7 +221,7 @@ const CartDrawer = () => {
                   {isVerifying ? "Verifying..." : "Proceed to Checkout"}
                 </button>
 
-                <p className="mt-3 text-center font-body text-[11px] text-[#aaaaaa]">
+                <p className="mt-3 text-center font-body text-[11px] text-[#777777]">
                   Free delivery on orders over {formatPrice(FREE_DELIVERY_THRESHOLD)}
                 </p>
               </div>
@@ -234,4 +234,5 @@ const CartDrawer = () => {
 };
 
 export default CartDrawer;
+
 

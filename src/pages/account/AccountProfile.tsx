@@ -361,7 +361,7 @@ const AccountProfile = () => {
             />
           </button>
 
-          <p className="font-body text-[12px] text-[#888888]">Receive updates on new arrivals and offers</p>
+          <p className="font-body text-[12px] text-[#555555]">Receive updates on new arrivals and offers</p>
         </div>
 
         {submitError ? <p className="mt-4 font-body text-[11px] text-[#C0392B]">{submitError}</p> : null}
@@ -386,3 +386,4 @@ const AccountProfile = () => {
 };
 
 export default AccountProfile;
+

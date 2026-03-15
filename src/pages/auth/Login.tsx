@@ -169,7 +169,7 @@ const Login = () => {
   return (
     <AuthPageLayout>
       <h1 className="font-display text-[42px] italic leading-none text-[#1A1A1A]">Welcome back</h1>
-      <p className="mt-3 font-body text-[13px] font-light leading-[1.8] text-[#888888]">
+      <p className="mt-3 font-body text-[13px] font-light leading-[1.8] text-[#555555]">
         Sign in to continue checkout, manage your account, and track orders.
       </p>
 
@@ -206,7 +206,7 @@ const Login = () => {
             <button
               type="button"
               onClick={() => setShowPassword((previous) => !previous)}
-              className="inline-flex text-[#888888] transition-colors hover:text-[#1A1A1A]"
+              className="inline-flex text-[#555555] transition-colors hover:text-[#1A1A1A]"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? <EyeOff size={16} strokeWidth={1.35} /> : <Eye size={16} strokeWidth={1.35} />}
@@ -217,7 +217,7 @@ const Login = () => {
         <div className="mt-2 text-right">
           <Link
             to="/auth/forgot-password"
-            className="font-body text-[11px] text-[#888888] transition-colors hover:text-[#1A1A1A]"
+            className="font-body text-[11px] text-[#555555] transition-colors hover:text-[#1A1A1A]"
           >
             Forgot your password?
           </Link>
@@ -239,7 +239,7 @@ const Login = () => {
           </p>
         ) : null}
 
-        {resendMessage ? <p className="mt-3 font-body text-[11px] text-[#888888]">{resendMessage}</p> : null}
+        {resendMessage ? <p className="mt-3 font-body text-[11px] text-[#555555]">{resendMessage}</p> : null}
 
         <button
           type="submit"
@@ -250,7 +250,7 @@ const Login = () => {
         </button>
       </form>
 
-      <p className="mt-6 font-body text-[12px] text-[#888888]">
+      <p className="mt-6 font-body text-[12px] text-[#555555]">
         Don&apos;t have an account?{" "}
         <Link to="/auth/register" className="text-[#1A1A1A] transition-colors hover:text-[#C4A882]">
           Create account
@@ -261,3 +261,4 @@ const Login = () => {
 };
 
 export default Login;
+

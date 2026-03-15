@@ -41,7 +41,7 @@ const periods: Array<{ label: string; value: RevenuePeriod }> = [
 ];
 
 const statusBadgeClass: Record<string, string> = {
-  pending: "border border-[#d4ccc2] text-[#888888]",
+  pending: "border border-[#d4ccc2] text-[#555555]",
   confirmed: "border border-[#1A1A1A] text-[#1A1A1A]",
   processing: "border border-[#C4A882] text-[#C4A882]",
   shipped: "bg-[#C4A882] text-[#1A1A1A]",
@@ -53,7 +53,7 @@ const trendClass = (value: number | null) => {
   const tone = trendTone(value);
   if (tone === "positive") return "text-[#27AE60]";
   if (tone === "negative") return "text-[#C0392B]";
-  return "text-[#aaaaaa]";
+  return "text-[#777777]";
 };
 
 const customTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
@@ -80,8 +80,8 @@ const StatCard = ({
   trend: number | null;
 }) => (
   <div className="border-b-2 border-[#C4A882] pb-5">
-    <p className="font-display text-[44px] leading-none text-[#1A1A1A]">{value}</p>
-    <p className="mt-2 font-body text-[10px] uppercase tracking-[0.12em] text-[#aaaaaa]">{label}</p>
+    <p className="font-display text-[32px] leading-none text-[#1A1A1A] md:text-[44px]">{value}</p>
+    <p className="mt-2 font-body text-[10px] uppercase tracking-[0.12em] text-[#777777]">{label}</p>
     <p className={`mt-2 font-body text-[11px] ${trendClass(trend)}`}>{trendLabel(trend)}</p>
   </div>
 );
@@ -178,8 +178,8 @@ const AdminDashboard = () => {
   }, [stats]);
 
   return (
-    <div className="bg-[#F5F0E8] px-6 py-10 lg:px-[60px] lg:py-12">
-      <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-4">
+    <div className="admin-page">
+      <div className="admin-stats-grid grid gap-8 grid-cols-2 md:grid-cols-2 xl:grid-cols-4">
         <StatCard value={statValues.revenue} label="Total Revenue" trend={stats?.totalRevenueTrend ?? null} />
         <StatCard value={statValues.ordersToday} label="Orders Today" trend={stats?.ordersTodayTrend ?? null} />
         <StatCard value={statValues.ordersMonth} label="Orders This Month" trend={stats?.ordersThisMonthTrend ?? null} />
@@ -196,7 +196,7 @@ const AdminDashboard = () => {
                 type="button"
                 onClick={() => setPeriod(periodOption.value)}
                 className={`border-b font-body text-[10px] uppercase tracking-[0.12em] ${
-                  period === periodOption.value ? "border-[#1A1A1A] text-[#1A1A1A]" : "border-transparent text-[#aaaaaa]"
+                  period === periodOption.value ? "border-[#1A1A1A] text-[#1A1A1A]" : "border-transparent text-[#777777]"
                 }`}
               >
                 {periodOption.label}
@@ -205,7 +205,7 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className="h-[280px] w-full">
+        <div className="dashboard-chart-mobile h-[200px] w-full md:h-[280px]">
           {isChartLoading ? (
             <div className="h-full w-full animate-pulse bg-[#eee6dc]" />
           ) : (
@@ -216,12 +216,12 @@ const AdminDashboard = () => {
                   dataKey="label"
                   tickLine={false}
                   axisLine={false}
-                  tick={{ fontSize: 10, fill: "#aaaaaa", fontFamily: "Inter" }}
+                  tick={{ fontSize: 10, fill: "#777777", fontFamily: "Inter" }}
                 />
                 <YAxis
                   tickLine={false}
                   axisLine={false}
-                  tick={{ fontSize: 10, fill: "#aaaaaa", fontFamily: "Inter" }}
+                  tick={{ fontSize: 10, fill: "#777777", fontFamily: "Inter" }}
                   tickFormatter={(value) => formatCompactCurrency(Number(value))}
                 />
                 <Tooltip content={customTooltip} />
@@ -259,7 +259,7 @@ const AdminDashboard = () => {
                 <div className="h-14 animate-pulse bg-[#eee6dc]" />
               </div>
             ) : recentOrders.length === 0 ? (
-              <p className="py-6 font-body text-[11px] text-[#aaaaaa]">No recent orders.</p>
+              <p className="py-6 font-body text-[11px] text-[#777777]">No recent orders.</p>
             ) : (
               recentOrders.map((order) => (
                 <Link
@@ -270,12 +270,12 @@ const AdminDashboard = () => {
                   <p className="font-body text-[11px] uppercase tracking-[0.08em] text-[#C4A882]">{order.order_number}</p>
                   <div>
                     <p className="font-body text-[12px] text-[#1A1A1A]">{order.customer_name}</p>
-                    <p className="font-body text-[10px] text-[#aaaaaa]">{formatRelativeDate(order.created_at)}</p>
+                    <p className="font-body text-[10px] text-[#777777]">{formatRelativeDate(order.created_at)}</p>
                   </div>
                   <p className="justify-self-end font-body text-[12px] text-[#1A1A1A]">{formatCurrency(order.total)}</p>
                   <span
                     className={`rounded-[2px] px-2 py-1 font-body text-[9px] uppercase tracking-[0.12em] ${
-                      statusBadgeClass[order.status] ?? "border border-[#d4ccc2] text-[#888888]"
+                      statusBadgeClass[order.status] ?? "border border-[#d4ccc2] text-[#555555]"
                     }`}
                   >
                     {buildStatusLabel(order.status)}
@@ -295,7 +295,7 @@ const AdminDashboard = () => {
                 <div className="h-12 animate-pulse bg-[#eee6dc]" />
               </div>
             ) : lowStockProducts.length === 0 ? (
-              <p className="py-6 font-body text-[11px] text-[#aaaaaa]">All products well stocked.</p>
+              <p className="py-6 font-body text-[11px] text-[#777777]">All products well stocked.</p>
             ) : (
               lowStockProducts.map((product) => {
                 const stockColor = product.stock_quantity === 0 ? "text-[#C0392B]" : "text-[#C4A882]";
@@ -314,7 +314,7 @@ const AdminDashboard = () => {
                     </div>
                     <Link
                       to={`/admin/products/${product.id}/edit`}
-                      className="font-body text-[10px] uppercase tracking-[0.1em] text-[#aaaaaa] transition-colors hover:text-[#1A1A1A]"
+                      className="font-body text-[10px] uppercase tracking-[0.1em] text-[#777777] transition-colors hover:text-[#1A1A1A]"
                     >
                       Edit
                     </Link>
@@ -335,7 +335,7 @@ const AdminDashboard = () => {
               <div className="h-16 animate-pulse bg-[#eee6dc]" />
             </div>
           ) : topSellers.length === 0 ? (
-            <p className="py-6 font-body text-[11px] text-[#aaaaaa]">No top sellers yet.</p>
+            <p className="py-6 font-body text-[11px] text-[#777777]">No top sellers yet.</p>
           ) : (
             topSellers.map((product, index) => (
               <div key={product.id} className="flex items-center gap-4 border-b border-[#d4ccc2] py-4">
@@ -349,7 +349,7 @@ const AdminDashboard = () => {
                 </div>
                 <div className="flex-1">
                   <p className="font-body text-[12px] text-[#1A1A1A]">{product.name}</p>
-                  <p className="font-body text-[11px] text-[#888888]">{product.total_orders} units sold</p>
+                  <p className="font-body text-[11px] text-[#555555]">{product.total_orders} units sold</p>
                 </div>
                 <p className="font-body text-[12px] text-[#C4A882]">{formatCurrency(product.price * product.total_orders)}</p>
               </div>
@@ -366,3 +366,4 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
+

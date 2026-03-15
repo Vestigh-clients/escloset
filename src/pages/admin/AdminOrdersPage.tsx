@@ -25,7 +25,7 @@ const paymentOptions: Array<{ label: string; value: PaymentFilter }> = [
 ];
 
 const statusBadgeClass: Record<string, string> = {
-  pending: "border border-[#d4ccc2] text-[#888888]",
+  pending: "border border-[#d4ccc2] text-[#555555]",
   confirmed: "border border-[#1A1A1A] text-[#1A1A1A]",
   processing: "border border-[#C4A882] text-[#C4A882]",
   shipped: "bg-[#C4A882] text-[#1A1A1A]",
@@ -34,7 +34,7 @@ const statusBadgeClass: Record<string, string> = {
 };
 
 const paymentBadgeClass: Record<string, string> = {
-  unpaid: "border border-[#d4ccc2] text-[#aaaaaa]",
+  unpaid: "border border-[#d4ccc2] text-[#777777]",
   paid: "border border-[#27AE60] text-[#27AE60]",
   refunded: "border border-[#C0392B] text-[#C0392B]",
   partially_refunded: "border border-[#C4A882] text-[#C4A882]",
@@ -175,30 +175,32 @@ const AdminOrdersPage = () => {
   };
 
   return (
-    <div className="bg-[#F5F0E8] px-6 py-10 lg:px-[60px] lg:py-12">
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-        <h1 className="font-display text-[36px] italic text-[#1A1A1A]">Orders</h1>
-        <button
-          type="button"
-          onClick={() => void onExport()}
-          disabled={isExporting}
-          className="rounded-[2px] border border-[#d4ccc2] bg-transparent px-6 py-2.5 font-body text-[11px] uppercase tracking-[0.1em] text-[#1A1A1A] transition-colors hover:border-[#1A1A1A] disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {isExporting ? "Exporting..." : "Export CSV"}
-        </button>
+    <div className="admin-page">
+      <div className="admin-page-header">
+        <h1 className="admin-page-title font-display text-[36px] italic text-[#1A1A1A]">Orders</h1>
+        <div className="admin-page-actions">
+          <button
+            type="button"
+            onClick={() => void onExport()}
+            disabled={isExporting}
+            className="rounded-[2px] border border-[#d4ccc2] bg-transparent px-6 py-2.5 font-body text-[11px] uppercase tracking-[0.1em] text-[#1A1A1A] transition-colors hover:border-[#1A1A1A] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isExporting ? "Exporting..." : "Export CSV"}
+          </button>
+        </div>
       </div>
 
       <div className="mb-5 flex flex-wrap items-end gap-4 border-b border-[#d4ccc2] pb-5">
-        <div className="w-full max-w-[320px]">
+        <div className="admin-search-wrap w-full max-w-[320px]">
           <input
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             placeholder="Search by order #, customer name or email..."
-            className="w-full border-0 border-b border-[#d4ccc2] bg-transparent px-0 pb-2 font-body text-[12px] text-[#1A1A1A] outline-none placeholder:text-[#aaaaaa] focus:border-[#1A1A1A]"
+            className="w-full border-0 border-b border-[#d4ccc2] bg-transparent px-0 pb-2 font-body text-[12px] text-[#1A1A1A] outline-none placeholder:text-[#999999] focus:border-[#1A1A1A]"
           />
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="admin-filter-pills flex flex-wrap gap-2">
           {statusTabs.map((tab) => {
             const isActive = tab.value === statusFilter;
             return (
@@ -212,7 +214,7 @@ const AdminOrdersPage = () => {
                 className={`rounded-[2px] border px-4 py-2 font-body text-[10px] uppercase tracking-[0.1em] transition-colors ${
                   isActive
                     ? "border-[#1A1A1A] bg-[#1A1A1A] text-[#F5F0E8]"
-                    : "border-[#d4ccc2] text-[#888888] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
+                    : "border-[#d4ccc2] text-[#555555] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
                 }`}
               >
                 {tab.label}
@@ -248,7 +250,7 @@ const AdminOrdersPage = () => {
             }}
             className="border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[12px] text-[#1A1A1A] outline-none focus:border-[#1A1A1A]"
           />
-          <span className="font-body text-[12px] text-[#aaaaaa]">-</span>
+          <span className="font-body text-[12px] text-[#777777]">-</span>
           <input
             type="date"
             value={dateTo}
@@ -264,21 +266,21 @@ const AdminOrdersPage = () => {
           <button
             type="button"
             onClick={onClearFilters}
-            className="font-body text-[10px] uppercase tracking-[0.1em] text-[#aaaaaa] transition-colors hover:text-[#1A1A1A]"
+            className="font-body text-[10px] uppercase tracking-[0.1em] text-[#777777] transition-colors hover:text-[#1A1A1A]"
           >
             Clear Filters
           </button>
         ) : null}
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="hidden overflow-x-auto md:block">
         <table className="min-w-[1040px] w-full border-collapse">
           <thead>
             <tr className="border-b border-[#d4ccc2]">
               {["Order #", "Customer", "Items", "Payment", "Total", "Status", "Date", "Action"].map((heading) => (
                 <th
                   key={heading}
-                  className="px-2 py-3 text-left font-body text-[10px] uppercase tracking-[0.12em] text-[#aaaaaa] first:pl-0 last:pr-0"
+                  className="px-2 py-3 text-left font-body text-[10px] uppercase tracking-[0.12em] text-[#777777] first:pl-0 last:pr-0"
                 >
                   {heading}
                 </th>
@@ -288,7 +290,7 @@ const AdminOrdersPage = () => {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={8} className="px-0 py-8 text-center font-body text-[12px] text-[#aaaaaa]">
+                <td colSpan={8} className="px-0 py-8 text-center font-body text-[12px] text-[#777777]">
                   Loading orders...
                 </td>
               </tr>
@@ -300,7 +302,7 @@ const AdminOrdersPage = () => {
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-0 py-8 text-center font-body text-[12px] text-[#aaaaaa]">
+                <td colSpan={8} className="px-0 py-8 text-center font-body text-[12px] text-[#777777]">
                   No orders found.
                 </td>
               </tr>
@@ -316,10 +318,10 @@ const AdminOrdersPage = () => {
                   </td>
                   <td className="px-2 py-4">
                     <p className="font-body text-[12px] text-[#1A1A1A]">{`${row.customer.first_name} ${row.customer.last_name}`.trim()}</p>
-                    <p className="mt-0.5 font-body text-[10px] text-[#aaaaaa]">{row.customer.email}</p>
+                    <p className="mt-0.5 font-body text-[10px] text-[#777777]">{row.customer.email}</p>
                   </td>
                   <td className="group relative px-2 py-4">
-                    <p className="font-body text-[11px] text-[#888888]">
+                    <p className="font-body text-[11px] text-[#555555]">
                       {row.items} item{row.items === 1 ? "" : "s"}
                     </p>
                     {row.item_names.length > 0 ? (
@@ -329,10 +331,10 @@ const AdminOrdersPage = () => {
                     ) : null}
                   </td>
                   <td className="px-2 py-4">
-                    <p className="font-body text-[11px] text-[#888888]">{paymentMethodLabel(row.payment_method)}</p>
+                    <p className="font-body text-[11px] text-[#555555]">{paymentMethodLabel(row.payment_method)}</p>
                     <span
                       className={`mt-1 inline-block rounded-[2px] px-2 py-1 font-body text-[9px] uppercase tracking-[0.12em] ${
-                        paymentBadgeClass[row.payment_status] ?? "border border-[#d4ccc2] text-[#aaaaaa]"
+                        paymentBadgeClass[row.payment_status] ?? "border border-[#d4ccc2] text-[#777777]"
                       }`}
                     >
                       {toTitleCase(row.payment_status)}
@@ -342,13 +344,13 @@ const AdminOrdersPage = () => {
                   <td className="px-2 py-4">
                     <span
                       className={`inline-block rounded-[2px] px-2 py-1 font-body text-[9px] uppercase tracking-[0.12em] ${
-                        statusBadgeClass[row.status] ?? "border border-[#d4ccc2] text-[#888888]"
+                        statusBadgeClass[row.status] ?? "border border-[#d4ccc2] text-[#555555]"
                       }`}
                     >
                       {toTitleCase(row.status)}
                     </span>
                   </td>
-                  <td className="px-2 py-4 font-body text-[11px] text-[#aaaaaa]">{formatAdminDate(row.created_at)}</td>
+                  <td className="px-2 py-4 font-body text-[11px] text-[#777777]">{formatAdminDate(row.created_at)}</td>
                   <td className="px-0 py-4 text-right">
                     <button
                       type="button"
@@ -368,7 +370,61 @@ const AdminOrdersPage = () => {
         </table>
       </div>
 
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-4 font-body text-[11px] text-[#888888]">
+      <div className="border-t border-[#d4ccc2] md:hidden">
+        {isLoading ? (
+          <p className="py-8 text-center font-body text-[12px] text-[#777777]">Loading orders...</p>
+        ) : loadError ? (
+          <p className="py-8 text-center font-body text-[12px] text-[#C0392B]">{loadError}</p>
+        ) : rows.length === 0 ? (
+          <p className="py-8 text-center font-body text-[12px] text-[#777777]">No orders found.</p>
+        ) : (
+          rows.map((row) => (
+            <div key={row.id} className="admin-mobile-card" onClick={() => navigate(`/admin/orders/${row.order_number}`)}>
+              <div className="flex items-center justify-between gap-3">
+                <p className="font-body text-[11px] uppercase tracking-[0.08em] text-[#C4A882]">{row.order_number}</p>
+                <span
+                  className={`rounded-[2px] px-2 py-1 font-body text-[9px] uppercase tracking-[0.12em] ${
+                    statusBadgeClass[row.status] ?? "border border-[#d4ccc2] text-[#555555]"
+                  }`}
+                >
+                  {toTitleCase(row.status)}
+                </span>
+              </div>
+
+              <div className="mt-2 flex items-center justify-between gap-3">
+                <p className="font-body text-[12px] text-[#1A1A1A]">{`${row.customer.first_name} ${row.customer.last_name}`.trim()}</p>
+                <p className="font-body text-[13px] text-[#1A1A1A]">{formatCurrency(row.total)}</p>
+              </div>
+
+              <div className="mt-2 flex items-center justify-between gap-3">
+                <p className="font-body text-[10px] text-[#777777]">{formatAdminDate(row.created_at)}</p>
+                <span
+                  className={`rounded-[2px] px-2 py-1 font-body text-[9px] uppercase tracking-[0.12em] ${
+                    paymentBadgeClass[row.payment_status] ?? "border border-[#d4ccc2] text-[#777777]"
+                  }`}
+                >
+                  {toTitleCase(row.payment_status)}
+                </span>
+              </div>
+
+              <div className="mt-2 flex justify-end">
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    navigate(`/admin/orders/${row.order_number}`);
+                  }}
+                  className="font-body text-[10px] uppercase tracking-[0.1em] text-[#C4A882]"
+                >
+                  View &rarr;
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-4 font-body text-[11px] text-[#555555]">
         <button
           type="button"
           onClick={() => setPage((current) => Math.max(1, current - 1))}
@@ -387,7 +443,7 @@ const AdminOrdersPage = () => {
               className={`border-b pb-1 ${
                 pageNumber === page
                   ? "border-[#1A1A1A] font-medium text-[#1A1A1A]"
-                  : "border-transparent text-[#888888] hover:text-[#1A1A1A]"
+                  : "border-transparent text-[#555555] hover:text-[#1A1A1A]"
               }`}
             >
               {pageNumber}
@@ -409,3 +465,4 @@ const AdminOrdersPage = () => {
 };
 
 export default AdminOrdersPage;
+

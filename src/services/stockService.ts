@@ -21,12 +21,14 @@ interface ProductStockRow {
   name: string;
   price: number;
   compare_at_price: number | null;
-  stock_quantity: number;
+  total_stock_quantity: number;
+  in_stock: boolean | null;
   is_available: boolean | null;
 }
 
 interface VariantStockRow {
   id: string;
+  product_id: string;
   stock_quantity: number;
   is_available: boolean | null;
   price: number | null;
@@ -65,40 +67,10 @@ export const validateCartStock = async (items: CartItem[]): Promise<StockValidat
     const variantLabel = item.variant_label?.trim() || "";
     const itemDisplayName = variantLabel ? `${item.name} (${variantLabel})` : item.name;
 
-    const { data: row, error: productError } = await supabase
-      .from("products")
-      .select("id,name,price,compare_at_price,stock_quantity,is_available")
-      .eq("id", item.product_id)
-      .maybeSingle();
-
-    if (productError) {
-      throw productError;
-    }
-
-    if (!row || row.is_available === false) {
-      hasChanges = true;
-      shouldBlockCheckout = true;
-
-      if (!blockingMessage) {
-        blockingMessage = `${itemDisplayName} is no longer available`;
-      }
-
-      messages.push({
-        type: "error",
-        message: `${itemDisplayName} is no longer available and has been removed from your cart`,
-      });
-      continue;
-    }
-
-    const currentName = row.name?.trim() || item.name;
-    const currentProductPrice = toPrice(row.price);
-    const currentProductCompareAtPrice =
-      row.compare_at_price === null || row.compare_at_price === undefined ? null : toPrice(row.compare_at_price);
-
     if (item.variant_id) {
       const { data: variant, error: variantError } = await supabase
         .from("product_variants")
-        .select("id,stock_quantity,is_available,price,compare_at_price")
+        .select("id,product_id,stock_quantity,is_available,price,compare_at_price")
         .eq("id", item.variant_id)
         .maybeSingle();
 
@@ -107,7 +79,12 @@ export const validateCartStock = async (items: CartItem[]): Promise<StockValidat
       }
 
       const variantRow = variant as VariantStockRow | null;
-      if (!variantRow || variantRow.is_available === false || toStockQuantity(Number(variantRow.stock_quantity)) === 0) {
+      if (
+        !variantRow ||
+        variantRow.product_id !== item.product_id ||
+        variantRow.is_available === false ||
+        toStockQuantity(Number(variantRow.stock_quantity)) === 0
+      ) {
         hasChanges = true;
         shouldBlockCheckout = true;
 
@@ -123,16 +100,14 @@ export const validateCartStock = async (items: CartItem[]): Promise<StockValidat
       }
 
       const currentVariantStock = toStockQuantity(Number(variantRow.stock_quantity));
-      const currentVariantPrice =
-        variantRow.price === null || variantRow.price === undefined ? currentProductPrice : toPrice(variantRow.price);
+      const currentVariantPrice = variantRow.price === null || variantRow.price === undefined ? item.price : toPrice(variantRow.price);
       const currentVariantCompareAt =
         variantRow.compare_at_price === null || variantRow.compare_at_price === undefined
-          ? currentProductCompareAtPrice
+          ? item.compare_at_price
           : toPrice(variantRow.compare_at_price);
 
       const nextItem: CartItem = {
         ...item,
-        name: currentName,
         price: currentVariantPrice,
         compare_at_price: currentVariantCompareAt,
         stock_quantity: currentVariantStock,
@@ -159,8 +134,39 @@ export const validateCartStock = async (items: CartItem[]): Promise<StockValidat
       continue;
     }
 
-    const currentPrice = currentProductPrice;
-    const currentStock = toStockQuantity(Number(row.stock_quantity));
+    const { data: row, error: productError } = await (supabase as any)
+      .from("products_with_stock")
+      .select("id,name,price,compare_at_price,is_available,in_stock,total_stock_quantity")
+      .eq("id", item.product_id)
+      .maybeSingle();
+
+    if (productError) {
+      throw productError;
+    }
+
+    const productRow = row as ProductStockRow | null;
+    if (!productRow || productRow.is_available === false || productRow.in_stock !== true) {
+      hasChanges = true;
+      shouldBlockCheckout = true;
+
+      if (!blockingMessage) {
+        blockingMessage = `${itemDisplayName} is no longer available`;
+      }
+
+      messages.push({
+        type: "error",
+        message: `${itemDisplayName} is no longer available and has been removed from your cart`,
+      });
+      continue;
+    }
+
+    const currentName = productRow.name?.trim() || item.name;
+    const currentPrice = toPrice(productRow.price);
+    const currentProductCompareAtPrice =
+      productRow.compare_at_price === null || productRow.compare_at_price === undefined
+        ? null
+        : toPrice(productRow.compare_at_price);
+    const currentStock = toStockQuantity(Number(productRow.total_stock_quantity));
 
     if (currentStock === 0) {
       hasChanges = true;

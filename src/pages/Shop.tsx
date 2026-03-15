@@ -93,7 +93,7 @@ const renderProductRows = (items: Product[], loading: boolean, expectedCount = 4
   if (items.length === 0) {
     return (
       <div className="border border-[#d4ccc2] px-6 py-8 text-center">
-        <p className="font-body text-[12px] text-[#888888]">No products available in this category right now.</p>
+        <p className="font-body text-[12px] text-[#555555]">No products available in this category right now.</p>
       </div>
     );
   }
@@ -226,7 +226,7 @@ const Shop = () => {
             })}
           </div>
 
-          <p className="font-body text-[12px] font-normal text-[#888888] md:text-right">Showing {visibleProductCount} products</p>
+          <p className="font-body text-[12px] font-normal text-[#555555] md:text-right">Showing {visibleProductCount} products</p>
         </div>
       </div>
 
@@ -239,11 +239,11 @@ const Shop = () => {
             <section key={category} className={showDivider ? "pt-20" : ""}>
               {showDivider ? (
                 <div className="mt-0 mb-10 border-t border-[#d4ccc2] pt-8">
-                  <p className="font-body text-[10px] font-light uppercase tracking-[0.2em] text-accent">{categoryLabels[category]}</p>
+                  <p className="font-body text-[10px] font-medium uppercase tracking-[0.2em] text-accent">{categoryLabels[category]}</p>
                 </div>
               ) : (
                 <div className="mb-10">
-                  <p className="font-body text-[10px] font-light uppercase tracking-[0.2em] text-accent">{categoryLabels[category]}</p>
+                  <p className="font-body text-[10px] font-medium uppercase tracking-[0.2em] text-accent">{categoryLabels[category]}</p>
                 </div>
               )}
 
@@ -259,7 +259,7 @@ const Shop = () => {
 
                   <div className="relative z-10 flex min-h-[60vh] items-center">
                     <div className="max-w-[600px] px-6 md:px-0 md:pl-[80px]">
-                      <p className="mb-4 font-body text-[11px] font-light uppercase tracking-[0.2em] text-accent">
+                      <p className="mb-4 font-body text-[11px] font-medium uppercase tracking-[0.2em] text-accent">
                         {categoryLabels[category]}
                       </p>
                       <h2 className="font-display text-[38px] md:text-[52px] font-light italic leading-[1.2] text-white">
@@ -280,3 +280,4 @@ const Shop = () => {
 };
 
 export default Shop;
+

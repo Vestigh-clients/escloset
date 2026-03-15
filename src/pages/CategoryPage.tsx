@@ -6,7 +6,7 @@ import { categoryImages } from "@/data/images";
 import { categoryLabels, getCategorySkeletonCount, isStorefrontCategorySlug, type StorefrontCategorySlug } from "@/lib/categories";
 import { formatPrice } from "@/lib/price";
 import { getProductsByCategory } from "@/services/productService";
-import { getPrimaryImage, type Product } from "@/types/product";
+import { getPrimaryImage, isInStock, type Product } from "@/types/product";
 
 type SortOption = "featured" | "price-low-high" | "price-high-low" | "newest";
 
@@ -42,6 +42,7 @@ interface CategoryProductCardProps {
 const CategoryProductCard = ({ product, variant }: CategoryProductCardProps) => {
   const image = getPrimaryImage(product);
   const [hasImageError, setHasImageError] = useState(false);
+  const isOutOfStock = !isInStock(product);
 
   useEffect(() => {
     setHasImageError(false);
@@ -73,9 +74,14 @@ const CategoryProductCard = ({ product, variant }: CategoryProductCardProps) => 
                 {product.name}
               </h3>
             </Link>
-            <p className="mt-2 font-body text-[13px] font-normal text-[#888] transition-colors duration-300 ease-in-out group-hover:text-[#F5F0E8]">
+            <p className="mt-2 font-body text-[13px] font-normal text-[#555555] transition-colors duration-300 ease-in-out group-hover:text-[#F5F0E8]">
               {formatPrice(product.price)}
             </p>
+            {isOutOfStock ? (
+              <p className="mt-1 font-['Inter'] text-[10px] uppercase tracking-[0.08em] text-[#777777] transition-colors duration-300 ease-in-out group-hover:text-[#d4ccc2]">
+                Out of Stock
+              </p>
+            ) : null}
 
             <p className="mt-4 font-body text-[13px] font-light leading-[1.8] text-[#666666] transition-colors duration-300 ease-in-out group-hover:text-[#F5F0E8]">
               {product.short_description || product.description || ""}
@@ -113,7 +119,10 @@ const CategoryProductCard = ({ product, variant }: CategoryProductCardProps) => 
         <Link to={`/shop/${product.slug}`}>
           <h3 className="font-display text-[16px] font-normal italic leading-snug text-foreground">{product.name}</h3>
         </Link>
-        <p className="mt-1 font-body text-[13px] font-normal text-[#888]">{formatPrice(product.price)}</p>
+        <p className="mt-1 font-body text-[13px] font-normal text-[#555555]">{formatPrice(product.price)}</p>
+        {isOutOfStock ? (
+          <p className="mt-1 font-['Inter'] text-[10px] uppercase tracking-[0.08em] text-[#777777]">Out of Stock</p>
+        ) : null}
       </div>
     </article>
   );
@@ -246,7 +255,7 @@ const CategoryPage = () => {
           <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.65)_0%,rgba(0,0,0,0.05)_100%)]" />
 
           <div className="absolute bottom-8 left-6 right-6 z-10 max-w-[520px] text-left md:bottom-[80px] md:left-[80px] md:right-auto">
-            <p className="mb-3 font-body text-[10px] font-light uppercase tracking-[0.2em] text-accent">{categoryLabels[category]}</p>
+            <p className="mb-3 font-body text-[10px] font-medium uppercase tracking-[0.2em] text-accent">{categoryLabels[category]}</p>
             <h1 className="font-display text-[46px] md:text-[64px] font-light italic leading-[1.05] text-white">{categoryLabels[category]}</h1>
             <p className="mt-4 max-w-[400px] font-body text-[14px] font-light leading-relaxed text-white/70">{heroDescriptions[category]}</p>
           </div>
@@ -254,12 +263,12 @@ const CategoryPage = () => {
 
         <section className="border-b border-[#d4ccc2] pb-8">
           <div className="container mx-auto px-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <p className="font-body text-[11px] font-light text-[#888888]">
+            <p className="font-body text-[11px] font-light text-[#555555]">
               Showing {loading ? getCategorySkeletonCount(categorySlug) : sortedProducts.length} products
             </p>
 
             <div className="relative inline-flex items-center gap-2 self-start sm:self-auto">
-              <span className="font-body text-[11px] font-light text-[#888888]">Sort by:</span>
+              <span className="font-body text-[11px] font-light text-[#555555]">Sort by:</span>
               <select
                 value={sortBy}
                 onChange={(event) => setSortBy(event.target.value as SortOption)}
@@ -272,7 +281,7 @@ const CategoryPage = () => {
                 <option value="price-high-low">Price High-Low</option>
                 <option value="newest">Newest</option>
               </select>
-              <span className="pointer-events-none absolute right-0 font-body text-[11px] text-[#888888]">v</span>
+              <span className="pointer-events-none absolute right-0 font-body text-[11px] text-[#555555]">v</span>
             </div>
           </div>
         </section>
@@ -377,7 +386,7 @@ const CategoryPage = () => {
 
             {!loading && sortedProducts.length === 0 ? (
               <div className="border border-[#d4ccc2] px-6 py-8 text-center">
-                <p className="font-body text-[12px] text-[#888888]">No products available in this category right now.</p>
+                <p className="font-body text-[12px] text-[#555555]">No products available in this category right now.</p>
               </div>
             ) : null}
           </div>
@@ -388,4 +397,5 @@ const CategoryPage = () => {
 };
 
 export default CategoryPage;
+
 

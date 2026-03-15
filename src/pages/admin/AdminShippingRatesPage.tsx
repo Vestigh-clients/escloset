@@ -231,20 +231,22 @@ const AdminShippingRatesPage = () => {
   };
 
   return (
-    <div className="bg-[#F5F0E8] px-6 py-10 lg:px-[60px] lg:py-12">
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-        <h1 className="font-display text-[36px] italic text-[#1A1A1A]">Shipping Rates</h1>
-        <button
-          type="button"
-          onClick={openCreateForm}
-          className="rounded-[2px] bg-[#1A1A1A] px-7 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[#F5F0E8] transition-colors hover:bg-[#C4A882] hover:text-[#1A1A1A]"
-        >
-          Add Rate
-        </button>
+    <div className="admin-page">
+      <div className="admin-page-header">
+        <h1 className="admin-page-title font-display text-[36px] italic text-[#1A1A1A]">Shipping Rates</h1>
+        <div className="admin-page-actions">
+          <button
+            type="button"
+            onClick={openCreateForm}
+            className="rounded-[2px] bg-[#1A1A1A] px-7 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[#F5F0E8] transition-colors hover:bg-[#C4A882] hover:text-[#1A1A1A]"
+          >
+            Add Rate
+          </button>
+        </div>
       </div>
 
       <div className="mb-8 rounded-[2px] border border-[#d4ccc2] bg-[rgba(196,168,130,0.08)] px-5 py-4">
-        <p className="font-body text-[12px] leading-[1.8] text-[#888888]">
+        <p className="font-body text-[12px] leading-[1.8] text-[#555555]">
           Rates are matched by state. If no state-specific rate is found for a customer&apos;s delivery address, the default nationwide
           rate is used. You must always have one active default rate with no states selected.
         </p>
@@ -252,14 +254,14 @@ const AdminShippingRatesPage = () => {
 
       {message ? <p className="mb-4 font-body text-[12px] text-[#C4A882]">{message}</p> : null}
 
-      <div className="overflow-x-auto">
+      <div className="hidden overflow-x-auto md:block">
         <table className="min-w-[1020px] w-full border-collapse">
           <thead>
             <tr className="border-b border-[#d4ccc2]">
               {["Name", "States Covered", "Rate", "Est. Delivery", "Status", "Actions"].map((heading) => (
                 <th
                   key={heading}
-                  className="px-2 py-3 text-left font-body text-[10px] uppercase tracking-[0.12em] text-[#aaaaaa] first:pl-0 last:pr-0"
+                  className="px-2 py-3 text-left font-body text-[10px] uppercase tracking-[0.12em] text-[#777777] first:pl-0 last:pr-0"
                 >
                   {heading}
                 </th>
@@ -269,7 +271,7 @@ const AdminShippingRatesPage = () => {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={6} className="px-0 py-8 text-center font-body text-[12px] text-[#aaaaaa]">
+                <td colSpan={6} className="px-0 py-8 text-center font-body text-[12px] text-[#777777]">
                   Loading shipping rates...
                 </td>
               </tr>
@@ -281,7 +283,7 @@ const AdminShippingRatesPage = () => {
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-0 py-8 text-center font-body text-[12px] text-[#aaaaaa]">
+                <td colSpan={6} className="px-0 py-8 text-center font-body text-[12px] text-[#777777]">
                   No shipping rates found.
                 </td>
               </tr>
@@ -289,7 +291,7 @@ const AdminShippingRatesPage = () => {
               rows.map((row) => {
                 const isDefault = row.states.length === 0;
                 const statesText =
-                  row.states.length <= 2 ? row.states.join(", ") : `${row.states.slice(0, 2).join(", ")} +${row.states.length - 2} more`;
+                  row.states.length <= 2 ? row.states.join(", ") : `${row.states.slice(0, 2).join(", ")} [${row.states.length - 2}] more`;
                 return (
                   <tr key={row.id} className="border-b border-[#e4dbd1] hover:bg-[rgba(196,168,130,0.04)]">
                     <td className="px-2 py-4 pl-0 font-body text-[13px] text-[#1A1A1A]">{row.name}</td>
@@ -297,19 +299,19 @@ const AdminShippingRatesPage = () => {
                       {isDefault ? (
                         <p className="font-body text-[11px] text-[#C4A882]">All States (Default)</p>
                       ) : (
-                        <p title={row.states.join(", ")} className="font-body text-[11px] text-[#888888]">
+                        <p title={row.states.join(", ")} className="font-body text-[11px] text-[#555555]">
                           {statesText}
                         </p>
                       )}
                     </td>
                     <td className="px-2 py-4 font-body text-[13px] text-[#1A1A1A]">{formatCurrency(row.base_rate)}</td>
-                    <td className="px-2 py-4 font-body text-[11px] text-[#888888]">
+                    <td className="px-2 py-4 font-body text-[11px] text-[#555555]">
                       {row.estimated_days_min ?? 1}–{row.estimated_days_max ?? row.estimated_days_min ?? 1} business days
                     </td>
                     <td className="px-2 py-4">
                       <span
                         className={`inline-block rounded-[2px] border px-[10px] py-[4px] font-body text-[9px] uppercase tracking-[0.12em] ${
-                          row.is_active ? "border-[#C4A882] text-[#C4A882]" : "border-[#d4ccc2] text-[#aaaaaa]"
+                          row.is_active ? "border-[#C4A882] text-[#C4A882]" : "border-[#d4ccc2] text-[#777777]"
                         }`}
                       >
                         {row.is_active ? "Active" : "Inactive"}
@@ -323,14 +325,14 @@ const AdminShippingRatesPage = () => {
                             <button type="button" onClick={() => void confirmDelete(row)} className="text-[#C0392B]">
                               Yes, Delete
                             </button>
-                            <button type="button" onClick={() => setDeleteConfirmId(null)} className="text-[#888888]">
+                            <button type="button" onClick={() => setDeleteConfirmId(null)} className="text-[#555555]">
                               Cancel
                             </button>
                           </div>
                         </div>
                       ) : (
                         <div className="flex items-center gap-3 font-body text-[10px] uppercase tracking-[0.1em]">
-                          <button type="button" onClick={() => openEditForm(row)} className="text-[#888888] transition-colors hover:text-[#1A1A1A]">
+                          <button type="button" onClick={() => openEditForm(row)} className="text-[#555555] transition-colors hover:text-[#1A1A1A]">
                             Edit
                           </button>
                           {isDefault ? (
@@ -338,7 +340,7 @@ const AdminShippingRatesPage = () => {
                               Default
                             </span>
                           ) : (
-                            <button type="button" onClick={() => setDeleteConfirmId(row.id)} className="text-[#888888] transition-colors hover:text-[#C0392B]">
+                            <button type="button" onClick={() => setDeleteConfirmId(row.id)} className="text-[#555555] transition-colors hover:text-[#C0392B]">
                               Delete
                             </button>
                           )}
@@ -353,13 +355,80 @@ const AdminShippingRatesPage = () => {
         </table>
       </div>
 
+      <div className="border-t border-[#d4ccc2] md:hidden">
+        {isLoading ? (
+          <p className="py-8 text-center font-body text-[12px] text-[#777777]">Loading shipping rates...</p>
+        ) : loadError ? (
+          <p className="py-8 text-center font-body text-[12px] text-[#C0392B]">{loadError}</p>
+        ) : rows.length === 0 ? (
+          <p className="py-8 text-center font-body text-[12px] text-[#777777]">No shipping rates found.</p>
+        ) : (
+          rows.map((row) => {
+            const isDefault = row.states.length === 0;
+            const statesText =
+              row.states.length <= 2 ? row.states.join(", ") : `${row.states.slice(0, 2).join(", ")} [${row.states.length - 2}] more`;
+            return (
+              <div key={`mobile-${row.id}`} className="admin-mobile-card">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-body text-[12px] text-[#1A1A1A]">{row.name}</p>
+                  <span
+                    className={`inline-block rounded-[2px] border px-[10px] py-[4px] font-body text-[9px] uppercase tracking-[0.12em] ${
+                      row.is_active ? "border-[#C4A882] text-[#C4A882]" : "border-[#d4ccc2] text-[#777777]"
+                    }`}
+                  >
+                    {row.is_active ? "Active" : "Inactive"}
+                  </span>
+                </div>
+
+                <p className="mt-2 font-body text-[11px] text-[#777777]">
+                  {isDefault ? "All States (Default)" : statesText || "No states"}
+                </p>
+
+                <div className="mt-2 flex items-center justify-between gap-3">
+                  <p className="font-body text-[12px] text-[#1A1A1A]">{formatCurrency(row.base_rate)}</p>
+                  <p className="font-body text-[11px] text-[#777777]">
+                    {row.estimated_days_min ?? 1}-{row.estimated_days_max ?? row.estimated_days_min ?? 1} business days
+                  </p>
+                </div>
+
+                <div className="mt-2 flex justify-end gap-3 font-body text-[10px] uppercase tracking-[0.1em]">
+                  {deleteConfirmId === row.id ? (
+                    <>
+                      <button type="button" onClick={() => void confirmDelete(row)} className="text-[#C0392B]">
+                        Yes Delete
+                      </button>
+                      <button type="button" onClick={() => setDeleteConfirmId(null)} className="text-[#555555]">
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button type="button" onClick={() => openEditForm(row)} className="text-[#555555] hover:text-[#1A1A1A]">
+                        Edit
+                      </button>
+                      {isDefault ? (
+                        <span className="text-[#C4A882]">Default</span>
+                      ) : (
+                        <button type="button" onClick={() => setDeleteConfirmId(row.id)} className="text-[#555555] hover:text-[#C0392B]">
+                          Delete
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
       {isFormOpen ? (
         <div className="mt-6 border border-[#d4ccc2] p-6">
           <p className="mb-4 font-body text-[10px] uppercase tracking-[0.2em] text-[#C4A882]">{form.id ? "Edit Rate" : "Add Shipping Rate"}</p>
 
           <div className="grid gap-5">
             <div>
-              <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Rate Name *</label>
+              <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Rate Name *</label>
               <input
                 value={form.name}
                 onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
@@ -369,7 +438,7 @@ const AdminShippingRatesPage = () => {
             </div>
 
             <div>
-              <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">States</label>
+              <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">States</label>
               <input
                 value={stateSearchInput}
                 onChange={(event) => setStateSearchInput(event.target.value)}
@@ -400,14 +469,14 @@ const AdminShippingRatesPage = () => {
                     className="inline-flex items-center gap-2 rounded-[2px] border border-[#d4ccc2] bg-[rgba(26,26,26,0.06)] px-[10px] py-1 font-body text-[11px] text-[#1A1A1A]"
                   >
                     {state}
-                    <button type="button" onClick={() => removeState(state)} className="text-[#888888] hover:text-[#C0392B]">
+                    <button type="button" onClick={() => removeState(state)} className="text-[#555555] hover:text-[#C0392B]">
                       ×
                     </button>
                   </span>
                 ))}
               </div>
 
-              <label className="mt-3 inline-flex items-center gap-2 font-body text-[11px] text-[#888888]">
+              <label className="mt-3 inline-flex items-center gap-2 font-body text-[11px] text-[#555555]">
                 <input
                   type="checkbox"
                   checked={form.isDefault}
@@ -430,7 +499,7 @@ const AdminShippingRatesPage = () => {
 
             <div className="grid gap-5 md:grid-cols-3">
               <div>
-                <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Base Rate GH₵ *</label>
+                <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Base Rate GH₵ *</label>
                 <input
                   inputMode="decimal"
                   value={form.baseRate}
@@ -440,7 +509,7 @@ const AdminShippingRatesPage = () => {
               </div>
 
               <div>
-                <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Estimated Delivery Min Days *</label>
+                <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Estimated Delivery Min Days *</label>
                 <input
                   inputMode="numeric"
                   value={form.minDays}
@@ -451,7 +520,7 @@ const AdminShippingRatesPage = () => {
               </div>
 
               <div>
-                <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Estimated Delivery Max Days *</label>
+                <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Estimated Delivery Max Days *</label>
                 <input
                   inputMode="numeric"
                   value={form.maxDays}
@@ -486,7 +555,7 @@ const AdminShippingRatesPage = () => {
               <button
                 type="button"
                 onClick={closeForm}
-                className="mt-3 block w-full font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa] transition-colors hover:text-[#1A1A1A]"
+                className="mt-3 block w-full font-body text-[11px] uppercase tracking-[0.1em] text-[#777777] transition-colors hover:text-[#1A1A1A]"
               >
                 Cancel
               </button>
@@ -499,4 +568,5 @@ const AdminShippingRatesPage = () => {
 };
 
 export default AdminShippingRatesPage;
+
 

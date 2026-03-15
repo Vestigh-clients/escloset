@@ -37,7 +37,7 @@ const getStatusClassName = (status: AccountOrderStatus): string => {
     return "border-[#1A1A1A] text-[#1A1A1A]";
   }
 
-  return "border-[#d4ccc2] bg-[#f5f0e8] text-[#888888]";
+  return "border-[#d4ccc2] bg-[#f5f0e8] text-[#555555]";
 };
 
 const getItemsSummaryText = (order: AccountOrderSummary): string => {
@@ -59,7 +59,7 @@ const AccountOrderList = ({ orders }: AccountOrderListProps) => {
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div className="min-w-0">
               <p className="font-body text-[12px] uppercase tracking-[0.1em] text-[#C4A882]">{order.order_number}</p>
-              <p className="mt-1 font-body text-[11px] text-[#aaaaaa]">{formatOrderDate(order.created_at)}</p>
+              <p className="mt-1 font-body text-[11px] text-[#666666]">{formatOrderDate(order.created_at)}</p>
 
               <span
                 className={`mt-4 inline-flex rounded-[2px] border px-3 py-[4px] font-body text-[9px] uppercase tracking-[0.15em] ${getStatusClassName(order.status)}`}
@@ -67,7 +67,7 @@ const AccountOrderList = ({ orders }: AccountOrderListProps) => {
                 {formatStatusLabel(order.status)}
               </span>
 
-              <p className="mt-4 truncate font-body text-[12px] text-[#888888]">{getItemsSummaryText(order)}</p>
+              <p className="mt-4 truncate font-body text-[12px] text-[#555555]">{getItemsSummaryText(order)}</p>
 
               <Link
                 to={`/orders/${order.order_number}`}
@@ -78,7 +78,7 @@ const AccountOrderList = ({ orders }: AccountOrderListProps) => {
             </div>
 
             <div className="md:text-right">
-              <p className="font-body text-[10px] uppercase tracking-[0.12em] text-[#aaaaaa]">Order Total</p>
+              <p className="font-body text-[10px] uppercase tracking-[0.12em] text-[#666666]">Order Total</p>
               <p className="mt-1 font-body text-[13px] text-[#1A1A1A]">{formatPrice(order.total)}</p>
             </div>
           </div>
@@ -89,4 +89,5 @@ const AccountOrderList = ({ orders }: AccountOrderListProps) => {
 };
 
 export default AccountOrderList;
+
 

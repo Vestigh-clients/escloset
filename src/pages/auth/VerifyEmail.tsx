@@ -89,7 +89,7 @@ const VerifyEmail = () => {
         <Mail className="mx-auto h-12 w-12 text-[#C4A882]" strokeWidth={1.35} />
 
         <h1 className="mt-8 font-display text-[42px] italic leading-none text-[#1A1A1A]">Check your email</h1>
-        <p className="mt-4 font-body text-[14px] font-light leading-[1.8] text-[#888888]">
+        <p className="mt-4 font-body text-[14px] font-light leading-[1.8] text-[#555555]">
           We sent a verification link to {emailLabel}. Click the link to activate your account.
         </p>
 
@@ -102,9 +102,9 @@ const VerifyEmail = () => {
           {isResending ? "Sending..." : countdown > 0 ? `Resend in ${countdown}s` : "Resend email"}
         </button>
 
-        {message ? <p className="mt-3 font-body text-[11px] text-[#888888]">{message}</p> : null}
+        {message ? <p className="mt-3 font-body text-[11px] text-[#555555]">{message}</p> : null}
 
-        <p className="mt-8 font-body text-[12px] text-[#888888]">
+        <p className="mt-8 font-body text-[12px] text-[#555555]">
           Wrong email?{" "}
           <Link to="/auth/register" className="text-[#1A1A1A] transition-colors hover:text-[#C4A882]">
             Go back
@@ -116,4 +116,5 @@ const VerifyEmail = () => {
 };
 
 export default VerifyEmail;
+
 

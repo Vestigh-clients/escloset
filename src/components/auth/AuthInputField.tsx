@@ -59,7 +59,7 @@ const AuthInputField = ({
           className={`pointer-events-none absolute left-0 font-body transition-all duration-200 ${
             shouldFloatLabel
               ? "top-[2px] text-[10px] uppercase tracking-[0.12em] text-[#C4A882]"
-              : "top-[20px] text-[14px] text-[#888888]"
+              : "top-[20px] text-[14px] text-[#555555]"
           }`}
         >
           {label}
@@ -69,10 +69,11 @@ const AuthInputField = ({
         {trailingControl ? <div className="absolute right-0 top-[17px]">{trailingControl}</div> : null}
       </div>
 
-      {helperText ? <p className="mt-[6px] font-body text-[11px] text-[#aaaaaa]">{helperText}</p> : null}
+      {helperText ? <p className="mt-[6px] font-body text-[11px] text-[#666666]">{helperText}</p> : null}
       {error ? <p className="mt-[6px] font-body text-[11px] text-[#C0392B]">{error}</p> : null}
     </div>
   );
 };
 
 export default AuthInputField;
+

@@ -11,6 +11,7 @@ import { formatPrice } from "@/lib/price";
 import { shouldShowPriceVariesByVariantNote } from "@/lib/productPricing";
 import { getFeaturedProducts, getRelatedProducts } from "@/services/productService";
 import {
+  getStockQuantity,
   getPrimaryImage,
   isInStock,
   type Product,
@@ -148,6 +149,11 @@ const mapProductRecord = (value: Record<string, unknown>): Product => {
     compare_at_price:
       value.compare_at_price === null || value.compare_at_price === undefined ? undefined : toNumber(value.compare_at_price),
     stock_quantity: Math.max(0, Math.trunc(toNumber(value.stock_quantity))),
+    total_stock_quantity:
+      value.total_stock_quantity === null || value.total_stock_quantity === undefined
+        ? undefined
+        : Math.max(0, Math.trunc(toNumber(value.total_stock_quantity))),
+    in_stock: value.in_stock === null || value.in_stock === undefined ? undefined : toBoolean(value.in_stock),
     is_available: toBoolean(value.is_available),
     is_featured: value.is_featured === null || value.is_featured === undefined ? undefined : toBoolean(value.is_featured),
     images: imageCandidates
@@ -302,9 +308,17 @@ const ProductPage = () => {
         }
 
         const { data, error: productError } = await (supabase as any)
-          .from("products")
+          .from("products_with_stock")
           .select(`
-            *,
+            id, name, slug, description,
+            short_description, price,
+            compare_at_price,
+            stock_quantity,
+            total_stock_quantity,
+            in_stock,
+            is_available, has_variants,
+            images, benefits, tags,
+            weight_grams, sku,
             categories ( id, name, slug ),
             product_option_types (
               id,
@@ -475,6 +489,7 @@ const ProductPage = () => {
     return values.length > 0 ? values.join(" / ") : null;
   }, [optionValueById, selectedVariant]);
   const hasAnyAvailableVariant = variants.some((variant) => variant.is_available && variant.stock_quantity > 0);
+  const productStockQuantity = product ? getStockQuantity(product) : 0;
   const isOutOfStock = !product || (hasVariants ? !hasAnyAvailableVariant : !isInStock(product));
   const displayPrice = selectedVariant?.price ?? product?.price ?? 0;
   const displayComparePrice = selectedVariant?.compare_at_price ?? product?.compare_at_price ?? null;
@@ -571,20 +586,20 @@ const ProductPage = () => {
       return { text: "Out of stock", tone: "danger" as const };
     }
 
-    if (product.stock_quantity <= 10) {
-      return { text: `Only ${product.stock_quantity} left in stock`, tone: "accent" as const };
+    if (productStockQuantity <= 10) {
+      return { text: `Only ${productStockQuantity} left in stock`, tone: "accent" as const };
     }
 
-    return { text: `${product.stock_quantity} in stock`, tone: "default" as const };
-  }, [hasVariants, isOutOfStock, product, selectedVariant]);
+    return { text: `${productStockQuantity} in stock`, tone: "default" as const };
+  }, [hasVariants, isOutOfStock, product, productStockQuantity, selectedVariant]);
   const stockStatusToneClass =
     stockStatus.tone === "danger"
-      ? "text-[#888888]"
+      ? "text-[#555555]"
       : stockStatus.tone === "accent"
         ? "text-[#C4A882]"
         : stockStatus.tone === "muted"
-          ? "text-[#aaaaaa]"
-          : "text-[#888888]";
+          ? "text-[#777777]"
+          : "text-[#555555]";
 
   useEffect(() => {
     if (!hasVariants) {
@@ -778,7 +793,7 @@ const ProductPage = () => {
       image_url: primaryImage,
       image_alt: product.name,
       sku: product.sku ?? null,
-      stock_quantity: product.stock_quantity,
+      stock_quantity: productStockQuantity,
       variant_id: null,
       variant_label: null,
     });
@@ -801,24 +816,24 @@ const ProductPage = () => {
       <div className="mb-10 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <Link
           to="/shop"
-          className="font-body text-[11px] uppercase tracking-[0.1em] text-[#888888] transition-colors hover:text-foreground"
+          className="font-body text-[11px] uppercase tracking-[0.1em] text-[#555555] transition-colors hover:text-foreground"
         >
           {"\u2190 Back to Shop"}
         </Link>
 
-        <div className="flex flex-wrap items-center gap-2 font-body text-[11px] font-light text-[#888888]">
+        <div className="flex flex-wrap items-center gap-2 font-body text-[11px] font-light text-[#555555]">
           <Link to="/" className="transition-colors hover:text-foreground">
             Home
           </Link>
-          <span className="text-[#d4ccc2]">/</span>
+          <span className="text-[#aaaaaa]">/</span>
           <Link to="/shop" className="transition-colors hover:text-foreground">
             Shop
           </Link>
-          <span className="text-[#d4ccc2]">/</span>
+          <span className="text-[#aaaaaa]">/</span>
           <Link to={`/category/${categorySlug}`} className="transition-colors hover:text-foreground">
             {categoryLabel}
           </Link>
-          <span className="text-[#d4ccc2]">/</span>
+          <span className="text-[#aaaaaa]">/</span>
           <span>{product.name}</span>
         </div>
       </div>
@@ -893,16 +908,16 @@ const ProductPage = () => {
         </div>
 
         <div className="flex flex-col">
-          <span className="mb-2 font-body text-[10px] uppercase tracking-[0.2em] text-[#C4A882]">{categoryLabel}</span>
+          <span className="mb-2 font-body text-[10px] font-medium uppercase tracking-[0.2em] text-[#C4A882]">{categoryLabel}</span>
           <h1 className="mb-4 font-display text-[36px] font-light italic leading-[1.2] text-[#1A1A1A]">{product.name}</h1>
           <div className="flex items-end gap-3">
             {displayComparePrice !== null && displayComparePrice > displayPrice ? (
-              <p className="font-body text-[16px] font-light text-[#aaaaaa] line-through">{formatPrice(displayComparePrice)}</p>
+              <p className="font-body text-[16px] font-light text-[#777777] line-through">{formatPrice(displayComparePrice)}</p>
             ) : null}
             <p className="font-display text-[28px] font-normal text-[#1A1A1A]">{formatPrice(displayPrice)}</p>
           </div>
           {showPriceVariesByVariantNote ? (
-            <p className="mt-1 font-body text-[10px] text-[#aaaaaa]">Price varies by variant</p>
+            <p className="mt-1 font-body text-[10px] text-[#777777]">Price varies by variant</p>
           ) : null}
 
           <div className="my-5 border-t border-[#d4ccc2]" />
@@ -927,7 +942,7 @@ const ProductPage = () => {
                           <button
                             type="button"
                             onClick={() => setSizeGuideOpen(true)}
-                            className="font-body text-[10px] uppercase tracking-[0.1em] text-[#aaaaaa] transition-colors duration-200 hover:text-[#1A1A1A]"
+                            className="font-body text-[10px] uppercase tracking-[0.1em] text-[#777777] transition-colors duration-200 hover:text-[#1A1A1A]"
                           >
                             Size guide
                           </button>
@@ -991,7 +1006,7 @@ const ProductPage = () => {
                                   ? "border-[#1A1A1A] bg-[#1A1A1A] text-[#F5F0E8]"
                                   : isUnavailable
                                     ? "cursor-not-allowed border-[#e8e2d9] text-[#d4ccc2] line-through"
-                                    : "border-[#d4ccc2] bg-transparent text-[#888888] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
+                                    : "border-[#d4ccc2] bg-transparent text-[#555555] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
                               }`}
                             >
                               {optionValue.value}
@@ -1016,7 +1031,7 @@ const ProductPage = () => {
             disabled={isAddToCartDisabled}
             className={`w-full rounded-[2px] border-0 px-4 py-[18px] font-body text-[11px] uppercase tracking-[0.18em] transition-all duration-200 ease-in ${
               isAddToCartDisabled
-                ? "cursor-not-allowed bg-[#d4ccc2] text-[#888888]"
+                ? "cursor-not-allowed bg-[#d4ccc2] text-[#555555]"
                 : "cursor-pointer bg-[#1A1A1A] text-[#F5F0E8] hover:bg-[#C4A882] hover:text-[#1A1A1A]"
             }`}
           >
@@ -1031,9 +1046,9 @@ const ProductPage = () => {
                 className="mt-[10px] flex w-full items-center justify-center gap-2 rounded-[2px] border border-[#1A1A1A] bg-transparent px-4 py-[18px] font-body text-[11px] uppercase tracking-[0.18em] text-[#1A1A1A] transition-all duration-200 ease-in hover:bg-[#1A1A1A] hover:text-[#F5F0E8]"
               >
                 <WandSparkles size={16} strokeWidth={1.4} />
-                Virtual Try-On
+                Try it On
               </button>
-              <p className="mt-[6px] text-center font-body text-[9px] tracking-[0.1em] text-[#aaaaaa]">Powered by StyleSyncs</p>
+              <p className="mt-[6px] text-center font-body text-[9px] tracking-[0.1em] text-[#777777]">Powered by StyleSyncs</p>
             </>
           ) : null}
 
@@ -1044,7 +1059,7 @@ const ProductPage = () => {
               return (
                 <div key={item.label} className="flex flex-1 flex-col items-center gap-1.5 text-center">
                   <Icon size={18} strokeWidth={1.4} className="text-[#C4A882]" />
-                  <p className="font-body text-[9px] uppercase tracking-[0.12em] text-[#888888]">{item.label}</p>
+                  <p className="font-body text-[9px] uppercase tracking-[0.12em] text-[#666666]">{item.label}</p>
                 </div>
               );
             })}
@@ -1052,7 +1067,7 @@ const ProductPage = () => {
 
           <div className="my-7 border-t border-[#d4ccc2]" />
 
-          <p className="font-body text-[14px] font-light leading-[1.8] text-[#666666]">
+          <p className="font-body text-[14px] font-light leading-[1.8] text-[#444444]">
             {product.short_description || product.description || ""}
           </p>
 
@@ -1068,7 +1083,7 @@ const ProductPage = () => {
                   } ${index < 2 ? "border-b border-[#d4ccc2]" : ""}`}
                 >
                   <Icon size={20} className="mb-3 text-[#1A1A1A]" />
-                  <span className="font-body text-[11px] font-light uppercase tracking-[0.1em] text-[#1A1A1A]">{benefit}</span>
+                  <span className="font-body text-[11px] font-light uppercase tracking-[0.1em] text-[#555555]">{benefit}</span>
                 </div>
               );
             })}
@@ -1204,17 +1219,17 @@ const ProductPage = () => {
             <button
               type="button"
               onClick={() => setSizeGuideOpen(false)}
-              className="absolute right-5 top-5 text-[#888888] transition-colors duration-200 hover:text-[#1A1A1A]"
+              className="absolute right-5 top-5 text-[#555555] transition-colors duration-200 hover:text-[#1A1A1A]"
               aria-label="Close size guide"
             >
               <X size={20} strokeWidth={1.4} />
             </button>
 
             <h3 className="font-display text-[28px] italic text-[#1A1A1A]">Size Guide</h3>
-            <p className="mb-8 font-body text-[11px] text-[#aaaaaa]">{categoryLabel}</p>
+            <p className="mb-8 font-body text-[11px] text-[#777777]">{categoryLabel}</p>
 
             {isBagCategory ? (
-              <p className="font-body text-[12px] leading-[1.8] text-[#888888]">
+              <p className="font-body text-[12px] leading-[1.8] text-[#555555]">
                 One size - see product dimensions in the description.
               </p>
             ) : isShoeCategory ? (
@@ -1230,10 +1245,10 @@ const ProductPage = () => {
                 <tbody>
                   {shoeSizeGuideRows.map((row, index) => (
                     <tr key={row.uk} className={index % 2 === 0 ? "bg-[#F5F0E8]" : "bg-[rgba(26,26,26,0.03)]"}>
-                      <td className="px-4 py-2.5 font-body text-[12px] text-[#888888]">{row.uk}</td>
-                      <td className="px-4 py-2.5 font-body text-[12px] text-[#888888]">{row.eu}</td>
-                      <td className="px-4 py-2.5 font-body text-[12px] text-[#888888]">{row.us}</td>
-                      <td className="px-4 py-2.5 font-body text-[12px] text-[#888888]">{row.foot}</td>
+                      <td className="px-4 py-2.5 font-body text-[12px] text-[#555555]">{row.uk}</td>
+                      <td className="px-4 py-2.5 font-body text-[12px] text-[#555555]">{row.eu}</td>
+                      <td className="px-4 py-2.5 font-body text-[12px] text-[#555555]">{row.us}</td>
+                      <td className="px-4 py-2.5 font-body text-[12px] text-[#555555]">{row.foot}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1251,17 +1266,17 @@ const ProductPage = () => {
                 <tbody>
                   {clothingSizeGuideRows.map((row, index) => (
                     <tr key={row.size} className={index % 2 === 0 ? "bg-[#F5F0E8]" : "bg-[rgba(26,26,26,0.03)]"}>
-                      <td className="px-4 py-2.5 font-body text-[12px] text-[#888888]">{row.size}</td>
-                      <td className="px-4 py-2.5 font-body text-[12px] text-[#888888]">{row.chest}</td>
-                      <td className="px-4 py-2.5 font-body text-[12px] text-[#888888]">{row.waist}</td>
-                      <td className="px-4 py-2.5 font-body text-[12px] text-[#888888]">{row.hips}</td>
+                      <td className="px-4 py-2.5 font-body text-[12px] text-[#555555]">{row.size}</td>
+                      <td className="px-4 py-2.5 font-body text-[12px] text-[#555555]">{row.chest}</td>
+                      <td className="px-4 py-2.5 font-body text-[12px] text-[#555555]">{row.waist}</td>
+                      <td className="px-4 py-2.5 font-body text-[12px] text-[#555555]">{row.hips}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             )}
 
-            <p className="mt-4 font-body text-[11px] leading-[1.8] text-[#aaaaaa]">
+            <p className="mt-4 font-body text-[11px] leading-[1.8] text-[#777777]">
               Measurements are approximate. If you are between sizes we recommend sizing up.
             </p>
           </div>
@@ -1274,3 +1289,4 @@ const ProductPage = () => {
 };
 
 export default ProductPage;
+

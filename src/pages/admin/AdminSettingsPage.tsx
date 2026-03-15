@@ -269,19 +269,19 @@ const AdminSettingsPage = () => {
   }
 
   if (isLoading) {
-    return <div className="bg-[#F5F0E8] px-6 py-10 font-body text-[12px] text-[#888888] lg:px-[60px] lg:py-12">Loading settings...</div>;
+    return <div className="admin-page font-body text-[12px] text-[#555555]">Loading settings...</div>;
   }
 
   return (
-    <div className="bg-[#F5F0E8] px-6 py-10 lg:px-[60px] lg:py-12">
-      <h1 className="mb-8 font-display text-[36px] italic text-[#1A1A1A]">Site Settings</h1>
+    <div className="admin-page">
+      <h1 className="admin-page-title mb-8 font-display text-[36px] italic text-[#1A1A1A]">Site Settings</h1>
 
       {loadError ? <p className="mb-4 font-body text-[12px] text-[#C0392B]">{loadError}</p> : null}
       {message ? <p className="mb-4 font-body text-[12px] text-[#C4A882]">{message}</p> : null}
 
-      <section className="mb-6 rounded-[2px] border border-[#d4ccc2] bg-transparent px-6 py-7 lg:px-10">
-        <h2 className="font-display text-[22px] italic text-[#1A1A1A]">General</h2>
-        <p className="mt-1 font-body text-[11px] text-[#aaaaaa]">Basic store information</p>
+      <section className="settings-section-card mb-6 rounded-[2px] border border-[#d4ccc2] bg-transparent px-6 py-7 lg:px-10">
+        <h2 className="admin-section-title font-display text-[22px] italic text-[#1A1A1A]">General</h2>
+        <p className="mt-1 font-body text-[11px] text-[#777777]">Basic store information</p>
         <div className="my-5 border-b border-[#d4ccc2]" />
 
         <div className="grid gap-5">
@@ -320,14 +320,14 @@ const AdminSettingsPage = () => {
         </div>
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-          <p className="font-body text-[10px] text-[#aaaaaa]">
+          <p className="font-body text-[10px] text-[#777777]">
             {generalMeta ? `Last updated ${generalMeta.date} by ${generalMeta.adminName}` : "Last updated —"}
           </p>
           <button
             type="button"
             onClick={() => void saveSection("general")}
             disabled={sectionSaving.general}
-            className="rounded-[2px] bg-[#1A1A1A] px-8 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[#F5F0E8] transition-colors hover:bg-[#C4A882] hover:text-[#1A1A1A] disabled:cursor-not-allowed disabled:opacity-65"
+            className="settings-save-button rounded-[2px] bg-[#1A1A1A] px-8 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[#F5F0E8] transition-colors hover:bg-[#C4A882] hover:text-[#1A1A1A] disabled:cursor-not-allowed disabled:opacity-65"
           >
             {sectionSaving.general ? "Saving..." : "Save General"}
           </button>
@@ -335,9 +335,9 @@ const AdminSettingsPage = () => {
         {sectionSaved.general ? <p className="mt-2 font-body text-[11px] text-[#C4A882]">Settings saved.</p> : null}
       </section>
 
-      <section className="mb-6 rounded-[2px] border border-[#d4ccc2] bg-transparent px-6 py-7 lg:px-10">
-        <h2 className="font-display text-[22px] italic text-[#1A1A1A]">Orders</h2>
-        <p className="mt-1 font-body text-[11px] text-[#aaaaaa]">Order processing settings</p>
+      <section className="settings-section-card mb-6 rounded-[2px] border border-[#d4ccc2] bg-transparent px-6 py-7 lg:px-10">
+        <h2 className="admin-section-title font-display text-[22px] italic text-[#1A1A1A]">Orders</h2>
+        <p className="mt-1 font-body text-[11px] text-[#777777]">Order processing settings</p>
         <div className="my-5 border-b border-[#d4ccc2]" />
 
         <div className="grid gap-5">
@@ -357,7 +357,7 @@ const AdminSettingsPage = () => {
             onChange={(value) => setSetting("order_number_prefix", value.toUpperCase().slice(0, 5))}
           />
           <div>
-            <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Default Currency</label>
+            <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Default Currency</label>
             <select
               value={settingsMap.default_currency || "GHS"}
               onChange={(event) => setSetting("default_currency", event.target.value)}
@@ -371,14 +371,14 @@ const AdminSettingsPage = () => {
         </div>
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-          <p className="font-body text-[10px] text-[#aaaaaa]">
+          <p className="font-body text-[10px] text-[#777777]">
             {orderMeta ? `Last updated ${orderMeta.date} by ${orderMeta.adminName}` : "Last updated —"}
           </p>
           <button
             type="button"
             onClick={() => void saveSection("orders")}
             disabled={sectionSaving.orders}
-            className="rounded-[2px] bg-[#1A1A1A] px-8 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[#F5F0E8] transition-colors hover:bg-[#C4A882] hover:text-[#1A1A1A] disabled:cursor-not-allowed disabled:opacity-65"
+            className="settings-save-button rounded-[2px] bg-[#1A1A1A] px-8 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[#F5F0E8] transition-colors hover:bg-[#C4A882] hover:text-[#1A1A1A] disabled:cursor-not-allowed disabled:opacity-65"
           >
             {sectionSaving.orders ? "Saving..." : "Save Orders"}
           </button>
@@ -386,9 +386,9 @@ const AdminSettingsPage = () => {
         {sectionSaved.orders ? <p className="mt-2 font-body text-[11px] text-[#C4A882]">Settings saved.</p> : null}
       </section>
 
-      <section className="mb-6 rounded-[2px] border border-[#d4ccc2] bg-transparent px-6 py-7 lg:px-10">
-        <h2 className="font-display text-[22px] italic text-[#1A1A1A]">Notifications</h2>
-        <p className="mt-1 font-body text-[11px] text-[#aaaaaa]">Email addresses for admin alerts and summaries</p>
+      <section className="settings-section-card mb-6 rounded-[2px] border border-[#d4ccc2] bg-transparent px-6 py-7 lg:px-10">
+        <h2 className="admin-section-title font-display text-[22px] italic text-[#1A1A1A]">Notifications</h2>
+        <p className="mt-1 font-body text-[11px] text-[#777777]">Email addresses for admin alerts and summaries</p>
         <div className="my-5 border-b border-[#d4ccc2]" />
 
         <div className="grid gap-5">
@@ -419,14 +419,14 @@ const AdminSettingsPage = () => {
         </div>
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-          <p className="font-body text-[10px] text-[#aaaaaa]">
+          <p className="font-body text-[10px] text-[#777777]">
             {notificationMeta ? `Last updated ${notificationMeta.date} by ${notificationMeta.adminName}` : "Last updated —"}
           </p>
           <button
             type="button"
             onClick={() => void saveSection("notifications")}
             disabled={sectionSaving.notifications}
-            className="rounded-[2px] bg-[#1A1A1A] px-8 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[#F5F0E8] transition-colors hover:bg-[#C4A882] hover:text-[#1A1A1A] disabled:cursor-not-allowed disabled:opacity-65"
+            className="settings-save-button rounded-[2px] bg-[#1A1A1A] px-8 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[#F5F0E8] transition-colors hover:bg-[#C4A882] hover:text-[#1A1A1A] disabled:cursor-not-allowed disabled:opacity-65"
           >
             {sectionSaving.notifications ? "Saving..." : "Save Notifications"}
           </button>
@@ -434,9 +434,9 @@ const AdminSettingsPage = () => {
         {sectionSaved.notifications ? <p className="mt-2 font-body text-[11px] text-[#C4A882]">Settings saved.</p> : null}
       </section>
 
-      <section className="mb-6 rounded-[2px] border border-[rgba(192,57,43,0.3)] bg-transparent px-6 py-7 lg:px-10">
-        <h2 className="font-display text-[22px] italic text-[#1A1A1A]">Danger Zone</h2>
-        <p className="mt-1 font-body text-[11px] text-[#aaaaaa]">Irreversible actions — proceed with caution</p>
+      <section className="settings-section-card mb-6 rounded-[2px] border border-[rgba(192,57,43,0.3)] bg-transparent px-6 py-7 lg:px-10">
+        <h2 className="admin-section-title font-display text-[22px] italic text-[#1A1A1A]">Danger Zone</h2>
+        <p className="mt-1 font-body text-[11px] text-[#777777]">Irreversible actions — proceed with caution</p>
         <div className="my-5 border-b border-[#d4ccc2]" />
 
         <button
@@ -459,8 +459,8 @@ const AdminSettingsPage = () => {
             Clear All Test Orders
           </button>
         ) : (
-          <div className="max-w-[560px]">
-            <p className="mb-3 font-body text-[11px] text-[#888888]">
+          <div className="w-full max-w-[560px]">
+            <p className="mb-3 font-body text-[11px] text-[#555555]">
               Type CONFIRM to delete all orders where customer email contains &apos;test&apos; or order total is GH₵0.00
             </p>
             <input
@@ -501,7 +501,7 @@ const Field = ({
   inputMode?: "text" | "decimal" | "numeric" | "email";
 }) => (
   <div>
-    <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">{label}</label>
+    <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">{label}</label>
     <input
       value={value}
       inputMode={inputMode}
@@ -509,10 +509,11 @@ const Field = ({
       onChange={(event) => onChange(event.target.value)}
       className="mt-2 w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[14px] text-[#1A1A1A] outline-none focus:border-[#1A1A1A]"
     />
-    {helper ? <p className="mt-1 font-body text-[10px] text-[#aaaaaa]">{helper}</p> : null}
+    {helper ? <p className="mt-1 font-body text-[10px] text-[#777777]">{helper}</p> : null}
     {error ? <p className="mt-1 font-body text-[11px] text-[#C0392B]">{error}</p> : null}
   </div>
 );
 
 export default AdminSettingsPage;
+
 

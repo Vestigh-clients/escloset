@@ -115,7 +115,7 @@ const AccountOrders = () => {
         <p className="mt-8 font-body text-[12px] text-[#C0392B]">{loadError}</p>
       ) : filteredOrders.length === 0 ? (
         <div className="mt-10">
-          <p className="font-display text-[24px] italic text-[#888888]">You haven't placed any orders yet.</p>
+          <p className="font-display text-[24px] italic text-[#555555]">You haven't placed any orders yet.</p>
           <Link
             to="/shop"
             className="mt-5 inline-block font-body text-[10px] uppercase tracking-[0.12em] text-[#C4A882] transition-colors hover:text-[#1A1A1A]"
@@ -133,3 +133,4 @@ const AccountOrders = () => {
 };
 
 export default AccountOrders;
+

@@ -306,7 +306,7 @@ const CheckoutConfirmation = () => {
     return (
       <div className="bg-[#F5F0E8] px-6 py-[80px] sm:px-6">
         <div className="mx-auto max-w-[640px] text-center">
-          <p className="font-body text-[13px] text-[#888888]">
+          <p className="font-body text-[13px] text-[#555555]">
             We couldn&apos;t load your order details. Your order was placed successfully. Check your email for
             confirmation.
           </p>
@@ -330,10 +330,10 @@ const CheckoutConfirmation = () => {
           <h1 className="mt-3 font-display text-[40px] italic font-light leading-none text-[#1A1A1A] sm:text-[52px]">
             Thank you, {order.customer.first_name}.
           </h1>
-          <p className="mt-4 font-body text-[14px] font-light leading-[1.8] text-[#888888]">
+          <p className="mt-4 font-body text-[14px] font-light leading-[1.8] text-[#555555]">
             Your order <span className="text-[#1A1A1A]">{order.order_number}</span> is confirmed.
           </p>
-          <p className="mt-2 font-body text-[13px] font-light text-[#aaaaaa]">We&apos;ll send updates to {order.customer.email}</p>
+          <p className="mt-2 font-body text-[13px] font-light text-[#777777]">We&apos;ll send updates to {order.customer.email}</p>
           <div className="my-12 border-b border-[#d4ccc2]" />
         </section>
 
@@ -344,12 +344,12 @@ const CheckoutConfirmation = () => {
 
           <div className="space-y-0">
             <div className="flex items-start gap-4">
-              <span className="flex h-[20px] w-[20px] items-center justify-center rounded-full border border-[#d4ccc2] font-body text-[10px] text-[#888888]">
+              <span className="flex h-[20px] w-[20px] items-center justify-center rounded-full border border-[#d4ccc2] font-body text-[10px] text-[#555555]">
                 1
               </span>
               <div className="pt-[1px]">
                 <p className="font-body text-[13px] text-[#1A1A1A]">Order Confirmed</p>
-                <p className="mt-1 font-body text-[11px] font-light text-[#888888]">
+                <p className="mt-1 font-body text-[11px] font-light text-[#555555]">
                   We&apos;ve received your order and are preparing it for dispatch.
                 </p>
               </div>
@@ -358,12 +358,12 @@ const CheckoutConfirmation = () => {
             <div className="ml-[9px] h-[24px] border-l border-[#d4ccc2]" />
 
             <div className="flex items-start gap-4">
-              <span className="flex h-[20px] w-[20px] items-center justify-center rounded-full border border-[#d4ccc2] font-body text-[10px] text-[#888888]">
+              <span className="flex h-[20px] w-[20px] items-center justify-center rounded-full border border-[#d4ccc2] font-body text-[10px] text-[#555555]">
                 2
               </span>
               <div className="pt-[1px]">
                 <p className="font-body text-[13px] text-[#1A1A1A]">Out for Delivery</p>
-                <p className="mt-1 font-body text-[11px] font-light text-[#888888]">
+                <p className="mt-1 font-body text-[11px] font-light text-[#555555]">
                   You&apos;ll receive an update when your order is on its way.
                 </p>
               </div>
@@ -372,12 +372,12 @@ const CheckoutConfirmation = () => {
             <div className="ml-[9px] h-[24px] border-l border-[#d4ccc2]" />
 
             <div className="flex items-start gap-4">
-              <span className="flex h-[20px] w-[20px] items-center justify-center rounded-full border border-[#d4ccc2] font-body text-[10px] text-[#888888]">
+              <span className="flex h-[20px] w-[20px] items-center justify-center rounded-full border border-[#d4ccc2] font-body text-[10px] text-[#555555]">
                 3
               </span>
               <div className="pt-[1px]">
                 <p className="font-body text-[13px] text-[#1A1A1A]">Delivered</p>
-                <p className="mt-1 font-body text-[11px] font-light text-[#888888]">
+                <p className="mt-1 font-body text-[11px] font-light text-[#555555]">
                   Your order arrives within {deliveryWindow.minDays}-{deliveryWindow.maxDays} business days.
                 </p>
               </div>
@@ -409,20 +409,20 @@ const CheckoutConfirmation = () => {
               <div>
                 <Check size={32} strokeWidth={1.2} className="text-[#C4A882]" />
                 <h2 className="mt-4 font-display text-[22px] italic text-[#1A1A1A]">Account created successfully.</h2>
-                <p className="mt-2 max-w-[420px] font-body text-[12px] font-light leading-[1.7] text-[#888888]">
+                <p className="mt-2 max-w-[420px] font-body text-[12px] font-light leading-[1.7] text-[#555555]">
                   You can now track all your orders and checkout faster next time.
                 </p>
               </div>
             ) : (
               <form onSubmit={handleCreateAccount}>
                 <h2 className="font-display text-[24px] italic text-[#1A1A1A]">Save your details for next time</h2>
-                <p className="mb-6 mt-2 max-w-[460px] font-body text-[12px] font-light leading-[1.7] text-[#888888]">
+                <p className="mb-6 mt-2 max-w-[460px] font-body text-[12px] font-light leading-[1.7] text-[#555555]">
                   Create an account to track orders, save addresses and checkout faster.
                 </p>
 
                 <label
                   htmlFor="guest-create-password"
-                  className="mb-2 block font-body text-[10px] uppercase tracking-[0.12em] text-[#888888]"
+                  className="mb-2 block font-body text-[10px] uppercase tracking-[0.12em] text-[#555555]"
                 >
                   Create a Password
                 </label>
@@ -434,26 +434,26 @@ const CheckoutConfirmation = () => {
                     onChange={(event) => setPassword(event.target.value)}
                     placeholder="Min. 8 characters"
                     autoComplete="new-password"
-                    className="w-full bg-transparent pr-10 font-body text-[14px] text-[#1A1A1A] placeholder:text-[#aaaaaa] focus:outline-none"
+                    className="w-full bg-transparent pr-10 font-body text-[14px] text-[#1A1A1A] placeholder:text-[#999999] focus:outline-none"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((previous) => !previous)}
-                    className="absolute right-0 top-1/2 -translate-y-1/2 text-[#888888] transition-colors hover:text-[#1A1A1A]"
+                    className="absolute right-0 top-1/2 -translate-y-1/2 text-[#555555] transition-colors hover:text-[#1A1A1A]"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? <EyeOff size={16} strokeWidth={1.35} /> : <Eye size={16} strokeWidth={1.35} />}
                   </button>
                 </div>
 
-                <div className="mt-3 space-y-1 font-body text-[10px] text-[#888888]">
-                  <p className={passwordRules.minLength ? "text-[#27AE60]" : "text-[#888888]"}>
+                <div className="mt-3 space-y-1 font-body text-[10px] text-[#555555]">
+                  <p className={passwordRules.minLength ? "text-[#27AE60]" : "text-[#555555]"}>
                     {passwordRules.minLength ? "✓" : "✗"} 8+ characters
                   </p>
-                  <p className={passwordRules.uppercase ? "text-[#27AE60]" : "text-[#888888]"}>
+                  <p className={passwordRules.uppercase ? "text-[#27AE60]" : "text-[#555555]"}>
                     {passwordRules.uppercase ? "✓" : "✗"} One uppercase letter
                   </p>
-                  <p className={passwordRules.number ? "text-[#27AE60]" : "text-[#888888]"}>
+                  <p className={passwordRules.number ? "text-[#27AE60]" : "text-[#555555]"}>
                     {passwordRules.number ? "✓" : "✗"} One number
                   </p>
                 </div>
@@ -471,7 +471,7 @@ const CheckoutConfirmation = () => {
                 <button
                   type="button"
                   onClick={() => setIsPromptDismissed(true)}
-                  className="mt-4 block w-full text-center font-body text-[10px] uppercase tracking-[0.12em] text-[#aaaaaa] transition-colors hover:text-[#1A1A1A]"
+                  className="mt-4 block w-full text-center font-body text-[10px] uppercase tracking-[0.12em] text-[#777777] transition-colors hover:text-[#1A1A1A]"
                 >
                   No thanks, maybe later
                 </button>
@@ -485,3 +485,4 @@ const CheckoutConfirmation = () => {
 };
 
 export default CheckoutConfirmation;
+

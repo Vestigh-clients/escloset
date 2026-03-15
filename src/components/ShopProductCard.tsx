@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
 import ProductImagePlaceholder from "@/components/products/ProductImagePlaceholder";
 import { getCategoryLabel } from "@/lib/categories";
 import { formatPrice } from "@/lib/price";
-import { getPrimaryImage, type Product } from "@/types/product";
+import { getPrimaryImage, getStockQuantity, isInStock, type Product } from "@/types/product";
 
 interface ShopProductCardProps {
   product: Product;
@@ -13,16 +13,24 @@ interface ShopProductCardProps {
 
 const ShopProductCard = ({ product, size = "regular" }: ShopProductCardProps) => {
   const { addToCart } = useCart();
+  const navigate = useNavigate();
   const imageUrl = getPrimaryImage(product);
   const [hasImageError, setHasImageError] = useState(false);
   const categoryLabel = product.categories?.name || getCategoryLabel(product.categories?.slug);
-  const isOutOfStock = !product.is_available || product.stock_quantity < 1;
+  const stockQuantity = getStockQuantity(product);
+  const isOutOfStock = !isInStock(product);
+  const requiresVariantSelection = product.has_variants === true;
 
   useEffect(() => {
     setHasImageError(false);
   }, [imageUrl, product.id]);
 
   const handleAddToCart = () => {
+    if (requiresVariantSelection) {
+      navigate(`/shop/${product.slug}`);
+      return;
+    }
+
     if (isOutOfStock) {
       return;
     }
@@ -37,7 +45,7 @@ const ShopProductCard = ({ product, size = "regular" }: ShopProductCardProps) =>
       image_url: imageUrl,
       image_alt: product.name,
       sku: product.sku ?? null,
-      stock_quantity: product.stock_quantity,
+      stock_quantity: stockQuantity,
       variant_id: null,
       variant_label: null,
     });
@@ -70,7 +78,7 @@ const ShopProductCard = ({ product, size = "regular" }: ShopProductCardProps) =>
           </div>
 
           <div className="flex h-full flex-col justify-center bg-[#F5F0E8] p-12">
-            <p className="mb-3 font-body text-[10px] font-light uppercase tracking-[0.2em] text-[#C4A882]">
+            <p className="mb-3 font-body text-[10px] font-medium uppercase tracking-[0.2em] text-[#C4A882]">
               {categoryLabel}
             </p>
 
@@ -78,15 +86,18 @@ const ShopProductCard = ({ product, size = "regular" }: ShopProductCardProps) =>
               <h3 className="font-display text-[24px] font-normal italic leading-[1.2] text-[#1A1A1A]">{product.name}</h3>
             </Link>
 
-            <p className="mb-7 font-body text-[13px] font-light text-[#888888]">{formatPrice(product.price)}</p>
+            <p className="mb-7 font-body text-[13px] font-light text-[#555555]">{formatPrice(product.price)}</p>
+            {isOutOfStock ? (
+              <p className="mb-6 font-['Inter'] text-[10px] uppercase tracking-[0.08em] text-[#777777]">Out of Stock</p>
+            ) : null}
 
             <button
               type="button"
               onClick={handleAddToCart}
               disabled={isOutOfStock}
-              className="w-fit rounded-[2px] bg-[#1A1A1A] px-8 py-[14px] font-body text-[11px] uppercase tracking-[0.15em] text-[#F5F0E8] transition-colors duration-300 hover:bg-[#C4A882] hover:text-[#1A1A1A] disabled:cursor-not-allowed disabled:bg-[#d4ccc2] disabled:text-[#888888]"
+              className="w-fit rounded-[2px] bg-[#1A1A1A] px-8 py-[14px] font-body text-[11px] uppercase tracking-[0.15em] text-[#F5F0E8] transition-colors duration-300 hover:bg-[#C4A882] hover:text-[#1A1A1A] disabled:cursor-not-allowed disabled:bg-[#d4ccc2] disabled:text-[#555555]"
             >
-              {isOutOfStock ? "Out of Stock" : "Add to Cart"}
+              {isOutOfStock ? "Out of Stock" : requiresVariantSelection ? "Select Options" : "Add to Cart"}
             </button>
           </div>
         </div>
@@ -117,10 +128,14 @@ const ShopProductCard = ({ product, size = "regular" }: ShopProductCardProps) =>
         <Link to={`/shop/${product.slug}`}>
           <h3 className="font-display text-[15px] font-normal italic leading-snug text-[#1A1A1A]">{product.name}</h3>
         </Link>
-        <p className="mt-1 font-body text-[12px] font-light text-[#888888]">{formatPrice(product.price)}</p>
+        <p className="mt-1 font-body text-[12px] font-light text-[#555555]">{formatPrice(product.price)}</p>
+        {isOutOfStock ? (
+          <p className="mt-1 font-['Inter'] text-[10px] uppercase tracking-[0.08em] text-[#777777]">Out of Stock</p>
+        ) : null}
       </div>
     </article>
   );
 };
 
 export default ShopProductCard;
+

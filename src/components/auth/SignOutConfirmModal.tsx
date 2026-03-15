@@ -15,7 +15,7 @@ const SignOutConfirmModal = ({ isOpen, isSubmitting, onConfirm, onCancel }: Sign
       <div className="mx-auto flex min-h-screen max-w-[360px] items-center">
         <div className="w-full rounded-[2px] bg-[#F5F0E8] p-10">
           <p className="font-display text-[30px] italic leading-none text-[#1A1A1A]">Sign out?</p>
-          <p className="mt-4 font-body text-[12px] font-light leading-[1.8] text-[#888888]">
+          <p className="mt-4 font-body text-[12px] font-light leading-[1.8] text-[#555555]">
             You have items in your cart. They will be lost if you sign out.
           </p>
 
@@ -45,4 +45,5 @@ const SignOutConfirmModal = ({ isOpen, isSubmitting, onConfirm, onCancel }: Sign
 };
 
 export default SignOutConfirmModal;
+
 

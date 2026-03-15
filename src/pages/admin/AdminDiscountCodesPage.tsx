@@ -302,27 +302,29 @@ const AdminDiscountCodesPage = () => {
   };
 
   return (
-    <div className="bg-[#F5F0E8] px-6 py-10 lg:px-[60px] lg:py-12">
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-        <h1 className="font-display text-[36px] italic text-[#1A1A1A]">Discount Codes</h1>
-        <button
-          type="button"
-          onClick={openCreateForm}
-          className="rounded-[2px] bg-[#1A1A1A] px-7 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[#F5F0E8] transition-colors hover:bg-[#C4A882] hover:text-[#1A1A1A]"
-        >
-          Create Code
-        </button>
+    <div className="admin-page">
+      <div className="admin-page-header">
+        <h1 className="admin-page-title font-display text-[36px] italic text-[#1A1A1A]">Discount Codes</h1>
+        <div className="admin-page-actions">
+          <button
+            type="button"
+            onClick={openCreateForm}
+            className="rounded-[2px] bg-[#1A1A1A] px-7 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[#F5F0E8] transition-colors hover:bg-[#C4A882] hover:text-[#1A1A1A]"
+          >
+            Create Code
+          </button>
+        </div>
       </div>
 
       {message ? <p className="mb-4 font-body text-[12px] text-[#C4A882]">{message}</p> : null}
 
       <div className="mb-5 flex flex-wrap items-end gap-4 border-b border-[#d4ccc2] pb-5">
-        <div className="w-full max-w-[280px]">
+        <div className="admin-search-wrap w-full max-w-[280px]">
           <input
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             placeholder="Search by code or description..."
-            className="w-full border-0 border-b border-[#d4ccc2] bg-transparent px-0 pb-2 font-body text-[12px] text-[#1A1A1A] outline-none placeholder:text-[#aaaaaa] focus:border-[#1A1A1A]"
+            className="w-full border-0 border-b border-[#d4ccc2] bg-transparent px-0 pb-2 font-body text-[12px] text-[#1A1A1A] outline-none placeholder:text-[#999999] focus:border-[#1A1A1A]"
           />
         </div>
 
@@ -354,21 +356,21 @@ const AdminDiscountCodesPage = () => {
           <button
             type="button"
             onClick={clearFilters}
-            className="font-body text-[10px] uppercase tracking-[0.1em] text-[#aaaaaa] transition-colors hover:text-[#1A1A1A]"
+            className="font-body text-[10px] uppercase tracking-[0.1em] text-[#777777] transition-colors hover:text-[#1A1A1A]"
           >
             Clear Filters
           </button>
         ) : null}
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="hidden overflow-x-auto md:block">
         <table className="min-w-[1040px] w-full border-collapse">
           <thead>
             <tr className="border-b border-[#d4ccc2]">
               {["Code", "Type", "Value", "Min Order", "Usage", "Expires", "Status", "Actions"].map((heading) => (
                 <th
                   key={heading}
-                  className="px-2 py-3 text-left font-body text-[10px] uppercase tracking-[0.12em] text-[#aaaaaa] first:pl-0 last:pr-0"
+                  className="px-2 py-3 text-left font-body text-[10px] uppercase tracking-[0.12em] text-[#777777] first:pl-0 last:pr-0"
                 >
                   {heading}
                 </th>
@@ -378,7 +380,7 @@ const AdminDiscountCodesPage = () => {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={8} className="px-0 py-8 text-center font-body text-[12px] text-[#aaaaaa]">
+                <td colSpan={8} className="px-0 py-8 text-center font-body text-[12px] text-[#777777]">
                   Loading discount codes...
                 </td>
               </tr>
@@ -390,7 +392,7 @@ const AdminDiscountCodesPage = () => {
               </tr>
             ) : filteredRows.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-0 py-8 text-center font-body text-[12px] text-[#aaaaaa]">
+                <td colSpan={8} className="px-0 py-8 text-center font-body text-[12px] text-[#777777]">
                   No discount codes found.
                 </td>
               </tr>
@@ -407,18 +409,18 @@ const AdminDiscountCodesPage = () => {
                   <tr key={row.id} className="border-b border-[#e4dbd1] hover:bg-[rgba(196,168,130,0.04)]">
                     <td className="px-2 py-4 pl-0 font-mono text-[12px] uppercase tracking-[0.1em] text-[#C4A882]">{codeForDisplay(row.code)}</td>
                     <td className="px-2 py-4">
-                      <span className="inline-block rounded-[2px] border border-[#d4ccc2] px-2 py-1 font-body text-[9px] uppercase tracking-[0.12em] text-[#888888]">
+                      <span className="inline-block rounded-[2px] border border-[#d4ccc2] px-2 py-1 font-body text-[9px] uppercase tracking-[0.12em] text-[#555555]">
                         {row.type === "percentage" ? "%" : "GH₵"}
                       </span>
                     </td>
                     <td className="px-2 py-4 font-body text-[13px] text-[#1A1A1A]">
                       {row.type === "percentage" ? `${row.value}%` : formatCurrency(row.value)}
                     </td>
-                    <td className="px-2 py-4 font-body text-[11px] text-[#888888]">
+                    <td className="px-2 py-4 font-body text-[11px] text-[#555555]">
                       {row.minimum_order_amount === null ? "—" : formatCurrency(row.minimum_order_amount)}
                     </td>
                     <td className="px-2 py-4">
-                      <p className="font-body text-[11px] text-[#888888]">{hasLimit ? `${usedCount} / ${usageLimit}` : "Unlimited"}</p>
+                      <p className="font-body text-[11px] text-[#555555]">{hasLimit ? `${usedCount} / ${usageLimit}` : "Unlimited"}</p>
                       {hasLimit ? (
                         <div className="mt-1 h-[3px] w-[110px] bg-[#e8e2d9]">
                           <div className="h-full bg-[#C4A882]" style={{ width: `${usagePercent}%` }} />
@@ -427,13 +429,13 @@ const AdminDiscountCodesPage = () => {
                     </td>
                     <td className="px-2 py-4">
                       {!row.expires_at ? (
-                        <span className="font-body text-[11px] text-[#aaaaaa]">No expiry</span>
+                        <span className="font-body text-[11px] text-[#777777]">No expiry</span>
                       ) : expired ? (
                         <span className="inline-block rounded-[2px] border border-[#C0392B] px-2 py-1 font-body text-[9px] uppercase tracking-[0.12em] text-[#C0392B]">
                           Expired
                         </span>
                       ) : (
-                        <span className={`font-body text-[11px] ${expiringSoon ? "text-[#C0392B]" : "text-[#aaaaaa]"}`}>
+                        <span className={`font-body text-[11px] ${expiringSoon ? "text-[#C0392B]" : "text-[#777777]"}`}>
                           {formatDateShort(row.expires_at)}
                         </span>
                       )}
@@ -441,7 +443,7 @@ const AdminDiscountCodesPage = () => {
                     <td className="px-2 py-4">
                       <span
                         className={`inline-block rounded-[2px] border px-[10px] py-[4px] font-body text-[9px] uppercase tracking-[0.12em] ${
-                          row.is_active ? "border-[#C4A882] text-[#C4A882]" : "border-[#d4ccc2] text-[#aaaaaa]"
+                          row.is_active ? "border-[#C4A882] text-[#C4A882]" : "border-[#d4ccc2] text-[#777777]"
                         }`}
                       >
                         {row.is_active ? "Active" : "Inactive"}
@@ -455,17 +457,17 @@ const AdminDiscountCodesPage = () => {
                             <button type="button" onClick={() => void confirmDelete(row)} className="text-[#C0392B]">
                               Yes, Delete
                             </button>
-                            <button type="button" onClick={() => setDeleteConfirmId(null)} className="text-[#888888]">
+                            <button type="button" onClick={() => setDeleteConfirmId(null)} className="text-[#555555]">
                               Cancel
                             </button>
                           </div>
                         </div>
                       ) : (
                         <div className="flex items-center gap-3 font-body text-[10px] uppercase tracking-[0.1em]">
-                          <button type="button" onClick={() => void openEditForm(row)} className="text-[#888888] transition-colors hover:text-[#1A1A1A]">
+                          <button type="button" onClick={() => void openEditForm(row)} className="text-[#555555] transition-colors hover:text-[#1A1A1A]">
                             Edit
                           </button>
-                          <button type="button" onClick={() => setDeleteConfirmId(row.id)} className="text-[#888888] transition-colors hover:text-[#C0392B]">
+                          <button type="button" onClick={() => setDeleteConfirmId(row.id)} className="text-[#555555] transition-colors hover:text-[#C0392B]">
                             Delete
                           </button>
                         </div>
@@ -479,13 +481,94 @@ const AdminDiscountCodesPage = () => {
         </table>
       </div>
 
+      <div className="border-t border-[#d4ccc2] md:hidden">
+        {isLoading ? (
+          <p className="py-8 text-center font-body text-[12px] text-[#777777]">Loading discount codes...</p>
+        ) : loadError ? (
+          <p className="py-8 text-center font-body text-[12px] text-[#C0392B]">{loadError}</p>
+        ) : filteredRows.length === 0 ? (
+          <p className="py-8 text-center font-body text-[12px] text-[#777777]">No discount codes found.</p>
+        ) : (
+          filteredRows.map((row) => {
+            const usedCount = row.usage_count ?? 0;
+            const usageLimit = row.usage_limit;
+            const hasLimit = usageLimit !== null && usageLimit !== undefined;
+            const usagePercent = hasLimit ? percentage(usedCount, usageLimit) : 0;
+            const expiringSoon = row.expires_at ? isWithinNextSevenDays(row.expires_at) : false;
+            const expired = row.expires_at ? isExpired(row.expires_at) : false;
+
+            return (
+              <div key={`mobile-${row.id}`} className="admin-mobile-card">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-mono text-[12px] uppercase tracking-[0.1em] text-[#C4A882]">{codeForDisplay(row.code)}</p>
+                  <span className="inline-block rounded-[2px] border border-[#d4ccc2] px-2 py-1 font-body text-[9px] uppercase tracking-[0.12em] text-[#555555]">
+                    {row.type === "percentage" ? "%" : "GHS"}
+                  </span>
+                </div>
+
+                <div className="mt-2 flex items-center justify-between gap-3">
+                  <p className="font-body text-[12px] text-[#1A1A1A]">
+                    {row.type === "percentage" ? `${row.value}%` : formatCurrency(row.value)}
+                  </p>
+                  <p className="font-body text-[12px] text-[#1A1A1A]">
+                    {row.minimum_order_amount === null ? "-" : formatCurrency(row.minimum_order_amount)}
+                  </p>
+                </div>
+
+                <div className="mt-2">
+                  <div className="h-[4px] w-full bg-[#e8e2d9]">
+                    <div className="h-full bg-[#C4A882]" style={{ width: `${usagePercent}%` }} />
+                  </div>
+                  <p className="mt-1 font-body text-[10px] text-[#777777]">{hasLimit ? `${usedCount} / ${usageLimit}` : "Unlimited usage"}</p>
+                </div>
+
+                <div className="mt-2 flex items-center justify-between gap-3">
+                  <p className={`font-body text-[10px] ${expiringSoon || expired ? "text-[#C0392B]" : "text-[#777777]"}`}>
+                    {row.expires_at ? formatDateShort(row.expires_at) : "No expiry"}
+                  </p>
+                  <span
+                    className={`inline-block rounded-[2px] border px-[10px] py-[4px] font-body text-[9px] uppercase tracking-[0.12em] ${
+                      row.is_active ? "border-[#C4A882] text-[#C4A882]" : "border-[#d4ccc2] text-[#777777]"
+                    }`}
+                  >
+                    {row.is_active ? "Active" : "Inactive"}
+                  </span>
+                </div>
+
+                <div className="mt-2 flex justify-end gap-3 font-body text-[10px] uppercase tracking-[0.1em]">
+                  {deleteConfirmId === row.id ? (
+                    <>
+                      <button type="button" onClick={() => void confirmDelete(row)} className="text-[#C0392B]">
+                        Yes Delete
+                      </button>
+                      <button type="button" onClick={() => setDeleteConfirmId(null)} className="text-[#555555]">
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button type="button" onClick={() => void openEditForm(row)} className="text-[#555555] hover:text-[#1A1A1A]">
+                        Edit
+                      </button>
+                      <button type="button" onClick={() => setDeleteConfirmId(row.id)} className="text-[#555555] hover:text-[#C0392B]">
+                        Delete
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
       {isFormOpen ? (
         <div className="mt-6 border border-[#d4ccc2] p-6">
           <p className="mb-4 font-body text-[10px] uppercase tracking-[0.2em] text-[#C4A882]">{form.id ? "Edit Code" : "Add Discount Code"}</p>
 
           <div className="grid gap-5">
             <div>
-              <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Code *</label>
+              <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Code *</label>
               <div className="mt-2 flex items-end gap-4">
                 <input
                   value={form.code}
@@ -503,12 +586,12 @@ const AdminDiscountCodesPage = () => {
             </div>
 
             <div>
-              <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Description</label>
+              <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Description</label>
               <input
                 value={form.description}
                 onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
                 placeholder="Internal note about this code"
-                className="mt-2 w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[13px] text-[#1A1A1A] outline-none placeholder:text-[#aaaaaa] focus:border-[#1A1A1A]"
+                className="mt-2 w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[13px] text-[#1A1A1A] outline-none placeholder:text-[#999999] focus:border-[#1A1A1A]"
               />
             </div>
 
@@ -538,7 +621,7 @@ const AdminDiscountCodesPage = () => {
 
             <div className="grid gap-5 md:grid-cols-2">
               <div>
-                <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">
+                <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">
                   {form.type === "percentage" ? "Discount %" : "Discount Amount (GH₵)"}
                 </label>
                 <input
@@ -550,7 +633,7 @@ const AdminDiscountCodesPage = () => {
               </div>
 
               <div>
-                <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Minimum Order Amount</label>
+                <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Minimum Order Amount</label>
                 <input
                   inputMode="decimal"
                   value={form.minimumOrderAmount}
@@ -559,7 +642,7 @@ const AdminDiscountCodesPage = () => {
                   }
                   className="mt-2 w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[13px] text-[#1A1A1A] outline-none focus:border-[#1A1A1A]"
                 />
-                <p className="mt-1 font-body text-[10px] text-[#aaaaaa]">
+                <p className="mt-1 font-body text-[10px] text-[#777777]">
                   Minimum cart total to apply this code. Leave empty for no minimum.
                 </p>
               </div>
@@ -568,7 +651,7 @@ const AdminDiscountCodesPage = () => {
             <div>
               <div className="flex items-center gap-3">
                 <div className="flex-1">
-                  <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Usage Limit</label>
+                  <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Usage Limit</label>
                   <input
                     inputMode="numeric"
                     value={form.usageLimit}
@@ -578,7 +661,7 @@ const AdminDiscountCodesPage = () => {
                   />
                 </div>
 
-                <label className="mt-6 inline-flex items-center gap-2 font-body text-[11px] text-[#888888]">
+                <label className="mt-6 inline-flex items-center gap-2 font-body text-[11px] text-[#555555]">
                   <input
                     type="checkbox"
                     checked={form.unlimited}
@@ -597,7 +680,7 @@ const AdminDiscountCodesPage = () => {
             </div>
 
             <div className="relative">
-              <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Specific Customer</label>
+              <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Specific Customer</label>
               <input
                 value={form.customerSearchInput}
                 onChange={(event) =>
@@ -608,11 +691,11 @@ const AdminDiscountCodesPage = () => {
                   }))
                 }
                 placeholder="Type email to search"
-                className="mt-2 w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[13px] text-[#1A1A1A] outline-none placeholder:text-[#aaaaaa] focus:border-[#1A1A1A]"
+                className="mt-2 w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[13px] text-[#1A1A1A] outline-none placeholder:text-[#999999] focus:border-[#1A1A1A]"
               />
 
               {form.selectedCustomer ? (
-                <p className="mt-2 font-body text-[11px] text-[#888888]">
+                <p className="mt-2 font-body text-[11px] text-[#555555]">
                   Selected: {form.selectedCustomer.first_name} {form.selectedCustomer.last_name} ({form.selectedCustomer.email}){" "}
                   <button
                     type="button"
@@ -623,7 +706,7 @@ const AdminDiscountCodesPage = () => {
                         customerSearchInput: "",
                       }))
                     }
-                    className="uppercase text-[#aaaaaa] hover:text-[#1A1A1A]"
+                    className="uppercase text-[#777777] hover:text-[#1A1A1A]"
                   >
                     Clear
                   </button>
@@ -646,19 +729,19 @@ const AdminDiscountCodesPage = () => {
                       className="block w-full border-b border-[#e4dbd1] px-4 py-3 text-left hover:bg-[rgba(196,168,130,0.05)]"
                     >
                       <p className="font-body text-[12px] text-[#1A1A1A]">{`${customer.first_name} ${customer.last_name}`.trim()}</p>
-                      <p className="font-body text-[11px] text-[#888888]">{customer.email}</p>
+                      <p className="font-body text-[11px] text-[#555555]">{customer.email}</p>
                     </button>
                   ))}
                 </div>
               ) : null}
 
-              {isCustomerSearching ? <p className="mt-2 font-body text-[11px] text-[#aaaaaa]">Searching...</p> : null}
-              <p className="mt-1 font-body text-[10px] text-[#aaaaaa]">Leave empty to allow all customers to use this code.</p>
+              {isCustomerSearching ? <p className="mt-2 font-body text-[11px] text-[#777777]">Searching...</p> : null}
+              <p className="mt-1 font-body text-[10px] text-[#777777]">Leave empty to allow all customers to use this code.</p>
             </div>
 
             <div className="grid gap-5 md:grid-cols-2">
               <div>
-                <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa]">Expiry Date</label>
+                <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Expiry Date</label>
                 <input
                   type="date"
                   value={form.expiresDate}
@@ -668,7 +751,7 @@ const AdminDiscountCodesPage = () => {
                   className="mt-2 w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[13px] text-[#1A1A1A] outline-none focus:border-[#1A1A1A] disabled:opacity-50"
                 />
               </div>
-              <label className="mt-6 inline-flex items-center gap-2 font-body text-[11px] text-[#888888]">
+              <label className="mt-6 inline-flex items-center gap-2 font-body text-[11px] text-[#555555]">
                 <input
                   type="checkbox"
                   checked={form.noExpiry}
@@ -707,7 +790,7 @@ const AdminDiscountCodesPage = () => {
               <button
                 type="button"
                 onClick={closeForm}
-                className="mt-3 block w-full font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa] transition-colors hover:text-[#1A1A1A]"
+                className="mt-3 block w-full font-body text-[11px] uppercase tracking-[0.1em] text-[#777777] transition-colors hover:text-[#1A1A1A]"
               >
                 Cancel
               </button>
@@ -720,4 +803,5 @@ const AdminDiscountCodesPage = () => {
 };
 
 export default AdminDiscountCodesPage;
+
 

@@ -13,7 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import type { Json } from "@/integrations/supabase/types";
 
 const statusBadgeClass: Record<string, string> = {
-  pending: "border border-[#d4ccc2] text-[#888888]",
+  pending: "border border-[#d4ccc2] text-[#555555]",
   confirmed: "border border-[#1A1A1A] text-[#1A1A1A]",
   processing: "border border-[#C4A882] text-[#C4A882]",
   shipped: "bg-[#C4A882] text-[#1A1A1A]",
@@ -22,7 +22,7 @@ const statusBadgeClass: Record<string, string> = {
 };
 
 const paymentBadgeClass: Record<string, string> = {
-  unpaid: "border border-[#d4ccc2] text-[#aaaaaa]",
+  unpaid: "border border-[#d4ccc2] text-[#777777]",
   paid: "border border-[#27AE60] text-[#27AE60]",
   refunded: "border border-[#C0392B] text-[#C0392B]",
   partially_refunded: "border border-[#C4A882] text-[#C4A882]",
@@ -158,12 +158,12 @@ const AdminOrderDetailPage = () => {
   }, [cancelSuccess]);
 
   if (isLoading) {
-    return <div className="px-6 py-10 lg:px-[60px] lg:py-12 font-body text-[12px] text-[#888888]">Loading order...</div>;
+    return <div className="admin-page font-body text-[12px] text-[#555555]">Loading order...</div>;
   }
 
   if (loadError || !order) {
     return (
-      <div className="px-6 py-10 lg:px-[60px] lg:py-12">
+      <div className="admin-page">
         <p className="font-body text-[12px] text-[#C0392B]">{loadError || "Order not found."}</p>
       </div>
     );
@@ -229,23 +229,23 @@ const AdminOrderDetailPage = () => {
   };
 
   return (
-    <div className="bg-[#F5F0E8] px-6 py-10 lg:px-[60px] lg:py-12">
-      <div className="grid gap-10 lg:grid-cols-[65%_35%]">
-        <div>
+    <div className="admin-page">
+      <div className="order-detail-layout grid gap-10 lg:grid-cols-[65%_35%]">
+        <div className="order-detail-left">
           <header>
-            <h1 className="font-display text-[32px] italic text-[#1A1A1A]">{order.order_number}</h1>
-            <p className="mt-1 font-body text-[11px] text-[#aaaaaa]">{formatDateLong(order.created_at)}</p>
+            <h1 className="admin-page-title font-display text-[32px] italic text-[#1A1A1A]">{order.order_number}</h1>
+            <p className="mt-1 font-body text-[11px] text-[#777777]">{formatDateLong(order.created_at)}</p>
             <div className="mt-4 flex items-center gap-2">
               <span
                 className={`rounded-[2px] px-2 py-1 font-body text-[9px] uppercase tracking-[0.12em] ${
-                  statusBadgeClass[order.status] ?? "border border-[#d4ccc2] text-[#888888]"
+                  statusBadgeClass[order.status] ?? "border border-[#d4ccc2] text-[#555555]"
                 }`}
               >
                 {buildStatusLabel(order.status)}
               </span>
               <span
                 className={`rounded-[2px] px-2 py-1 font-body text-[9px] uppercase tracking-[0.12em] ${
-                  paymentBadgeClass[order.payment_status] ?? "border border-[#d4ccc2] text-[#aaaaaa]"
+                  paymentBadgeClass[order.payment_status] ?? "border border-[#d4ccc2] text-[#777777]"
                 }`}
               >
                 {toTitleCase(order.payment_status)}
@@ -269,14 +269,14 @@ const AdminOrderDetailPage = () => {
                   </div>
                   <div className="flex-1">
                     <p className="font-display text-[16px] italic text-[#1A1A1A]">{item.product_name}</p>
-                    <p className="font-body text-[10px] text-[#aaaaaa]">{item.product_sku || "No SKU"}</p>
+                    <p className="font-body text-[10px] text-[#777777]">{item.product_sku || "No SKU"}</p>
                     {item.variant_label ? (
-                      <p className="mt-[2px] font-body text-[11px] text-[#888888]">
+                      <p className="mt-[2px] font-body text-[11px] text-[#555555]">
                         {item.variant_label}
                       </p>
                     ) : null}
-                    <p className="mt-1 font-body text-[12px] text-[#888888]">{formatCurrency(item.unit_price)} each</p>
-                    <p className="font-body text-[11px] text-[#888888]">Qty: {item.quantity}</p>
+                    <p className="mt-1 font-body text-[12px] text-[#555555]">{formatCurrency(item.unit_price)} each</p>
+                    <p className="font-body text-[11px] text-[#555555]">Qty: {item.quantity}</p>
                   </div>
                   <p className="font-body text-[13px] text-[#1A1A1A]">{formatCurrency(item.subtotal)}</p>
                 </div>
@@ -284,12 +284,12 @@ const AdminOrderDetailPage = () => {
             </div>
           </section>
 
-          <div className="ml-auto mt-6 max-w-[280px]">
-            <div className="flex items-center justify-between py-1 font-body text-[12px] text-[#888888]">
+          <div className="ml-auto mt-6 w-full max-w-[280px]">
+            <div className="flex items-center justify-between py-1 font-body text-[12px] text-[#555555]">
               <span>Subtotal</span>
               <span>{formatCurrency(order.subtotal)}</span>
             </div>
-            <div className="flex items-center justify-between py-1 font-body text-[12px] text-[#888888]">
+            <div className="flex items-center justify-between py-1 font-body text-[12px] text-[#555555]">
               <span>Shipping</span>
               <span>{formatCurrency(order.shipping_fee)}</span>
             </div>
@@ -311,16 +311,16 @@ const AdminOrderDetailPage = () => {
           <section>
             <p className="mb-3 font-body text-[10px] uppercase tracking-[0.2em] text-[#C4A882]">Delivering To</p>
             {addressLines.length > 0 ? (
-              <div className="space-y-1 font-body text-[13px] text-[#888888]">
+              <div className="space-y-1 font-body text-[13px] text-[#555555]">
                 {addressLines.map((line) => (
                   <p key={line}>{line}</p>
                 ))}
               </div>
             ) : (
-              <p className="font-body text-[13px] text-[#888888]">No delivery address captured.</p>
+              <p className="font-body text-[13px] text-[#555555]">No delivery address captured.</p>
             )}
             {parseSnapshot(order.shipping_address_snapshot)?.delivery_instructions ? (
-              <p className="mt-2 font-body text-[12px] italic text-[#aaaaaa]">
+              <p className="mt-2 font-body text-[12px] italic text-[#777777]">
                 {String(parseSnapshot(order.shipping_address_snapshot)?.delivery_instructions)}
               </p>
             ) : null}
@@ -330,10 +330,10 @@ const AdminOrderDetailPage = () => {
 
           <section>
             <p className="mb-3 font-body text-[10px] uppercase tracking-[0.2em] text-[#C4A882]">Payment</p>
-            <p className="font-body text-[13px] text-[#888888]">{toTitleCase(order.payment_method || "not specified")}</p>
-            {order.payment_reference ? <p className="mt-1 font-body text-[11px] text-[#aaaaaa]">Ref: {order.payment_reference}</p> : null}
+            <p className="font-body text-[13px] text-[#555555]">{toTitleCase(order.payment_method || "not specified")}</p>
+            {order.payment_reference ? <p className="mt-1 font-body text-[11px] text-[#777777]">Ref: {order.payment_reference}</p> : null}
             {order.mobile_money_number ? (
-              <p className="mt-1 font-body text-[11px] text-[#aaaaaa]">Mobile Money: {order.mobile_money_number}</p>
+              <p className="mt-1 font-body text-[11px] text-[#777777]">Mobile Money: {order.mobile_money_number}</p>
             ) : null}
           </section>
 
@@ -342,7 +342,7 @@ const AdminOrderDetailPage = () => {
               <div className="my-8 border-b border-[#d4ccc2]" />
               <section>
                 <p className="mb-3 font-body text-[10px] uppercase tracking-[0.2em] text-[#C4A882]">Customer Notes</p>
-                <p className="font-body text-[13px] italic text-[#888888]">{order.notes}</p>
+                <p className="font-body text-[13px] italic text-[#555555]">{order.notes}</p>
               </section>
             </>
           ) : null}
@@ -366,8 +366,8 @@ const AdminOrderDetailPage = () => {
                       <p className="font-body text-[12px] uppercase tracking-[0.08em] text-[#1A1A1A]">
                         {buildStatusLabel(entry.new_status)}
                       </p>
-                      {entry.note ? <p className="mt-0.5 font-body text-[11px] font-light text-[#888888]">{entry.note}</p> : null}
-                      <p className="mt-0.5 font-body text-[10px] text-[#aaaaaa]">
+                      {entry.note ? <p className="mt-0.5 font-body text-[11px] font-light text-[#555555]">{entry.note}</p> : null}
+                      <p className="mt-0.5 font-body text-[10px] text-[#777777]">
                         {entry.changed_by || "System"} {"\u00B7"} {formatRelativeDate(entry.changed_at)}
                       </p>
                     </div>
@@ -378,7 +378,7 @@ const AdminOrderDetailPage = () => {
           </section>
         </div>
 
-        <aside className="border-l border-[#d4ccc2] pl-0 lg:sticky lg:top-20 lg:h-fit lg:pl-10">
+        <aside className="order-detail-right border-l border-[#d4ccc2] pl-0 lg:sticky lg:top-20 lg:h-fit lg:pl-10">
           <section>
             <p className="mb-4 font-body text-[10px] uppercase tracking-[0.2em] text-[#C4A882]">Update Status</p>
             <select
@@ -398,10 +398,10 @@ const AdminOrderDetailPage = () => {
               value={statusNote}
               onChange={(event) => setStatusNote(event.target.value)}
               placeholder="Note about this status change..."
-              className="mt-4 min-h-20 w-full resize-none border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[13px] text-[#1A1A1A] outline-none placeholder:text-[#aaaaaa] focus:border-[#1A1A1A]"
+              className="mt-4 min-h-20 w-full resize-none border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[13px] text-[#1A1A1A] outline-none placeholder:text-[#999999] focus:border-[#1A1A1A]"
             />
 
-            <label className="mt-4 flex items-center gap-2 font-body text-[12px] text-[#888888]">
+            <label className="mt-4 flex items-center gap-2 font-body text-[12px] text-[#555555]">
               <input
                 type="checkbox"
                 checked={notifyCustomer}
@@ -442,7 +442,7 @@ const AdminOrderDetailPage = () => {
               value={paymentReference}
               onChange={(event) => setPaymentReference(event.target.value)}
               placeholder="Transaction reference (optional)"
-              className="mt-3 w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[13px] text-[#1A1A1A] outline-none placeholder:text-[#aaaaaa] focus:border-[#1A1A1A]"
+              className="mt-3 w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[13px] text-[#1A1A1A] outline-none placeholder:text-[#999999] focus:border-[#1A1A1A]"
             />
 
             <button
@@ -466,8 +466,8 @@ const AdminOrderDetailPage = () => {
               </div>
               <div>
                 <p className="font-body text-[13px] text-[#1A1A1A]">{`${order.customer.first_name} ${order.customer.last_name}`.trim()}</p>
-                <p className="font-body text-[11px] text-[#aaaaaa]">{order.customer.email}</p>
-                {order.customer.phone ? <p className="font-body text-[11px] text-[#aaaaaa]">{order.customer.phone}</p> : null}
+                <p className="font-body text-[11px] text-[#777777]">{order.customer.email}</p>
+                {order.customer.phone ? <p className="font-body text-[11px] text-[#777777]">{order.customer.phone}</p> : null}
               </div>
             </div>
 
@@ -477,7 +477,7 @@ const AdminOrderDetailPage = () => {
             >
               View Customer &rarr;
             </Link>
-            <p className="mt-2 font-body text-[11px] text-[#aaaaaa]">
+            <p className="mt-2 font-body text-[11px] text-[#777777]">
               {(order.customer.total_orders ?? 0).toLocaleString("en-GH")} orders {"\u00B7"}{" "}
               {formatCurrency(order.customer.total_spent ?? 0)} total spent
             </p>
@@ -491,7 +491,7 @@ const AdminOrderDetailPage = () => {
                   <button
                     type="button"
                     onClick={() => setIsCancelOpen(true)}
-                    className="font-body text-[10px] uppercase tracking-[0.1em] text-[#aaaaaa] transition-colors hover:text-[#C0392B]"
+                    className="font-body text-[10px] uppercase tracking-[0.1em] text-[#777777] transition-colors hover:text-[#C0392B]"
                   >
                     Cancel Order
                   </button>
@@ -501,7 +501,7 @@ const AdminOrderDetailPage = () => {
                       value={cancelReason}
                       onChange={(event) => setCancelReason(event.target.value)}
                       placeholder="Reason for cancellation"
-                      className="min-h-20 w-full resize-none border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[13px] text-[#1A1A1A] outline-none placeholder:text-[#aaaaaa] focus:border-[#1A1A1A]"
+                      className="min-h-20 w-full resize-none border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[13px] text-[#1A1A1A] outline-none placeholder:text-[#999999] focus:border-[#1A1A1A]"
                     />
                     <button
                       type="button"
@@ -517,7 +517,7 @@ const AdminOrderDetailPage = () => {
                         setIsCancelOpen(false);
                         setCancelReason("");
                       }}
-                      className="mt-2 font-body text-[10px] text-[#aaaaaa]"
+                      className="mt-2 font-body text-[10px] text-[#777777]"
                     >
                       Never mind
                     </button>
@@ -534,3 +534,4 @@ const AdminOrderDetailPage = () => {
 };
 
 export default AdminOrderDetailPage;
+

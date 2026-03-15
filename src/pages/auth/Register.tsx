@@ -170,7 +170,7 @@ const Register = () => {
   return (
     <AuthPageLayout>
       <h1 className="font-display text-[42px] italic leading-none text-[#1A1A1A]">Create your account</h1>
-      <p className="mt-3 font-body text-[13px] font-light leading-[1.8] text-[#888888]">
+      <p className="mt-3 font-body text-[13px] font-light leading-[1.8] text-[#555555]">
         Sign up to save your details, check out faster, and track your orders.
       </p>
 
@@ -245,7 +245,7 @@ const Register = () => {
             <button
               type="button"
               onClick={() => setShowPassword((previous) => !previous)}
-              className="inline-flex text-[#888888] transition-colors hover:text-[#1A1A1A]"
+              className="inline-flex text-[#555555] transition-colors hover:text-[#1A1A1A]"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? <EyeOff size={16} strokeWidth={1.35} /> : <Eye size={16} strokeWidth={1.35} />}
@@ -268,7 +268,7 @@ const Register = () => {
             <button
               type="button"
               onClick={() => setShowConfirmPassword((previous) => !previous)}
-              className="inline-flex text-[#888888] transition-colors hover:text-[#1A1A1A]"
+              className="inline-flex text-[#555555] transition-colors hover:text-[#1A1A1A]"
               aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
             >
               {showConfirmPassword ? <EyeOff size={16} strokeWidth={1.35} /> : <Eye size={16} strokeWidth={1.35} />}
@@ -294,7 +294,7 @@ const Register = () => {
         </button>
       </form>
 
-      <p className="mt-6 font-body text-[12px] text-[#888888]">
+      <p className="mt-6 font-body text-[12px] text-[#555555]">
         Already have an account?{" "}
         <Link to="/auth/login" className="text-[#1A1A1A] transition-colors hover:text-[#C4A882]">
           Sign in
@@ -305,3 +305,4 @@ const Register = () => {
 };
 
 export default Register;
+

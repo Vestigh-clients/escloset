@@ -71,7 +71,7 @@ const ProfileMenu = ({
         >
           <div className="border-b border-[#d4ccc2] px-4 py-3">
             <p className="font-display text-[20px] italic text-[#1A1A1A]">{userName}</p>
-            <p className="font-body text-[11px] text-[#aaaaaa]">{userEmail}</p>
+            <p className="font-body text-[11px] text-[#555555]">{userEmail}</p>
           </div>
 
           <div className="py-2">
@@ -81,7 +81,7 @@ const ProfileMenu = ({
                 to={link.to}
                 onClick={onClose}
                 role="menuitem"
-                className="block px-4 py-2.5 font-body text-[11px] uppercase tracking-[0.1em] text-[#1A1A1A] transition-colors hover:bg-[#1A1A108] hover:text-[#C4A882]"
+                className="block px-4 py-2.5 font-body text-[11px] uppercase tracking-[0.1em] text-[#444444] transition-colors hover:bg-[#1A1A108] hover:text-[#C4A882]"
               >
                 {link.label}
               </Link>
@@ -95,7 +95,7 @@ const ProfileMenu = ({
               onSignOut();
             }}
             role="menuitem"
-            className="w-full border-t border-[#d4ccc2] px-4 py-3 text-left font-body text-[11px] uppercase tracking-[0.1em] text-[#aaaaaa] transition-colors hover:bg-[#1A1A108] hover:text-[#C0392B]"
+            className="w-full border-t border-[#d4ccc2] px-4 py-3 text-left font-body text-[11px] uppercase tracking-[0.1em] text-[#777777] transition-colors hover:bg-[#1A1A108] hover:text-[#C0392B]"
           >
             Sign Out
           </button>
@@ -407,3 +407,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+

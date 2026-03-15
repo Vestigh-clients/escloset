@@ -190,7 +190,7 @@ const getStepCircleClass = (state: "completed" | "current" | "upcoming"): string
     return "border-[#1A1A1A] bg-[#1A1A1A] text-[#F5F0E8]";
   }
 
-  return "border-[#d4ccc2] bg-transparent text-[#888888]";
+  return "border-[#d4ccc2] bg-transparent text-[#555555]";
 };
 
 const getConnectorClass = (
@@ -386,7 +386,7 @@ const OrderTracking = () => {
             <div className="mb-5">
               <label
                 htmlFor="order-tracking-order-number"
-                className="mb-2 block font-body text-[10px] uppercase tracking-[0.12em] text-[#888888]"
+                className="mb-2 block font-body text-[10px] uppercase tracking-[0.12em] text-[#555555]"
               >
                 Order Number
               </label>
@@ -396,7 +396,7 @@ const OrderTracking = () => {
                 value={lookupOrderNumber}
                 onChange={(event) => setLookupOrderNumber(event.target.value)}
                 placeholder="LUX-2026-00001"
-                className="w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-[10px] font-body text-[14px] text-[#1A1A1A] placeholder:text-[#aaaaaa] outline-none transition-colors focus:border-[#1A1A1A]"
+                className="w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-[10px] font-body text-[14px] text-[#1A1A1A] placeholder:text-[#999999] outline-none transition-colors focus:border-[#1A1A1A]"
                 autoComplete="off"
               />
             </div>
@@ -404,7 +404,7 @@ const OrderTracking = () => {
             <div>
               <label
                 htmlFor="order-tracking-email"
-                className="mb-2 block font-body text-[10px] uppercase tracking-[0.12em] text-[#888888]"
+                className="mb-2 block font-body text-[10px] uppercase tracking-[0.12em] text-[#555555]"
               >
                 Email Address
               </label>
@@ -414,7 +414,7 @@ const OrderTracking = () => {
                 value={lookupEmail}
                 onChange={(event) => setLookupEmail(event.target.value)}
                 placeholder="Email used at checkout"
-                className="w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-[10px] font-body text-[14px] text-[#1A1A1A] placeholder:text-[#aaaaaa] outline-none transition-colors focus:border-[#1A1A1A]"
+                className="w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-[10px] font-body text-[14px] text-[#1A1A1A] placeholder:text-[#999999] outline-none transition-colors focus:border-[#1A1A1A]"
                 autoComplete="email"
               />
             </div>
@@ -440,7 +440,7 @@ const OrderTracking = () => {
         <div className="mx-auto max-w-[640px] text-center">
           <p className="font-body text-[10px] uppercase tracking-[0.2em] text-[#C4A882]">404</p>
           <h1 className="mt-3 font-display text-[38px] italic font-light text-[#1A1A1A] sm:text-[48px]">Order not found</h1>
-          <p className="mt-4 font-body text-[13px] font-light text-[#888888]">
+          <p className="mt-4 font-body text-[13px] font-light text-[#555555]">
             We could not find this order under your account.
           </p>
           <Link
@@ -458,7 +458,7 @@ const OrderTracking = () => {
     return (
       <div className="bg-[#F5F0E8] px-6 py-[80px] sm:px-6">
         <div className="mx-auto max-w-[640px] text-center">
-          <p className="font-body text-[13px] text-[#888888]">{lookupError || "We couldn't load your order details right now."}</p>
+          <p className="font-body text-[13px] text-[#555555]">{lookupError || "We couldn't load your order details right now."}</p>
           <Link
             to="/shop"
             className="mt-6 inline-block font-body text-[11px] uppercase tracking-[0.15em] text-[#1A1A1A] transition-colors duration-200 hover:text-[#C4A882]"
@@ -478,7 +478,7 @@ const OrderTracking = () => {
           <h1 className="mt-3 font-display text-[38px] italic font-light text-[#1A1A1A] sm:text-[48px]">
             Order {order.order_number}
           </h1>
-          <p className="mt-3 font-body text-[13px] font-light text-[#888888]">
+          <p className="mt-3 font-body text-[13px] font-light text-[#555555]">
             Current status: <span className="text-[#1A1A1A]">{formatStatusLabel(order.status)}</span>
           </p>
           <div className="my-12 border-b border-[#d4ccc2]" />
@@ -494,7 +494,7 @@ const OrderTracking = () => {
               const nextStep = liveStatusSteps[index + 1];
               const labelColor =
                 step.state === "upcoming"
-                  ? "text-[#aaaaaa]"
+                  ? "text-[#777777]"
                   : step.state === "current"
                     ? "font-medium text-[#1A1A1A]"
                     : "text-[#1A1A1A]";
@@ -512,13 +512,13 @@ const OrderTracking = () => {
                       <p className={`font-body text-[13px] ${labelColor}`}>{step.label}</p>
                       <p
                         className={`mt-1 font-body text-[11px] font-light ${
-                          step.state === "upcoming" ? "text-[#aaaaaa]" : "text-[#888888]"
+                          step.state === "upcoming" ? "text-[#777777]" : "text-[#555555]"
                         }`}
                       >
                         {step.note || step.description}
                       </p>
                       {step.changedAt ? (
-                        <p className="mt-1 font-body text-[10px] uppercase tracking-[0.08em] text-[#aaaaaa]">
+                        <p className="mt-1 font-body text-[10px] uppercase tracking-[0.08em] text-[#777777]">
                           {formatChangedAt(step.changedAt)}
                         </p>
                       ) : null}
@@ -556,3 +556,4 @@ const OrderTracking = () => {
 };
 
 export default OrderTracking;
+

@@ -24,10 +24,11 @@ const AuthCheckbox = ({ id, checked, label, onChange }: AuthCheckboxProps) => {
       >
         {checked ? <Check className="h-3 w-3 text-white" /> : null}
       </span>
-      <span className="font-body text-[12px] text-[#888888]">{label}</span>
+      <span className="font-body text-[12px] text-[#555555]">{label}</span>
     </label>
   );
 };
 
 export default AuthCheckbox;
+
 

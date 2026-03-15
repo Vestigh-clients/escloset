@@ -98,7 +98,7 @@ const AccountLayout = () => {
             </div>
             <div>
               <p className="font-display text-[20px] italic text-[#1A1A1A]">{fullName || "My Account"}</p>
-              <p className="font-body text-[11px] text-[#aaaaaa]">{email}</p>
+              <p className="font-body text-[11px] text-[#555555]">{email}</p>
             </div>
           </div>
 
@@ -114,7 +114,7 @@ const AccountLayout = () => {
                     className={`whitespace-nowrap border-b-2 pb-[6px] font-body text-[11px] uppercase tracking-[0.12em] transition-colors ${
                       isActive
                         ? "border-[#C4A882] text-[#1A1A1A]"
-                        : "border-transparent text-[#888888] hover:text-[#1A1A1A]"
+                        : "border-transparent text-[#555555] hover:text-[#1A1A1A]"
                     }`}
                   >
                     {link.label}
@@ -125,7 +125,7 @@ const AccountLayout = () => {
               <button
                 type="button"
                 onClick={requestSignOut}
-                className="whitespace-nowrap border-b-2 border-transparent pb-[6px] font-body text-[11px] uppercase tracking-[0.12em] text-[#aaaaaa] transition-colors hover:text-[#C0392B]"
+                className="whitespace-nowrap border-b-2 border-transparent pb-[6px] font-body text-[11px] uppercase tracking-[0.12em] text-[#777777] transition-colors hover:text-[#C0392B]"
               >
                 Sign Out
               </button>
@@ -140,7 +140,7 @@ const AccountLayout = () => {
             </div>
             <div>
               <p className="font-display text-[20px] italic text-[#1A1A1A]">{fullName || "My Account"}</p>
-              <p className="font-body text-[11px] text-[#aaaaaa]">{email}</p>
+              <p className="font-body text-[11px] text-[#555555]">{email}</p>
             </div>
           </div>
 
@@ -155,7 +155,7 @@ const AccountLayout = () => {
                   className={`block border-l-2 py-[10px] pl-4 font-body text-[11px] uppercase tracking-[0.12em] transition-colors ${
                     isActive
                       ? "border-[#C4A882] text-[#1A1A1A]"
-                      : "border-transparent text-[#888888] hover:text-[#1A1A1A]"
+                      : "border-transparent text-[#555555] hover:text-[#1A1A1A]"
                   }`}
                 >
                   {link.label}
@@ -166,14 +166,14 @@ const AccountLayout = () => {
             <button
               type="button"
               onClick={requestSignOut}
-              className="mt-4 block w-full border-l-2 border-transparent py-[10px] pl-4 text-left font-body text-[11px] uppercase tracking-[0.12em] text-[#aaaaaa] transition-colors hover:text-[#C0392B]"
+              className="mt-4 block w-full border-l-2 border-transparent py-[10px] pl-4 text-left font-body text-[11px] uppercase tracking-[0.12em] text-[#777777] transition-colors hover:text-[#C0392B]"
             >
               Sign Out
             </button>
           </nav>
 
           {isProfileLoading ? (
-            <p className="mt-10 font-body text-[11px] uppercase tracking-[0.12em] text-[#aaaaaa]">Loading profile...</p>
+            <p className="mt-10 font-body text-[11px] uppercase tracking-[0.12em] text-[#777777]">Loading profile...</p>
           ) : null}
           {profileError ? <p className="mt-4 font-body text-[11px] text-[#C0392B]">{profileError}</p> : null}
         </aside>
@@ -196,3 +196,4 @@ const AccountLayout = () => {
 export const useAccountLayoutContext = () => useOutletContext<AccountLayoutContextValue>();
 
 export default AccountLayout;
+

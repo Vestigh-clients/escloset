@@ -134,7 +134,7 @@ const ResetPassword = () => {
     return (
       <AuthPageLayout>
         <h1 className="font-display text-[42px] italic leading-none text-[#1A1A1A]">Invalid reset link</h1>
-        <p className="mt-4 font-body text-[13px] font-light leading-[1.8] text-[#888888]">
+        <p className="mt-4 font-body text-[13px] font-light leading-[1.8] text-[#555555]">
           This link is invalid or has expired. Request a new password reset email.
         </p>
         <Link
@@ -150,7 +150,7 @@ const ResetPassword = () => {
   return (
     <AuthPageLayout>
       <h1 className="font-display text-[42px] italic leading-none text-[#1A1A1A]">Reset password</h1>
-      <p className="mt-3 font-body text-[13px] font-light leading-[1.8] text-[#888888]">
+      <p className="mt-3 font-body text-[13px] font-light leading-[1.8] text-[#555555]">
         Set a new password for your account.
       </p>
 
@@ -171,7 +171,7 @@ const ResetPassword = () => {
               <button
                 type="button"
                 onClick={() => setShowNewPassword((previous) => !previous)}
-                className="inline-flex text-[#888888] transition-colors hover:text-[#1A1A1A]"
+                className="inline-flex text-[#555555] transition-colors hover:text-[#1A1A1A]"
                 aria-label={showNewPassword ? "Hide password" : "Show password"}
               >
                 {showNewPassword ? <EyeOff size={16} strokeWidth={1.35} /> : <Eye size={16} strokeWidth={1.35} />}
@@ -194,7 +194,7 @@ const ResetPassword = () => {
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword((previous) => !previous)}
-                className="inline-flex text-[#888888] transition-colors hover:text-[#1A1A1A]"
+                className="inline-flex text-[#555555] transition-colors hover:text-[#1A1A1A]"
                 aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
               >
                 {showConfirmPassword ? <EyeOff size={16} strokeWidth={1.35} /> : <Eye size={16} strokeWidth={1.35} />}
@@ -214,8 +214,8 @@ const ResetPassword = () => {
         </form>
       ) : (
         <div className="mt-8">
-          <p className="font-body text-[13px] text-[#888888]">Password updated successfully.</p>
-          <p className="mt-3 font-body text-[12px] text-[#888888]">Redirecting in {countdown}s</p>
+          <p className="font-body text-[13px] text-[#555555]">Password updated successfully.</p>
+          <p className="mt-3 font-body text-[12px] text-[#555555]">Redirecting in {countdown}s</p>
         </div>
       )}
     </AuthPageLayout>
@@ -223,3 +223,4 @@ const ResetPassword = () => {
 };
 
 export default ResetPassword;
+

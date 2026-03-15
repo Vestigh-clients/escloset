@@ -129,7 +129,7 @@ const AccountPassword = () => {
             <button
               type="button"
               onClick={() => setShowCurrentPassword((previous) => !previous)}
-              className="inline-flex text-[#888888] transition-colors hover:text-[#1A1A1A]"
+              className="inline-flex text-[#555555] transition-colors hover:text-[#1A1A1A]"
               aria-label={showCurrentPassword ? "Hide current password" : "Show current password"}
             >
               {showCurrentPassword ? <EyeOff size={16} strokeWidth={1.35} /> : <Eye size={16} strokeWidth={1.35} />}
@@ -151,7 +151,7 @@ const AccountPassword = () => {
             <button
               type="button"
               onClick={() => setShowNewPassword((previous) => !previous)}
-              className="inline-flex text-[#888888] transition-colors hover:text-[#1A1A1A]"
+              className="inline-flex text-[#555555] transition-colors hover:text-[#1A1A1A]"
               aria-label={showNewPassword ? "Hide new password" : "Show new password"}
             >
               {showNewPassword ? <EyeOff size={16} strokeWidth={1.35} /> : <Eye size={16} strokeWidth={1.35} />}
@@ -173,7 +173,7 @@ const AccountPassword = () => {
             <button
               type="button"
               onClick={() => setShowConfirmPassword((previous) => !previous)}
-              className="inline-flex text-[#888888] transition-colors hover:text-[#1A1A1A]"
+              className="inline-flex text-[#555555] transition-colors hover:text-[#1A1A1A]"
               aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
             >
               {showConfirmPassword ? (
@@ -201,3 +201,4 @@ const AccountPassword = () => {
 };
 
 export default AccountPassword;
+

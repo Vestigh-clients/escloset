@@ -19,7 +19,7 @@ const AccountHome = () => {
         <h1 className="mt-3 font-display text-[40px] italic font-light leading-none text-[#1A1A1A] sm:text-[52px]">
           {displayName}
         </h1>
-        <p className="mt-4 font-body text-[13px] font-light leading-[1.8] text-[#888888]">
+        <p className="mt-4 font-body text-[13px] font-light leading-[1.8] text-[#555555]">
           Manage your profile and orders from here.
         </p>
 
@@ -52,4 +52,5 @@ const AccountHome = () => {
 };
 
 export default AccountHome;
+
 

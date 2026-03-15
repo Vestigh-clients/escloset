@@ -44,7 +44,7 @@ const CheckoutEntry = () => {
         <h1 className="font-display text-[38px] italic leading-[1.1] text-[#1A1A1A]">
           How would you like to continue?
         </h1>
-        <p className="mb-12 mt-2 font-body text-[12px] text-[#aaaaaa]">Choose an option to proceed to checkout</p>
+        <p className="mb-12 mt-2 font-body text-[12px] text-[#777777]">Choose an option to proceed to checkout</p>
 
         <button
           type="button"
@@ -53,20 +53,20 @@ const CheckoutEntry = () => {
         >
           <div className="flex items-center justify-between">
             <UserX size={20} strokeWidth={1.3} className="text-[#1A1A1A]" />
-            <span className="rounded-[2px] border border-[#d4ccc2] px-[10px] py-[3px] font-body text-[9px] uppercase tracking-[0.14em] text-[#888888]">
+            <span className="rounded-[2px] border border-[#d4ccc2] px-[10px] py-[3px] font-body text-[9px] uppercase tracking-[0.14em] text-[#555555]">
               Guest
             </span>
           </div>
 
           <p className="mt-3 font-display text-[22px] italic text-[#1A1A1A]">Continue as Guest</p>
-          <p className="mt-1.5 max-w-[290px] font-body text-[12px] font-light leading-[1.7] text-[#888888]">
+          <p className="mt-1.5 max-w-[290px] font-body text-[12px] font-light leading-[1.7] text-[#555555]">
             No account needed. Enter your details at checkout.
           </p>
         </button>
 
         <div className="my-[4px] flex items-center gap-3">
           <span className="h-px flex-1 bg-[#d4ccc2]" />
-          <span className="font-body text-[11px] text-[#aaaaaa]">or</span>
+          <span className="font-body text-[11px] text-[#777777]">or</span>
           <span className="h-px flex-1 bg-[#d4ccc2]" />
         </div>
 
@@ -83,7 +83,7 @@ const CheckoutEntry = () => {
           </div>
 
           <p className="mt-3 font-display text-[22px] italic text-[#1A1A1A]">Sign In or Create Account</p>
-          <p className="mt-1.5 max-w-[320px] font-body text-[12px] font-light leading-[1.7] text-[#888888]">
+          <p className="mt-1.5 max-w-[320px] font-body text-[12px] font-light leading-[1.7] text-[#555555]">
             Faster checkout with saved details, order history and address book.
           </p>
         </button>
@@ -93,3 +93,4 @@ const CheckoutEntry = () => {
 };
 
 export default CheckoutEntry;
+
