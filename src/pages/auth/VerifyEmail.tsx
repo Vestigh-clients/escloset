@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { Mail } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import AuthPageLayout from "@/components/auth/AuthPageLayout";
@@ -86,10 +86,10 @@ const VerifyEmail = () => {
   return (
     <AuthPageLayout>
       <div className="text-center">
-        <Mail className="mx-auto h-12 w-12 text-[#C4A882]" strokeWidth={1.35} />
+        <Mail className="mx-auto h-12 w-12 text-[var(--color-accent)]" strokeWidth={1.35} />
 
-        <h1 className="mt-8 font-display text-[42px] italic leading-none text-[#1A1A1A]">Check your email</h1>
-        <p className="mt-4 font-body text-[14px] font-light leading-[1.8] text-[#555555]">
+        <h1 className="mt-8 font-display text-[42px] italic leading-none text-[var(--color-primary)]">Check your email</h1>
+        <p className="mt-4 font-body text-[14px] font-light leading-[1.8] text-[var(--color-muted)]">
           We sent a verification link to {emailLabel}. Click the link to activate your account.
         </p>
 
@@ -97,16 +97,16 @@ const VerifyEmail = () => {
           type="button"
           onClick={() => void handleResend()}
           disabled={countdown > 0 || isResending || !email}
-          className="mt-8 font-body text-[11px] uppercase tracking-[0.15em] text-[#C4A882] transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-55"
+          className="mt-8 font-body text-[11px] uppercase tracking-[0.15em] text-[var(--color-accent)] transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-55"
         >
           {isResending ? "Sending..." : countdown > 0 ? `Resend in ${countdown}s` : "Resend email"}
         </button>
 
-        {message ? <p className="mt-3 font-body text-[11px] text-[#555555]">{message}</p> : null}
+        {message ? <p className="mt-3 font-body text-[11px] text-[var(--color-muted)]">{message}</p> : null}
 
-        <p className="mt-8 font-body text-[12px] text-[#555555]">
+        <p className="mt-8 font-body text-[12px] text-[var(--color-muted)]">
           Wrong email?{" "}
-          <Link to="/auth/register" className="text-[#1A1A1A] transition-colors hover:text-[#C4A882]">
+          <Link to="/auth/register" className="text-[var(--color-primary)] transition-colors hover:text-[var(--color-accent)]">
             Go back
           </Link>
         </p>
@@ -116,5 +116,6 @@ const VerifyEmail = () => {
 };
 
 export default VerifyEmail;
+
 
 

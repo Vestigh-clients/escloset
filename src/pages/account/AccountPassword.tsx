@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { AccountInputField } from "@/components/account/AccountFields";
 import { useAuth } from "@/contexts/AuthContext";
@@ -112,7 +112,7 @@ const AccountPassword = () => {
 
   return (
     <div>
-      <h1 className="font-display text-[42px] italic text-[#1A1A1A]">Change Password</h1>
+      <h1 className="font-display text-[42px] italic text-[var(--color-primary)]">Change Password</h1>
 
       <form onSubmit={handleSubmit} className="mt-8 max-w-[400px]">
         <AccountInputField
@@ -129,7 +129,7 @@ const AccountPassword = () => {
             <button
               type="button"
               onClick={() => setShowCurrentPassword((previous) => !previous)}
-              className="inline-flex text-[#555555] transition-colors hover:text-[#1A1A1A]"
+              className="inline-flex text-[var(--color-muted)] transition-colors hover:text-[var(--color-primary)]"
               aria-label={showCurrentPassword ? "Hide current password" : "Show current password"}
             >
               {showCurrentPassword ? <EyeOff size={16} strokeWidth={1.35} /> : <Eye size={16} strokeWidth={1.35} />}
@@ -151,7 +151,7 @@ const AccountPassword = () => {
             <button
               type="button"
               onClick={() => setShowNewPassword((previous) => !previous)}
-              className="inline-flex text-[#555555] transition-colors hover:text-[#1A1A1A]"
+              className="inline-flex text-[var(--color-muted)] transition-colors hover:text-[var(--color-primary)]"
               aria-label={showNewPassword ? "Hide new password" : "Show new password"}
             >
               {showNewPassword ? <EyeOff size={16} strokeWidth={1.35} /> : <Eye size={16} strokeWidth={1.35} />}
@@ -173,7 +173,7 @@ const AccountPassword = () => {
             <button
               type="button"
               onClick={() => setShowConfirmPassword((previous) => !previous)}
-              className="inline-flex text-[#555555] transition-colors hover:text-[#1A1A1A]"
+              className="inline-flex text-[var(--color-muted)] transition-colors hover:text-[var(--color-primary)]"
               aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
             >
               {showConfirmPassword ? (
@@ -185,13 +185,13 @@ const AccountPassword = () => {
           }
         />
 
-        {submitError ? <p className="mt-4 font-body text-[11px] text-[#C0392B]">{submitError}</p> : null}
-        {successMessage ? <p className="mt-4 font-body text-[12px] text-[#C4A882]">{successMessage}</p> : null}
+        {submitError ? <p className="mt-4 font-body text-[11px] text-[var(--color-danger)]">{submitError}</p> : null}
+        {successMessage ? <p className="mt-4 font-body text-[12px] text-[var(--color-accent)]">{successMessage}</p> : null}
 
         <button
           type="submit"
           disabled={isSubmitting}
-          className="mt-8 rounded-[2px] bg-[#1A1A1A] px-8 py-3 font-body text-[11px] uppercase tracking-[0.14em] text-[#F5F0E8] transition-colors hover:bg-[#C4A882] hover:text-[#1A1A1A] disabled:cursor-not-allowed disabled:opacity-65"
+          className="mt-8 rounded-[var(--border-radius)] bg-[var(--color-primary)] px-8 py-3 font-body text-[11px] uppercase tracking-[0.14em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-65"
         >
           {isSubmitting ? "Updating..." : "Update Password"}
         </button>
@@ -201,4 +201,5 @@ const AccountPassword = () => {
 };
 
 export default AccountPassword;
+
 

@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import CategoryCard from "@/components/CategoryCard";
-import { type StorefrontCategorySlug } from "@/lib/categories";
-
-const categories: StorefrontCategorySlug[] = ["hair-care", "mens-fashion", "womens-fashion", "bags", "shoes"];
+import { storeConfig } from "@/config/store.config";
 const AUTOPLAY_INTERVAL_SECONDS = 5;
 type TransitionType = "push";
 const Transition_type: TransitionType = "push";
@@ -95,12 +93,12 @@ const slides: HeroSlide[] = [
 ];
 
 const ctaBaseClass =
-  "inline-flex cursor-pointer items-center justify-center rounded-[2px] border px-[36px] py-[14px] font-body text-[11px] uppercase tracking-[0.18em] transition-all duration-300 ease-in-out";
+  "inline-flex cursor-pointer items-center justify-center rounded-[var(--border-radius)] border px-[36px] py-[14px] font-body text-[11px] uppercase tracking-[0.18em] transition-all duration-300 ease-in-out";
 
 const ctaClassByStyle: Record<HeroCtaStyle, string> = {
-  outline: "border-[#C4A882] bg-transparent text-[#C4A882] hover:bg-[#C4A882] hover:text-[#1A1A1A]",
-  solid: "border-[#1A1A1A] bg-[#1A1A1A] text-[#F5F0E8] hover:bg-[#F5F0E8] hover:text-[#1A1A1A]",
-  bronze: "border-[#C4A882] bg-[#C4A882] text-[#1A1A1A] hover:border-[#C4A882] hover:bg-transparent hover:text-[#C4A882]",
+  outline: "border-[var(--color-accent)] bg-transparent text-[var(--color-accent)] hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)]",
+  solid: "border-[var(--color-primary)] bg-[var(--color-primary)] text-[var(--color-secondary)] hover:bg-[var(--color-secondary)] hover:text-[var(--color-primary)]",
+  bronze: "border-[var(--color-accent)] bg-[var(--color-accent)] text-[var(--color-primary)] hover:border-[var(--color-accent)] hover:bg-transparent hover:text-[var(--color-accent)]",
 };
 
 type SlideDirection = "next" | "prev";
@@ -126,6 +124,17 @@ const Index = () => {
 
   const hasMultipleSlides = slides.length > 1;
   const isPushTransition = Transition_type === "push";
+  const enabledCategories = useMemo(
+    () =>
+      storeConfig.categories
+        .filter((category) => category.enabled)
+        .map((category) => ({
+          ...category,
+          slug: category.slug.trim().toLowerCase(),
+        }))
+        .filter((category) => category.slug.length > 0),
+    [],
+  );
 
   useEffect(() => {
     return () => {
@@ -280,11 +289,11 @@ const Index = () => {
                 style={{ width: `${slideItemWidthPercent}%` }}
               >
                 <img src={slide.image} alt={`${slide.category} collection`} className="h-full w-full object-cover object-center" />
-                <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.65)_0%,rgba(0,0,0,0.05)_100%)]" />
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(var(--color-primary-rgb),0.65)_0%,rgba(var(--color-primary-rgb),0.05)_100%)]" />
 
                 <div className="absolute bottom-8 left-6 right-6 z-20 text-left md:bottom-[80px] md:left-[80px] md:right-auto">
                   <p
-                    className={`mb-4 font-body text-[11px] font-light uppercase tracking-[0.2em] text-[#C4A882] ${isEntering ? "transition-[transform,opacity]" : ""} ${getTextAnimationClass(isEntering)}`}
+                    className={`mb-4 font-body text-[11px] font-light uppercase tracking-[0.2em] text-[var(--color-accent)] ${isEntering ? "transition-[transform,opacity]" : ""} ${getTextAnimationClass(isEntering)}`}
                     style={getEnteringTextStyle(isEntering, ENTERING_TEXT_DELAYS_MS.label)}
                   >
                     {slide.label}
@@ -298,7 +307,7 @@ const Index = () => {
                   </h1>
 
                   <p
-                    className={`mb-[36px] max-w-[420px] font-body text-[15px] font-light text-[rgba(255,255,255,0.7)] ${isEntering ? "transition-[transform,opacity]" : ""} ${getTextAnimationClass(isEntering)}`}
+                    className={`mb-[36px] max-w-[420px] font-body text-[15px] font-light text-[rgba(var(--color-secondary-rgb),0.7)] ${isEntering ? "transition-[transform,opacity]" : ""} ${getTextAnimationClass(isEntering)}`}
                     style={getEnteringTextStyle(isEntering, ENTERING_TEXT_DELAYS_MS.subtext)}
                   >
                     {slide.subtext}
@@ -327,7 +336,7 @@ const Index = () => {
               onClick={goToPreviousSlide}
               disabled={isAnimating}
               aria-label="Previous slide"
-              className="absolute left-8 top-1/2 z-20 -translate-y-1/2 text-[rgba(255,255,255,0.6)] transition-colors duration-300 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+              className="absolute left-8 top-1/2 z-20 -translate-y-1/2 text-[rgba(var(--color-secondary-rgb),0.6)] transition-colors duration-300 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
             >
               <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
                 <path d="M20 8L12 16L20 24" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -339,7 +348,7 @@ const Index = () => {
               onClick={goToNextSlide}
               disabled={isAnimating}
               aria-label="Next slide"
-              className="absolute right-8 top-1/2 z-20 -translate-y-1/2 text-[rgba(255,255,255,0.6)] transition-colors duration-300 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+              className="absolute right-8 top-1/2 z-20 -translate-y-1/2 text-[rgba(var(--color-secondary-rgb),0.6)] transition-colors duration-300 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
             >
               <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
                 <path d="M12 8L20 16L12 24" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -354,8 +363,8 @@ const Index = () => {
                   onClick={() => handleDotClick(index)}
                   disabled={isAnimating}
                   aria-label={`Go to slide ${index + 1}`}
-                  className={`h-[6px] rounded-[3px] transition-all duration-300 ease-in-out disabled:cursor-not-allowed ${
-                    index === currentIndicatorIndex ? "w-[24px] bg-[#C4A882]" : "w-[6px] bg-[rgba(255,255,255,0.4)]"
+                  className={`h-[6px] rounded-[var(--border-radius)] transition-all duration-300 ease-in-out disabled:cursor-not-allowed ${
+                    index === currentIndicatorIndex ? "w-[24px] bg-[var(--color-accent)]" : "w-[6px] bg-[rgba(var(--color-secondary-rgb),0.4)]"
                   }`}
                 />
               ))}
@@ -365,25 +374,31 @@ const Index = () => {
       </section>
 
       {/* Categories */}
-      <section className="bg-background py-[100px]">
-        <div className="container mx-auto px-4">
-          <p className="font-body font-light text-[11px] tracking-[0.2em] uppercase text-accent text-center mb-4">
-            Our Collections
-          </p>
-          <h2 className="font-display text-[42px] font-normal italic text-center text-foreground mb-2">Shop by Category</h2>
-          <p className="font-body font-light text-[14px] text-[#555555] text-center mb-[60px] max-w-2xl mx-auto">
-            Considered categories for wardrobe staples, elevated accessories, and restorative hair care.
-          </p>
-          <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-5 lg:gap-8">
-            {categories.map((cat) => (
-              <CategoryCard key={cat} category={cat} />
-            ))}
+      {enabledCategories.length > 0 ? (
+        <section className="bg-background py-[100px]">
+          <div className="container mx-auto px-4">
+            <p className="font-body font-light text-[11px] tracking-[0.2em] uppercase text-accent text-center mb-4">
+              Our Collections
+            </p>
+            <h2 className="font-display text-[42px] font-normal italic text-center text-foreground mb-2">Shop by Category</h2>
+            <p className="font-body font-light text-[14px] text-[var(--color-muted)] text-center mb-[60px] max-w-2xl mx-auto">
+              Considered categories for wardrobe staples, elevated accessories, and restorative hair care.
+            </p>
+            <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-5 lg:gap-8">
+              {enabledCategories.map((category) => (
+                <CategoryCard
+                  key={category.slug}
+                  name={category.name}
+                  slug={category.slug}
+                  imageUrl={category.imageUrl}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
     </div>
   );
 };
 
 export default Index;
-

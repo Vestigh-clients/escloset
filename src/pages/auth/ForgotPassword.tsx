@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from "react";
+﻿import { useMemo, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import AuthInputField from "@/components/auth/AuthInputField";
 import AuthPageLayout from "@/components/auth/AuthPageLayout";
@@ -47,8 +47,8 @@ const ForgotPassword = () => {
 
   return (
     <AuthPageLayout>
-      <h1 className="font-display text-[42px] italic leading-none text-[#1A1A1A]">Forgot password?</h1>
-      <p className="mt-3 font-body text-[13px] font-light leading-[1.8] text-[#555555]">
+      <h1 className="font-display text-[42px] italic leading-none text-[var(--color-primary)]">Forgot password?</h1>
+      <p className="mt-3 font-body text-[13px] font-light leading-[1.8] text-[var(--color-muted)]">
         Enter your email and we&apos;ll send a link to reset your password.
       </p>
 
@@ -69,17 +69,17 @@ const ForgotPassword = () => {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="mt-8 w-full rounded-[2px] bg-[#1A1A1A] px-4 py-[18px] font-body text-[11px] uppercase tracking-[0.18em] text-[#F5F0E8] transition-colors duration-300 hover:bg-[#C4A882] hover:text-[#1A1A1A] disabled:cursor-not-allowed disabled:opacity-65"
+          className="mt-8 w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-[18px] font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-65"
         >
           {isSubmitting ? "Please wait..." : "Send Reset Link"}
         </button>
       </form>
 
-      {successMessage ? <p className="mt-6 font-body text-[13px] text-[#555555]">{successMessage}</p> : null}
+      {successMessage ? <p className="mt-6 font-body text-[13px] text-[var(--color-muted)]">{successMessage}</p> : null}
 
-      <p className="mt-6 font-body text-[12px] text-[#555555]">
+      <p className="mt-6 font-body text-[12px] text-[var(--color-muted)]">
         Remembered your password?{" "}
-        <Link to="/auth/login" className="text-[#1A1A1A] transition-colors hover:text-[#C4A882]">
+        <Link to="/auth/login" className="text-[var(--color-primary)] transition-colors hover:text-[var(--color-accent)]">
           Sign in
         </Link>
       </p>
@@ -88,4 +88,5 @@ const ForgotPassword = () => {
 };
 
 export default ForgotPassword;
+
 

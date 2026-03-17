@@ -1,4 +1,5 @@
 import type { CartItem } from "@/contexts/CartContext";
+import { storeConfig } from "@/config/store.config";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { getSession } from "@/services/authService";
@@ -572,6 +573,8 @@ export const triggerOrderConfirmationEmail = async (orderNumber: string): Promis
   const { error } = await supabase.functions.invoke("send_order_confirmation_email", {
     body: {
       order_number: orderNumber,
+      store_name: storeConfig.storeName,
+      support_email: storeConfig.contact.email,
     },
   });
 
@@ -584,6 +587,8 @@ export const triggerNewOrderAdminNotification = async (orderNumber: string): Pro
   const { error } = await supabase.functions.invoke("send_new_order_admin_notification", {
     body: {
       order_number: orderNumber,
+      store_name: storeConfig.storeName,
+      support_email: storeConfig.contact.email,
     },
   });
 

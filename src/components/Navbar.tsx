@@ -1,21 +1,16 @@
 import { Link, useLocation } from "react-router-dom";
-import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { LayoutDashboard, Menu, ShoppingBag, X } from "lucide-react";
 import SignOutConfirmModal from "@/components/auth/SignOutConfirmModal";
+import StoreLogo from "@/components/StoreLogo";
+import { storeConfig } from "@/config/store.config";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import { useSignOutWithCartWarning } from "@/hooks/useSignOutWithCartWarning";
 
-const navLinks = [
+const baseNavLinks = [
   { to: "/", label: "Home" },
   { to: "/shop", label: "Shop" },
-  { to: "/category/hair-care", label: "Hair Care" },
-  { to: "/category/mens-fashion", label: "Men" },
-  { to: "/category/womens-fashion", label: "Women" },
-  { to: "/category/bags", label: "Bags" },
-  { to: "/category/shoes", label: "Shoes" },
-  { to: "/about", label: "About" },
-  { to: "/contact", label: "Contact" },
 ];
 
 const accountMenuLinks = [
@@ -25,6 +20,8 @@ const accountMenuLinks = [
   { to: "/account/profile", label: "Personal Details" },
   { to: "/account/password", label: "Change Password" },
 ];
+
+const CATEGORY_ROUTE_PREFIX = "/category/";
 
 interface ProfileMenuProps {
   isOpen: boolean;
@@ -58,7 +55,7 @@ const ProfileMenu = ({
         aria-expanded={isOpen}
         aria-haspopup="menu"
         aria-controls={menuId}
-        className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1A1A1A] font-body text-[12px] text-[#F5F0E8] transition-colors hover:bg-[#C4A882] hover:text-[#1A1A1A]"
+        className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-primary)] font-body text-[12px] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)]"
       >
         {userInitial}
       </button>
@@ -67,11 +64,11 @@ const ProfileMenu = ({
         <div
           id={menuId}
           role="menu"
-          className="absolute right-0 top-full z-[95] mt-3 min-w-[240px] rounded-[2px] border border-[#d4ccc2] bg-[#F5F0E8] shadow-[0_18px_40px_rgba(26,26,26,0.08)]"
+          className="absolute right-0 top-full z-[95] mt-3 min-w-[240px] rounded-[var(--border-radius)] border border-[var(--color-border)] bg-[var(--color-secondary)] shadow-[0_18px_40px_rgba(var(--color-primary-rgb),0.08)]"
         >
-          <div className="border-b border-[#d4ccc2] px-4 py-3">
-            <p className="font-display text-[20px] italic text-[#1A1A1A]">{userName}</p>
-            <p className="font-body text-[11px] text-[#555555]">{userEmail}</p>
+          <div className="border-b border-[var(--color-border)] px-4 py-3">
+            <p className="font-display text-[20px] italic text-[var(--color-primary)]">{userName}</p>
+            <p className="font-body text-[11px] text-[var(--color-muted)]">{userEmail}</p>
           </div>
 
           <div className="py-2">
@@ -81,7 +78,7 @@ const ProfileMenu = ({
                 to={link.to}
                 onClick={onClose}
                 role="menuitem"
-                className="block px-4 py-2.5 font-body text-[11px] uppercase tracking-[0.1em] text-[#444444] transition-colors hover:bg-[#1A1A108] hover:text-[#C4A882]"
+                className="block px-4 py-2.5 font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-muted)] transition-colors hover:bg-[rgba(var(--color-primary-rgb),0.08)] hover:text-[var(--color-accent)]"
               >
                 {link.label}
               </Link>
@@ -95,7 +92,7 @@ const ProfileMenu = ({
               onSignOut();
             }}
             role="menuitem"
-            className="w-full border-t border-[#d4ccc2] px-4 py-3 text-left font-body text-[11px] uppercase tracking-[0.1em] text-[#777777] transition-colors hover:bg-[#1A1A108] hover:text-[#C0392B]"
+            className="w-full border-t border-[var(--color-border)] px-4 py-3 text-left font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-muted-soft)] transition-colors hover:bg-[rgba(var(--color-primary-rgb),0.08)] hover:text-[var(--color-danger)]"
           >
             Sign Out
           </button>
@@ -113,8 +110,10 @@ const Navbar = () => {
   const [isMobileUserMenuOpen, setIsMobileUserMenuOpen] = useState(false);
 
   const location = useLocation();
-  const isHome = location.pathname === "/";
-  const overlayHero = isHome && !scrolled && !open;
+  const normalizedPathname = useMemo(() => {
+    const trimmedPathname = location.pathname.replace(/\/+$/, "");
+    return trimmedPathname.length > 0 ? trimmedPathname : "/";
+  }, [location.pathname]);
   const desktopUserMenuRef = useRef<HTMLDivElement | null>(null);
   const mobileUserMenuRef = useRef<HTMLDivElement | null>(null);
 
@@ -123,9 +122,49 @@ const Navbar = () => {
   const { isConfirmOpen, isSubmitting, requestSignOut, confirmSignOut, cancelSignOut } = useSignOutWithCartWarning();
   const previousTotalItemsRef = useRef(totalItems);
   const badgeResetTimeoutRef = useRef<number | null>(null);
+  const enabledCategories = useMemo(
+    () =>
+      storeConfig.categories
+        .filter((category) => category.enabled)
+        .map((category) => ({
+          ...category,
+          slug: category.slug.trim().toLowerCase(),
+        }))
+        .filter((category) => category.slug.length > 0),
+    [],
+  );
+  const isTransparentRoute = useMemo(() => {
+    if (normalizedPathname === "/") {
+      return true;
+    }
+
+    if (!normalizedPathname.startsWith(CATEGORY_ROUTE_PREFIX)) {
+      return false;
+    }
+
+    const categorySlug = normalizedPathname.slice(CATEGORY_ROUTE_PREFIX.length);
+    if (!categorySlug || categorySlug.includes("/")) {
+      return false;
+    }
+
+    let decodedCategorySlug = categorySlug;
+    try {
+      decodedCategorySlug = decodeURIComponent(categorySlug);
+    } catch {
+      decodedCategorySlug = categorySlug;
+    }
+
+    const normalizedCategorySlug = decodedCategorySlug.trim().toLowerCase();
+    if (!normalizedCategorySlug) {
+      return false;
+    }
+
+    return enabledCategories.some((category) => category.slug === normalizedCategorySlug);
+  }, [enabledCategories, normalizedPathname]);
+  const overlayHero = isTransparentRoute && !scrolled && !open;
 
   useEffect(() => {
-    if (!isHome) {
+    if (!isTransparentRoute) {
       setScrolled(true);
       return;
     }
@@ -137,7 +176,7 @@ const Navbar = () => {
     handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [isHome]);
+  }, [isTransparentRoute]);
 
   useEffect(() => {
     if (totalItems > previousTotalItemsRef.current) {
@@ -204,7 +243,41 @@ const Navbar = () => {
     };
   }, [closeUserMenus, isDesktopUserMenuOpen, isMobileUserMenuOpen]);
 
-  const navTextColor = isHome ? "text-white" : "text-foreground";
+  const solidNavTextClass = "text-[var(--color-navbar-solid-foreground)]";
+  const solidNavMutedTextClass = "text-[rgba(var(--color-navbar-solid-foreground-rgb),0.78)]";
+  const solidNavInteractiveTextClass = "text-[var(--color-navbar-solid-interactive)]";
+  const solidNavInteractiveHoverClass = "hover:text-[var(--color-navbar-solid-interactive)]";
+  const navTextColor = isTransparentRoute ? "text-white" : solidNavTextClass;
+  const navDividerClass = isTransparentRoute ? "text-[var(--color-border)]" : "text-[rgba(var(--color-navbar-solid-foreground-rgb),0.35)]";
+  const navHoverClass = isTransparentRoute ? "hover:text-accent" : solidNavInteractiveHoverClass;
+  const navActiveClass = isTransparentRoute ? "text-accent font-semibold" : `${solidNavInteractiveTextClass} font-semibold`;
+  const navLinks = useMemo(() => {
+    if (enabledCategories.length === 0) {
+      return baseNavLinks;
+    }
+
+    const shopLinkIndex = baseNavLinks.findIndex((link) => link.to === "/shop");
+    if (shopLinkIndex < 0) {
+      return baseNavLinks;
+    }
+
+    const categoryLinks = enabledCategories.map((category) => ({
+      to: `/category/${encodeURIComponent(category.slug)}`,
+      label: category.name,
+    }));
+
+    return [
+      ...baseNavLinks.slice(0, shopLinkIndex + 1),
+      ...categoryLinks,
+      ...baseNavLinks.slice(shopLinkIndex + 1),
+    ];
+  }, [enabledCategories]);
+  const isNavLinkActive = useCallback(
+    (to: string) => {
+      return location.pathname === to;
+    },
+    [location.pathname],
+  );
   const metadata = (user?.user_metadata ?? {}) as Record<string, unknown>;
   const metadataFirstName = typeof metadata.first_name === "string" ? metadata.first_name.trim() : "";
   const metadataLastName = typeof metadata.last_name === "string" ? metadata.last_name.trim() : "";
@@ -221,12 +294,12 @@ const Navbar = () => {
         setOpen(false);
         openCart();
       }}
-      className={`relative transition-colors ${navTextColor} hover:text-[#C4A882]`}
+      className={`relative transition-colors ${navTextColor} ${navHoverClass}`}
     >
       <ShoppingBag size={20} strokeWidth={1.35} />
       {totalItems > 0 ? (
         <span
-          className={`absolute -right-[9px] -top-[8px] inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-[9px] bg-[#C4A882] px-[4px] font-body text-[9px] font-medium leading-none text-[#1A1A1A] transition-transform duration-200 ease-out ${badgeScaleClass}`}
+          className={`absolute -right-[9px] -top-[8px] inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[var(--color-accent)] px-[4px] font-body text-[9px] font-medium leading-none text-[var(--color-primary)] transition-transform duration-200 ease-out ${badgeScaleClass}`}
         >
           {totalItems > 99 ? "99+" : totalItems}
         </span>
@@ -234,8 +307,12 @@ const Navbar = () => {
     </button>
   );
 
-  const signInLinkClass = isHome ? "text-white/85 hover:text-[#C4A882]" : "text-[#1A1A1A] hover:text-[#C4A882]";
-  const adminIconClass = isHome ? "text-white/85 hover:text-[#C4A882]" : "text-foreground/70 hover:text-[#C4A882]";
+  const signInLinkClass = isTransparentRoute
+    ? "text-white/85 hover:text-[var(--color-accent)]"
+    : `${solidNavTextClass} ${solidNavInteractiveHoverClass}`;
+  const adminIconClass = isTransparentRoute
+    ? "text-white/85 hover:text-[var(--color-accent)]"
+    : `${solidNavMutedTextClass} ${solidNavInteractiveHoverClass}`;
 
   const adminAction = isAuthenticated && isAdmin ? (
     <Link
@@ -294,19 +371,18 @@ const Navbar = () => {
     <>
       <nav
         className={`top-0 left-0 z-50 w-full transition-[background-color,border-color,backdrop-filter] duration-500 ${
-          isHome
+          isTransparentRoute
             ? overlayHero
               ? "absolute bg-transparent border-transparent"
               : "fixed bg-black/55 backdrop-blur-md border-b border-white/15"
-            : "sticky bg-background/95 backdrop-blur-md border-b border-border"
+            : "sticky bg-[rgba(var(--color-navbar-solid-rgb),0.95)] backdrop-blur-md border-b border-border"
         }`}
       >
         <div className="container mx-auto flex items-center justify-between py-5 px-4">
-          <Link to="/" aria-label="Luxuriant home" className="inline-flex items-center">
-            <img
-              src="/assets/vicky_logo_blue.png"
-              alt="Luxuriant"
+          <Link to="/" aria-label={`${storeConfig.storeName} home`} className="inline-flex items-center">
+            <StoreLogo
               className="h-10 w-auto sm:h-12 lg:h-14"
+              textClassName={`text-[20px] sm:text-[24px] ${isTransparentRoute ? "text-white" : "text-foreground"}`}
             />
           </Link>
 
@@ -316,18 +392,18 @@ const Navbar = () => {
                 <div key={link.to} className="flex items-center">
                   <Link
                     to={link.to}
-                    className={`font-body text-[11px] uppercase tracking-[0.1em] transition-colors hover:text-accent ${
-                      location.pathname === link.to
-                        ? "text-accent font-semibold"
-                        : isHome
+                    className={`font-body text-[11px] uppercase tracking-[0.1em] transition-colors ${navHoverClass} ${
+                      isNavLinkActive(link.to)
+                        ? navActiveClass
+                        : isTransparentRoute
                           ? "text-white/85"
-                          : "text-foreground/70"
+                          : solidNavMutedTextClass
                     }`}
                   >
                     {link.label}
                   </Link>
                   {index < navLinks.length - 1 ? (
-                    <span className="mx-4 text-[#d4ccc2]" aria-hidden="true">
+                    <span className={`mx-4 ${navDividerClass}`} aria-hidden="true">
                       |
                     </span>
                   ) : null}
@@ -357,9 +433,9 @@ const Navbar = () => {
         {open ? (
           <div
             className={`lg:hidden px-4 pb-4 animate-fade-in ${
-              isHome
+              isTransparentRoute
                 ? "bg-black/60 backdrop-blur-md border-b border-white/15"
-                : "bg-background/95 backdrop-blur-md border-b border-border"
+                : "bg-[rgba(var(--color-navbar-solid-rgb),0.95)] backdrop-blur-md border-b border-border"
             }`}
           >
             {navLinks.map((link) => (
@@ -367,12 +443,12 @@ const Navbar = () => {
                 key={link.to}
                 to={link.to}
                 onClick={() => setOpen(false)}
-                className={`block py-2.5 font-body text-[11px] uppercase tracking-[0.1em] transition-colors hover:text-accent ${
-                  location.pathname === link.to
-                    ? "text-accent font-semibold"
-                    : isHome
+                className={`block py-2.5 font-body text-[11px] uppercase tracking-[0.1em] transition-colors ${navHoverClass} ${
+                  isNavLinkActive(link.to)
+                    ? navActiveClass
+                    : isTransparentRoute
                       ? "text-white/85"
-                      : "text-foreground/70"
+                      : solidNavMutedTextClass
                 }`}
               >
                 {link.label}
@@ -407,4 +483,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-

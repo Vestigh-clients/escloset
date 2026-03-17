@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
 import ProductImagePlaceholder from "@/components/products/ProductImagePlaceholder";
@@ -52,8 +52,8 @@ const ShopProductCard = ({ product, size = "regular" }: ShopProductCardProps) =>
   };
 
   const imageHoverOverlay = (
-    <div className="pointer-events-none absolute inset-x-0 bottom-0 flex h-12 translate-y-full items-center justify-center bg-[rgba(26,26,26,0.88)] transition-transform duration-300 ease-in-out group-hover:translate-y-0">
-      <span className="font-body text-[11px] uppercase tracking-[0.15em] text-[#F5F0E8]">Add to Cart</span>
+    <div className="pointer-events-none absolute inset-x-0 bottom-0 flex h-12 translate-y-full items-center justify-center bg-[rgba(var(--color-primary-rgb),0.88)] transition-transform duration-300 ease-in-out group-hover:translate-y-0">
+      <span className="font-body text-[11px] uppercase tracking-[0.15em] text-[var(--color-secondary)]">Add to Cart</span>
     </div>
   );
 
@@ -77,25 +77,25 @@ const ShopProductCard = ({ product, size = "regular" }: ShopProductCardProps) =>
             </Link>
           </div>
 
-          <div className="flex h-full flex-col justify-center bg-[#F5F0E8] p-12">
-            <p className="mb-3 font-body text-[10px] font-medium uppercase tracking-[0.2em] text-[#C4A882]">
+          <div className="flex h-full flex-col justify-center bg-[var(--color-secondary)] p-12">
+            <p className="mb-3 font-body text-[10px] font-medium uppercase tracking-[0.2em] text-[var(--color-accent)]">
               {categoryLabel}
             </p>
 
             <Link to={`/shop/${product.slug}`} className="mb-2 block">
-              <h3 className="font-display text-[24px] font-normal italic leading-[1.2] text-[#1A1A1A]">{product.name}</h3>
+              <h3 className="font-display text-[24px] font-normal italic leading-[1.2] text-[var(--color-primary)]">{product.name}</h3>
             </Link>
 
-            <p className="mb-7 font-body text-[13px] font-light text-[#555555]">{formatPrice(product.price)}</p>
+            <p className="mb-7 font-body text-[13px] font-light text-[var(--color-muted)]">{formatPrice(product.price)}</p>
             {isOutOfStock ? (
-              <p className="mb-6 font-['Inter'] text-[10px] uppercase tracking-[0.08em] text-[#777777]">Out of Stock</p>
+              <p className="mb-6 font-body text-[10px] uppercase tracking-[0.08em] text-[var(--color-muted-soft)]">Out of Stock</p>
             ) : null}
 
             <button
               type="button"
               onClick={handleAddToCart}
               disabled={isOutOfStock}
-              className="w-fit rounded-[2px] bg-[#1A1A1A] px-8 py-[14px] font-body text-[11px] uppercase tracking-[0.15em] text-[#F5F0E8] transition-colors duration-300 hover:bg-[#C4A882] hover:text-[#1A1A1A] disabled:cursor-not-allowed disabled:bg-[#d4ccc2] disabled:text-[#555555]"
+              className="w-fit rounded-[var(--border-radius)] bg-[var(--color-primary)] px-8 py-[14px] font-body text-[11px] uppercase tracking-[0.15em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:bg-[var(--color-border)] disabled:text-[var(--color-muted)]"
             >
               {isOutOfStock ? "Out of Stock" : requiresVariantSelection ? "Select Options" : "Add to Cart"}
             </button>
@@ -126,11 +126,11 @@ const ShopProductCard = ({ product, size = "regular" }: ShopProductCardProps) =>
 
       <div className="mt-3 text-left">
         <Link to={`/shop/${product.slug}`}>
-          <h3 className="font-display text-[15px] font-normal italic leading-snug text-[#1A1A1A]">{product.name}</h3>
+          <h3 className="font-display text-[15px] font-normal italic leading-snug text-[var(--color-primary)]">{product.name}</h3>
         </Link>
-        <p className="mt-1 font-body text-[12px] font-light text-[#555555]">{formatPrice(product.price)}</p>
+        <p className="mt-1 font-body text-[12px] font-light text-[var(--color-muted)]">{formatPrice(product.price)}</p>
         {isOutOfStock ? (
-          <p className="mt-1 font-['Inter'] text-[10px] uppercase tracking-[0.08em] text-[#777777]">Out of Stock</p>
+          <p className="mt-1 font-body text-[10px] uppercase tracking-[0.08em] text-[var(--color-muted-soft)]">Out of Stock</p>
         ) : null}
       </div>
     </article>
@@ -138,4 +138,5 @@ const ShopProductCard = ({ product, size = "regular" }: ShopProductCardProps) =>
 };
 
 export default ShopProductCard;
+
 

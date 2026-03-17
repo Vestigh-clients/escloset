@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+﻿import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { REDIRECT_AFTER_LOGIN_KEY } from "@/services/authService";
@@ -8,8 +8,8 @@ interface RouteGuardProps {
 }
 
 const GuardLoadingScreen = () => (
-  <div className="flex min-h-screen items-center justify-center bg-[#F5F0E8] px-6">
-    <p className="font-body text-[12px] uppercase tracking-[0.14em] text-[#555555]">Loading...</p>
+  <div className="flex min-h-screen items-center justify-center bg-[var(--color-secondary)] px-6">
+    <p className="font-body text-[12px] uppercase tracking-[0.14em] text-[var(--color-muted)]">Loading...</p>
   </div>
 );
 
@@ -68,4 +68,5 @@ export const SuperAdminRoute = ({ children }: RouteGuardProps) => {
 
   return <>{children}</>;
 };
+
 

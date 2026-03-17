@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from "react";
+﻿import { useMemo, useState, type FormEvent } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthCheckbox from "@/components/auth/AuthCheckbox";
@@ -169,8 +169,8 @@ const Register = () => {
 
   return (
     <AuthPageLayout>
-      <h1 className="font-display text-[42px] italic leading-none text-[#1A1A1A]">Create your account</h1>
-      <p className="mt-3 font-body text-[13px] font-light leading-[1.8] text-[#555555]">
+      <h1 className="font-display text-[42px] italic leading-none text-[var(--color-primary)]">Create your account</h1>
+      <p className="mt-3 font-body text-[13px] font-light leading-[1.8] text-[var(--color-muted)]">
         Sign up to save your details, check out faster, and track your orders.
       </p>
 
@@ -245,7 +245,7 @@ const Register = () => {
             <button
               type="button"
               onClick={() => setShowPassword((previous) => !previous)}
-              className="inline-flex text-[#555555] transition-colors hover:text-[#1A1A1A]"
+              className="inline-flex text-[var(--color-muted)] transition-colors hover:text-[var(--color-primary)]"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? <EyeOff size={16} strokeWidth={1.35} /> : <Eye size={16} strokeWidth={1.35} />}
@@ -268,7 +268,7 @@ const Register = () => {
             <button
               type="button"
               onClick={() => setShowConfirmPassword((previous) => !previous)}
-              className="inline-flex text-[#555555] transition-colors hover:text-[#1A1A1A]"
+              className="inline-flex text-[var(--color-muted)] transition-colors hover:text-[var(--color-primary)]"
               aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
             >
               {showConfirmPassword ? <EyeOff size={16} strokeWidth={1.35} /> : <Eye size={16} strokeWidth={1.35} />}
@@ -283,20 +283,20 @@ const Register = () => {
           label="Send me updates on new arrivals and offers"
         />
 
-        {generalError ? <p className="mt-4 font-body text-[11px] text-[#C0392B]">{generalError}</p> : null}
+        {generalError ? <p className="mt-4 font-body text-[11px] text-[var(--color-danger)]">{generalError}</p> : null}
 
         <button
           type="submit"
           disabled={isSubmitting || isGoogleSubmitting}
-          className="mt-8 w-full rounded-[2px] bg-[#1A1A1A] px-4 py-[18px] font-body text-[11px] uppercase tracking-[0.18em] text-[#F5F0E8] transition-colors duration-300 hover:bg-[#C4A882] hover:text-[#1A1A1A] disabled:cursor-not-allowed disabled:opacity-65"
+          className="mt-8 w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-[18px] font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-65"
         >
           {isSubmitting ? "Please wait..." : "Create Account"}
         </button>
       </form>
 
-      <p className="mt-6 font-body text-[12px] text-[#555555]">
+      <p className="mt-6 font-body text-[12px] text-[var(--color-muted)]">
         Already have an account?{" "}
-        <Link to="/auth/login" className="text-[#1A1A1A] transition-colors hover:text-[#C4A882]">
+        <Link to="/auth/login" className="text-[var(--color-primary)] transition-colors hover:text-[var(--color-accent)]">
           Sign in
         </Link>
       </p>
@@ -305,4 +305,5 @@ const Register = () => {
 };
 
 export default Register;
+
 

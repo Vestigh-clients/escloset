@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Banknote, Check, ChevronDown, Smartphone, X } from "lucide-react";
 import {
@@ -26,6 +26,7 @@ import {
   submitOrderRpc,
   triggerNewOrderAdminNotification,
 } from "@/services/orderService";
+import { storeConfig, storeKeyPrefix } from "@/config/store.config";
 import { REDIRECT_AFTER_LOGIN_KEY } from "@/services/authService";
 
 type CheckoutStep = "contact" | "delivery" | "payment" | "review";
@@ -190,9 +191,10 @@ interface SearchableStateFieldProps {
   onBlur: () => void;
 }
 
-const CHECKOUT_SESSION_STORAGE_KEY = "luxuriant_checkout_session_v1";
-const CHECKOUT_MODE_STORAGE_KEY = "luxuriant_checkout_mode";
-const SAVED_ADDRESS_STORAGE_KEY_PREFIX = "luxuriant_saved_addresses";
+const CHECKOUT_SESSION_STORAGE_KEY = `${storeKeyPrefix}_checkout_session_v1`;
+const CHECKOUT_MODE_STORAGE_KEY = `${storeKeyPrefix}_checkout_mode`;
+const SAVED_ADDRESS_STORAGE_KEY_PREFIX = `${storeKeyPrefix}_saved_addresses`;
+const LAST_ORDER_STORAGE_KEY = `${storeKeyPrefix}_last_order`;
 
 const CHECKOUT_STEPS: CheckoutStep[] = ["contact", "delivery", "payment", "review"];
 
@@ -700,7 +702,7 @@ const FloatingInput = ({
   const shouldFloatLabel = isFocused || hasValue;
   const showSuccess = Boolean(touched && !error && (required ? hasValue : hasValue));
 
-  const borderClass = error ? "border-[#C0392B]" : showSuccess ? "border-[#C4A882]" : "border-[#d4ccc2]";
+  const borderClass = error ? "border-[var(--color-danger)]" : showSuccess ? "border-[var(--color-accent)]" : "border-[var(--color-border)]";
 
   return (
     <div className="pt-[14px]">
@@ -717,24 +719,24 @@ const FloatingInput = ({
             setIsFocused(false);
             onBlur();
           }}
-          className={`w-full border-0 border-b ${borderClass} bg-transparent pb-[10px] pt-[16px] font-body text-[16px] text-[#1A1A1A] transition-colors duration-200 placeholder:text-transparent focus:placeholder:text-[#999999] focus:border-[#1A1A1A] focus:outline-none md:text-[14px]`}
+          className={`w-full border-0 border-b ${borderClass} bg-transparent pb-[10px] pt-[16px] font-body text-[16px] text-[var(--color-primary)] transition-colors duration-200 placeholder:text-transparent focus:placeholder:text-[var(--color-muted-soft)] focus:border-[var(--color-primary)] focus:outline-none md:text-[14px]`}
         />
 
         <label
           htmlFor={id}
           className={`pointer-events-none absolute left-0 font-body transition-all duration-200 ${
             shouldFloatLabel
-              ? "top-[2px] text-[10px] uppercase tracking-[0.12em] text-[#C4A882]"
-              : "top-[20px] text-[14px] text-[#555555]"
+              ? "top-[2px] text-[10px] uppercase tracking-[0.12em] text-[var(--color-accent)]"
+              : "top-[20px] text-[14px] text-[var(--color-muted)]"
           }`}
         >
           {label}
-          {required ? <span className="ml-[2px] text-[#C0392B]">*</span> : null}
+          {required ? <span className="ml-[2px] text-[var(--color-danger)]">*</span> : null}
         </label>
       </div>
 
-      {helperText ? <p className="mt-[6px] font-body text-[11px] text-[#666666]">{helperText}</p> : null}
-      {error ? <p className="mt-[6px] font-body text-[11px] text-[#C0392B]">{error}</p> : null}
+      {helperText ? <p className="mt-[6px] font-body text-[11px] text-[var(--color-muted-soft)]">{helperText}</p> : null}
+      {error ? <p className="mt-[6px] font-body text-[11px] text-[var(--color-danger)]">{error}</p> : null}
     </div>
   );
 };
@@ -757,7 +759,7 @@ const FloatingTextarea = ({
   const shouldFloatLabel = isFocused || hasValue;
   const showSuccess = Boolean(touched && !error && (required ? hasValue : hasValue));
 
-  const borderClass = error ? "border-[#C0392B]" : showSuccess ? "border-[#C4A882]" : "border-[#d4ccc2]";
+  const borderClass = error ? "border-[var(--color-danger)]" : showSuccess ? "border-[var(--color-accent)]" : "border-[var(--color-border)]";
 
   return (
     <div className="pt-[14px]">
@@ -772,7 +774,7 @@ const FloatingTextarea = ({
             setIsFocused(false);
             onBlur();
           }}
-          className={`w-full resize-none border-0 border-b ${borderClass} bg-transparent pb-[10px] pt-[20px] font-body text-[16px] text-[#1A1A1A] transition-colors duration-200 placeholder:text-transparent focus:placeholder:text-[#999999] focus:border-[#1A1A1A] focus:outline-none md:text-[14px]`}
+          className={`w-full resize-none border-0 border-b ${borderClass} bg-transparent pb-[10px] pt-[20px] font-body text-[16px] text-[var(--color-primary)] transition-colors duration-200 placeholder:text-transparent focus:placeholder:text-[var(--color-muted-soft)] focus:border-[var(--color-primary)] focus:outline-none md:text-[14px]`}
           rows={4}
         />
 
@@ -780,22 +782,22 @@ const FloatingTextarea = ({
           htmlFor={id}
           className={`pointer-events-none absolute left-0 font-body transition-all duration-200 ${
             shouldFloatLabel
-              ? "top-[2px] text-[10px] uppercase tracking-[0.12em] text-[#C4A882]"
-              : "top-[22px] text-[14px] text-[#555555]"
+              ? "top-[2px] text-[10px] uppercase tracking-[0.12em] text-[var(--color-accent)]"
+              : "top-[22px] text-[14px] text-[var(--color-muted)]"
           }`}
         >
           {label}
-          {required ? <span className="ml-[2px] text-[#C0392B]">*</span> : null}
+          {required ? <span className="ml-[2px] text-[var(--color-danger)]">*</span> : null}
         </label>
       </div>
 
       {showCharacterCount && typeof maxLength === "number" ? (
-        <p className="mt-[6px] text-right font-body text-[10px] text-[#666666]">
+        <p className="mt-[6px] text-right font-body text-[10px] text-[var(--color-muted-soft)]">
           {value.length}/{maxLength}
         </p>
       ) : null}
 
-      {error ? <p className="mt-[6px] font-body text-[11px] text-[#C0392B]">{error}</p> : null}
+      {error ? <p className="mt-[6px] font-body text-[11px] text-[var(--color-danger)]">{error}</p> : null}
     </div>
   );
 };
@@ -816,7 +818,7 @@ const FloatingSelect = ({
   const shouldFloatLabel = isFocused || hasValue;
   const showSuccess = Boolean(touched && !error && hasValue);
 
-  const borderClass = error ? "border-[#C0392B]" : showSuccess ? "border-[#C4A882]" : "border-[#d4ccc2]";
+  const borderClass = error ? "border-[var(--color-danger)]" : showSuccess ? "border-[var(--color-accent)]" : "border-[var(--color-border)]";
 
   return (
     <div className="pt-[14px]">
@@ -830,7 +832,7 @@ const FloatingSelect = ({
             setIsFocused(false);
             onBlur();
           }}
-          className={`w-full appearance-none border-0 border-b ${borderClass} bg-transparent pb-[10px] pt-[16px] font-body text-[16px] text-[#1A1A1A] transition-colors duration-200 focus:border-[#1A1A1A] focus:outline-none md:text-[14px]`}
+          className={`w-full appearance-none border-0 border-b ${borderClass} bg-transparent pb-[10px] pt-[16px] font-body text-[16px] text-[var(--color-primary)] transition-colors duration-200 focus:border-[var(--color-primary)] focus:outline-none md:text-[14px]`}
         >
           <option value="" disabled>
             Select an option
@@ -842,22 +844,22 @@ const FloatingSelect = ({
           ))}
         </select>
 
-        <ChevronDown className="pointer-events-none absolute right-0 top-[31px] h-4 w-4 text-[#555555]" />
+        <ChevronDown className="pointer-events-none absolute right-0 top-[31px] h-4 w-4 text-[var(--color-muted)]" />
 
         <label
           htmlFor={id}
           className={`pointer-events-none absolute left-0 font-body transition-all duration-200 ${
             shouldFloatLabel
-              ? "top-[2px] text-[10px] uppercase tracking-[0.12em] text-[#C4A882]"
-              : "top-[20px] text-[14px] text-[#555555]"
+              ? "top-[2px] text-[10px] uppercase tracking-[0.12em] text-[var(--color-accent)]"
+              : "top-[20px] text-[14px] text-[var(--color-muted)]"
           }`}
         >
           {label}
-          {required ? <span className="ml-[2px] text-[#C0392B]">*</span> : null}
+          {required ? <span className="ml-[2px] text-[var(--color-danger)]">*</span> : null}
         </label>
       </div>
 
-      {error ? <p className="mt-[6px] font-body text-[11px] text-[#C0392B]">{error}</p> : null}
+      {error ? <p className="mt-[6px] font-body text-[11px] text-[var(--color-danger)]">{error}</p> : null}
     </div>
   );
 };
@@ -878,7 +880,7 @@ const SearchableStateField = ({
   const shouldFloatLabel = isFocused || hasValue;
   const showSuccess = Boolean(touched && !error && hasValue);
 
-  const borderClass = error ? "border-[#C0392B]" : showSuccess ? "border-[#C4A882]" : "border-[#d4ccc2]";
+  const borderClass = error ? "border-[var(--color-danger)]" : showSuccess ? "border-[var(--color-accent)]" : "border-[var(--color-border)]";
 
   return (
     <div className="pt-[14px]">
@@ -897,24 +899,24 @@ const SearchableStateField = ({
           <PopoverTrigger asChild>
             <button
               type="button"
-              className={`flex w-full items-center justify-between border-0 border-b ${borderClass} bg-transparent pb-[10px] pt-[16px] text-left font-body text-[16px] text-[#1A1A1A] transition-colors duration-200 focus:border-[#1A1A1A] focus:outline-none md:text-[14px]`}
+              className={`flex w-full items-center justify-between border-0 border-b ${borderClass} bg-transparent pb-[10px] pt-[16px] text-left font-body text-[16px] text-[var(--color-primary)] transition-colors duration-200 focus:border-[var(--color-primary)] focus:outline-none md:text-[14px]`}
             >
               <span className="truncate">{value || " "}</span>
-              <ChevronDown className="h-4 w-4 text-[#555555]" />
+              <ChevronDown className="h-4 w-4 text-[var(--color-muted)]" />
             </button>
           </PopoverTrigger>
           <PopoverContent
             align="start"
             sideOffset={8}
-            className="w-[var(--radix-popover-trigger-width)] border-[#d4ccc2] bg-[#F5F0E8] p-0"
+            className="w-[var(--radix-popover-trigger-width)] border-[var(--color-border)] bg-[var(--color-secondary)] p-0"
           >
-            <Command className="bg-[#F5F0E8]">
+            <Command className="bg-[var(--color-secondary)]">
               <CommandInput
                 placeholder="Search region..."
-                className="font-body text-[13px] placeholder:text-[#999999] focus:ring-0"
+                className="font-body text-[13px] placeholder:text-[var(--color-muted-soft)] focus:ring-0"
               />
               <CommandList>
-                <CommandEmpty className="font-body text-[12px] text-[#555555]">No region found.</CommandEmpty>
+                <CommandEmpty className="font-body text-[12px] text-[var(--color-muted)]">No region found.</CommandEmpty>
                 <CommandGroup>
                   {options.map((stateName) => (
                     <CommandItem
@@ -926,7 +928,7 @@ const SearchableStateField = ({
                         setIsFocused(false);
                         onBlur();
                       }}
-                      className="font-body text-[12px] text-[#1A1A1A] data-[selected=true]:bg-[#e8dfd3] data-[selected=true]:text-[#1A1A1A]"
+                      className="font-body text-[12px] text-[var(--color-primary)] data-[selected=true]:bg-[var(--color-surface)] data-[selected=true]:text-[var(--color-primary)]"
                     >
                       <span className="flex-1">{stateName}</span>
                       <Check className={`h-3.5 w-3.5 ${value === stateName ? "opacity-100" : "opacity-0"}`} />
@@ -941,16 +943,16 @@ const SearchableStateField = ({
         <p
           className={`pointer-events-none absolute left-0 font-body transition-all duration-200 ${
             shouldFloatLabel
-              ? "top-[2px] text-[10px] uppercase tracking-[0.12em] text-[#C4A882]"
-              : "top-[20px] text-[14px] text-[#555555]"
+              ? "top-[2px] text-[10px] uppercase tracking-[0.12em] text-[var(--color-accent)]"
+              : "top-[20px] text-[14px] text-[var(--color-muted)]"
           }`}
         >
           {label}
-          {required ? <span className="ml-[2px] text-[#C0392B]">*</span> : null}
+          {required ? <span className="ml-[2px] text-[var(--color-danger)]">*</span> : null}
         </p>
       </div>
 
-      {error ? <p className="mt-[6px] font-body text-[11px] text-[#C0392B]">{error}</p> : null}
+      {error ? <p className="mt-[6px] font-body text-[11px] text-[var(--color-danger)]">{error}</p> : null}
     </div>
   );
 };
@@ -958,6 +960,8 @@ const SearchableStateField = ({
 const Checkout = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const isGuestCheckoutEnabled = storeConfig.features.guestCheckout;
+  const isDiscountCodesEnabled = storeConfig.features.discountCodes;
 
   const { items, subtotal, totalItems, validateCart, isValidating, clearCart, replaceItems } = useCart();
 
@@ -1018,7 +1022,7 @@ const Checkout = () => {
   }, [deliveryValues.state, shippingRates]);
 
   const shippingFee = shippingQuote?.fee ?? 0;
-  const discountAmount = appliedDiscount?.amount ?? 0;
+  const discountAmount = isDiscountCodesEnabled ? appliedDiscount?.amount ?? 0 : 0;
   const orderTotal = Math.max(0, subtotal + shippingFee - discountAmount);
 
   const shippingSidebarValue =
@@ -1033,7 +1037,7 @@ const Checkout = () => {
     paymentValues.method === "mobile_money" ? "Mobile Money" : "Cash on Delivery";
   const shouldShowSavedDetailsPrompt =
     isSessionChecked && isLoggedIn && Boolean(savedContactDetails) && isSavedDetailsPromptVisible;
-  const isGuestCheckout = isSessionChecked && !isLoggedIn && checkoutMode === "guest";
+  const isGuestCheckout = isGuestCheckoutEnabled && isSessionChecked && !isLoggedIn && checkoutMode === "guest";
 
   useEffect(() => {
     void validateCart();
@@ -1047,6 +1051,15 @@ const Checkout = () => {
     const storedMode = window.sessionStorage.getItem(CHECKOUT_MODE_STORAGE_KEY);
     setCheckoutMode(storedMode === "guest" ? "guest" : null);
   }, []);
+
+  useEffect(() => {
+    if (!isDiscountCodesEnabled) {
+      setDiscountInput("");
+      setDiscountError(null);
+      setDiscountSuccess(null);
+      setAppliedDiscount(null);
+    }
+  }, [isDiscountCodesEnabled]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -1107,11 +1120,11 @@ const Checkout = () => {
         setIsManualAddressOpen(false);
       }
 
-      if (typeof parsed.discountInput === "string") {
+      if (isDiscountCodesEnabled && typeof parsed.discountInput === "string") {
         setDiscountInput(parsed.discountInput);
       }
 
-      if (isPlainRecord(parsed.appliedDiscount)) {
+      if (isDiscountCodesEnabled && isPlainRecord(parsed.appliedDiscount)) {
         const type = parsed.appliedDiscount.type;
         if (type === "percentage" || type === "fixed_amount") {
           const amount = Number(parsed.appliedDiscount.amount ?? 0);
@@ -1147,8 +1160,8 @@ const Checkout = () => {
       review: reviewValues,
       completed: completedSteps,
       selectedSavedAddressId,
-      discountInput,
-      appliedDiscount,
+      discountInput: isDiscountCodesEnabled ? discountInput : "",
+      appliedDiscount: isDiscountCodesEnabled ? appliedDiscount : null,
     };
 
     window.sessionStorage.setItem(CHECKOUT_SESSION_STORAGE_KEY, JSON.stringify(snapshot));
@@ -1158,6 +1171,7 @@ const Checkout = () => {
     contactValues,
     deliveryValues,
     discountInput,
+    isDiscountCodesEnabled,
     isHydrated,
     paymentValues,
     reviewValues,
@@ -1191,7 +1205,20 @@ const Checkout = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isDiscountCodesEnabled]);
+
+  useEffect(() => {
+    if (!isSessionChecked || isLoggedIn || isGuestCheckoutEnabled) {
+      return;
+    }
+
+    if (typeof window !== "undefined") {
+      window.sessionStorage.removeItem(CHECKOUT_MODE_STORAGE_KEY);
+      window.sessionStorage.setItem(REDIRECT_AFTER_LOGIN_KEY, STEP_PATH.contact);
+    }
+
+    navigate("/auth/login?redirect=/checkout/contact", { replace: true });
+  }, [isGuestCheckoutEnabled, isLoggedIn, isSessionChecked, navigate]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1581,6 +1608,13 @@ const Checkout = () => {
   }, [currentStep, navigate]);
 
   const handleApplyDiscount = useCallback(async () => {
+    if (!isDiscountCodesEnabled) {
+      setAppliedDiscount(null);
+      setDiscountError(null);
+      setDiscountSuccess(null);
+      return;
+    }
+
     const candidateCode = sanitizeText(discountInput).toUpperCase();
 
     if (!candidateCode) {
@@ -1676,7 +1710,7 @@ const Checkout = () => {
     } finally {
       setIsApplyingDiscount(false);
     }
-  }, [discountInput, subtotal]);
+  }, [discountInput, isDiscountCodesEnabled, subtotal]);
 
   const goToCompletedStep = useCallback(
     (step: CheckoutStep) => {
@@ -2028,7 +2062,7 @@ const Checkout = () => {
       if (typeof window !== "undefined") {
         window.sessionStorage.removeItem(CHECKOUT_SESSION_STORAGE_KEY);
         window.sessionStorage.removeItem(CHECKOUT_MODE_STORAGE_KEY);
-        window.sessionStorage.setItem("luxuriant_last_order", orderResponse.order_number);
+        window.sessionStorage.setItem(LAST_ORDER_STORAGE_KEY, orderResponse.order_number);
       }
 
       navigate("/checkout/confirmation", { replace: true });
@@ -2093,9 +2127,9 @@ const Checkout = () => {
 
   const renderOrderSummary = (isMobile: boolean) => (
     <div className={`${isMobile ? "" : "sticky top-[112px]"}`}>
-      <h3 className="mb-6 font-display text-[22px] italic text-[#1A1A1A]">Order Summary</h3>
+      <h3 className="mb-6 font-display text-[22px] italic text-[var(--color-primary)]">Order Summary</h3>
 
-      <div className="space-y-3 border-b border-[#d4ccc2] pb-4">
+      <div className="space-y-3 border-b border-[var(--color-border)] pb-4">
         {items.map((item) => (
           <div key={`${item.product_id}-${item.variant_id ?? "base"}`}>
             <div className="flex items-start gap-3">
@@ -2110,90 +2144,92 @@ const Checkout = () => {
               />
 
               <div className="min-w-0 flex-1">
-                <p className="truncate font-display text-[14px] italic text-[#555555]">{item.name}</p>
+                <p className="truncate font-display text-[14px] italic text-[var(--color-muted)]">{item.name}</p>
                 {item.variant_label ? (
-                  <p className="mt-[3px] mb-[6px] font-body text-[10px] tracking-[0.05em] text-[#555555]">
+                  <p className="mt-[3px] mb-[6px] font-body text-[10px] tracking-[0.05em] text-[var(--color-muted)]">
                     {item.variant_label}
                   </p>
                 ) : null}
-                <p className="font-body text-[11px] text-[#555555]">Qty: {item.quantity}</p>
+                <p className="font-body text-[11px] text-[var(--color-muted)]">Qty: {item.quantity}</p>
               </div>
 
-              <p className="text-right font-body text-[12px] text-[#1A1A1A]">
+              <p className="text-right font-body text-[12px] text-[var(--color-primary)]">
                 {formatPrice(item.price * item.quantity)}
               </p>
             </div>
-            <div className="mt-3 border-b border-[#d4ccc2]" />
+            <div className="mt-3 border-b border-[var(--color-border)]" />
           </div>
         ))}
       </div>
 
       <div className="mt-4 space-y-2 font-body text-[12px]">
-        <div className="flex items-center justify-between text-[#555555]">
+        <div className="flex items-center justify-between text-[var(--color-muted)]">
           <span>Subtotal</span>
           <span>{formatPrice(subtotal)}</span>
         </div>
 
-        <div className="flex items-center justify-between text-[#555555]">
+        <div className="flex items-center justify-between text-[var(--color-muted)]">
           <span>Shipping</span>
           <span>{shippingSidebarValue}</span>
         </div>
 
-        {appliedDiscount ? (
-          <div className="flex items-center justify-between text-[#C4A882]">
+        {isDiscountCodesEnabled && appliedDiscount ? (
+          <div className="flex items-center justify-between text-[var(--color-accent)]">
             <span>Discount</span>
             <span>- {formatPrice(discountAmount)}</span>
           </div>
         ) : null}
       </div>
 
-      <div className="my-4 border-b border-[#d4ccc2]" />
+      <div className="my-4 border-b border-[var(--color-border)]" />
 
-      <div className="flex items-center justify-between font-body text-[14px] font-medium text-[#1A1A1A]">
+      <div className="flex items-center justify-between font-body text-[14px] font-medium text-[var(--color-primary)]">
         <span>Order Total</span>
         <span>{formatPrice(orderTotal)}</span>
       </div>
 
-      <div className="mt-7">
-        <div className="relative">
-          <input
-            id={isMobile ? "discount-mobile" : "discount-desktop"}
-            value={discountInput}
-            onChange={(event) => {
-              setDiscountInput(event.target.value);
-              setDiscountError(null);
-              setDiscountSuccess(null);
-            }}
-            placeholder=" "
-            className="w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-[10px] pt-[16px] font-body text-[16px] text-[#1A1A1A] transition-colors duration-200 placeholder:text-transparent focus:border-[#1A1A1A] focus:outline-none md:text-[14px]"
-          />
-          <label
-            htmlFor={isMobile ? "discount-mobile" : "discount-desktop"}
-            className={`pointer-events-none absolute left-0 font-body transition-all duration-200 ${
-              discountInput.trim().length > 0
-                ? "top-[2px] text-[10px] uppercase tracking-[0.12em] text-[#C4A882]"
-                : "top-[20px] text-[14px] text-[#555555]"
-            }`}
+      {isDiscountCodesEnabled ? (
+        <div className="mt-7">
+          <div className="relative">
+            <input
+              id={isMobile ? "discount-mobile" : "discount-desktop"}
+              value={discountInput}
+              onChange={(event) => {
+                setDiscountInput(event.target.value);
+                setDiscountError(null);
+                setDiscountSuccess(null);
+              }}
+              placeholder=" "
+              className="w-full border-0 border-b border-[var(--color-border)] bg-transparent pb-[10px] pt-[16px] font-body text-[16px] text-[var(--color-primary)] transition-colors duration-200 placeholder:text-transparent focus:border-[var(--color-primary)] focus:outline-none md:text-[14px]"
+            />
+            <label
+              htmlFor={isMobile ? "discount-mobile" : "discount-desktop"}
+              className={`pointer-events-none absolute left-0 font-body transition-all duration-200 ${
+                discountInput.trim().length > 0
+                  ? "top-[2px] text-[10px] uppercase tracking-[0.12em] text-[var(--color-accent)]"
+                  : "top-[20px] text-[14px] text-[var(--color-muted)]"
+              }`}
+            >
+              Discount code
+            </label>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => void handleApplyDiscount()}
+            disabled={isApplyingDiscount}
+            className="mt-2 ml-auto block font-body text-[11px] uppercase tracking-[0.12em] text-[var(--color-accent)] transition-colors hover:text-[var(--color-primary)] disabled:opacity-60"
           >
-            Discount code
-          </label>
+            {isApplyingDiscount ? "Applying..." : "Apply"}
+          </button>
+
+          {discountSuccess ? <p className="mt-2 font-body text-[11px] text-[var(--color-success)]">{discountSuccess}</p> : null}
+          {discountError ? <p className="mt-2 font-body text-[11px] text-[var(--color-danger)]">{discountError}</p> : null}
         </div>
-
-        <button
-          type="button"
-          onClick={() => void handleApplyDiscount()}
-          disabled={isApplyingDiscount}
-          className="mt-2 ml-auto block font-body text-[11px] uppercase tracking-[0.12em] text-[#C4A882] transition-colors hover:text-[#1A1A1A] disabled:opacity-60"
-        >
-          {isApplyingDiscount ? "Applying..." : "Apply"}
-        </button>
-
-        {discountSuccess ? <p className="mt-2 font-body text-[11px] text-[#2E7D32]">{discountSuccess}</p> : null}
-        {discountError ? <p className="mt-2 font-body text-[11px] text-[#C0392B]">{discountError}</p> : null}
-      </div>
+      ) : null}
 
       {isValidating ? (
-        <p className="mt-5 font-body text-[11px] text-[#555555]">Verifying latest prices and stock...</p>
+        <p className="mt-5 font-body text-[11px] text-[var(--color-muted)]">Verifying latest prices and stock...</p>
       ) : null}
     </div>
   );
@@ -2203,17 +2239,17 @@ const Checkout = () => {
   }
 
   return (
-    <div className="bg-[#F5F0E8] pb-[60px] pt-[80px]">
+    <div className="bg-[var(--color-secondary)] pb-[60px] pt-[80px]">
       <div className="mx-auto max-w-[1180px] px-4 sm:px-6">
         <button
           type="button"
           onClick={() => setIsMobileSummaryOpen(true)}
-          className="sticky top-[72px] z-30 mb-6 flex h-[52px] w-full items-center justify-between bg-[#1A1A1A] px-4 lg:hidden"
+          className="sticky top-[72px] z-30 mb-6 flex h-[52px] w-full items-center justify-between bg-[var(--color-primary)] px-4 lg:hidden"
         >
-          <span className="font-body text-[12px] text-[#F5F0E8]">
+          <span className="font-body text-[12px] text-[var(--color-secondary)]">
             {orderItemCountLabel} {"\u00B7"} {formatPrice(subtotal)}
           </span>
-          <ChevronDown className="h-4 w-4 text-[#F5F0E8]" />
+          <ChevronDown className="h-4 w-4 text-[var(--color-secondary)]" />
         </button>
 
         <div className="grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
@@ -2239,10 +2275,10 @@ const Checkout = () => {
                         <span
                           className={`flex h-6 w-6 items-center justify-center rounded-full border text-[11px] font-medium ${
                             isActive
-                              ? "border-[#1A1A1A] bg-[#1A1A1A] text-[#F5F0E8]"
+                              ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-[var(--color-secondary)]"
                               : isCompleted
-                                ? "border-[#C4A882] bg-[#C4A882] text-[#1A1A1A]"
-                                : "border-[#d4ccc2] bg-transparent text-[#777777]"
+                                ? "border-[var(--color-accent)] bg-[var(--color-accent)] text-[var(--color-primary)]"
+                                : "border-[var(--color-border)] bg-transparent text-[var(--color-muted-soft)]"
                           }`}
                         >
                           {isCompleted && !isActive ? <Check className="h-3.5 w-3.5" /> : index + 1}
@@ -2250,7 +2286,7 @@ const Checkout = () => {
 
                         <span
                           className={`mt-2 font-body text-[10px] uppercase tracking-[0.12em] ${
-                            isActive ? "text-[#1A1A1A]" : isCompleted ? "text-[#C4A882]" : "text-[#777777]"
+                            isActive ? "text-[var(--color-primary)]" : isCompleted ? "text-[var(--color-accent)]" : "text-[var(--color-muted-soft)]"
                           }`}
                         >
                           {STEP_LABEL[step]}
@@ -2260,7 +2296,7 @@ const Checkout = () => {
                       {index < CHECKOUT_STEPS.length - 1 ? (
                         <span
                           className={`mt-3 mx-3 h-px flex-1 border-t ${
-                            connectorCompleted ? "border-[#C4A882]" : "border-[#d4ccc2]"
+                            connectorCompleted ? "border-[var(--color-accent)]" : "border-[var(--color-border)]"
                           }`}
                         />
                       ) : null}
@@ -2271,24 +2307,24 @@ const Checkout = () => {
             </div>
 
             <div className="mb-8 flex items-center justify-between md:hidden">
-              <p className="font-body text-[10px] uppercase tracking-[0.12em] text-[#1A1A1A]">
+              <p className="font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-primary)]">
                 {STEP_LABEL[currentStep]}
               </p>
-              <p className="font-body text-[10px] uppercase tracking-[0.12em] text-[#555555]">
+              <p className="font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-muted)]">
                 Step {currentStepIndex + 1} of {CHECKOUT_STEPS.length}
               </p>
             </div>
 
             {currentStep === "contact" ? (
               <div>
-                <h1 className="font-display text-[32px] italic text-[#1A1A1A]">Contact Information</h1>
+                <h1 className="font-display text-[32px] italic text-[var(--color-primary)]">Contact Information</h1>
                 {isGuestCheckout ? (
-                  <p className="mt-2 font-body text-[11px] text-[#666666]">
+                  <p className="mt-2 font-body text-[11px] text-[var(--color-muted-soft)]">
                     Checking out as guest &#183;{" "}
                     <Link
                       to="/auth/login?redirect=/checkout/contact"
                       onClick={handleSignInInstead}
-                      className="text-[#C4A882] transition-colors hover:text-[#1A1A1A]"
+                      className="text-[var(--color-accent)] transition-colors hover:text-[var(--color-primary)]"
                     >
                       Sign in instead
                     </Link>
@@ -2296,12 +2332,12 @@ const Checkout = () => {
                 ) : null}
 
                 {shouldShowSavedDetailsPrompt ? (
-                  <div className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-[2px] border border-[#d4ccc2] bg-[rgba(196,168,130,0.08)] px-5 py-4">
+                  <div className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-[var(--border-radius)] border border-[var(--color-border)] bg-[rgba(var(--color-accent-rgb),0.08)] px-5 py-4">
                     <div className="flex items-center">
                       <svg
                         viewBox="0 0 24 24"
                         aria-hidden="true"
-                        className="h-4 w-4 shrink-0 text-[#C4A882]"
+                        className="h-4 w-4 shrink-0 text-[var(--color-accent)]"
                         fill="none"
                         stroke="currentColor"
                         strokeWidth="1.75"
@@ -2312,14 +2348,14 @@ const Checkout = () => {
                         <circle cx="12" cy="9.25" r="2.25" />
                         <path d="M8.9 16.4c.9-1.5 2.03-2.25 3.1-2.25s2.2.75 3.1 2.25" />
                       </svg>
-                      <p className="ml-2 font-body text-[12px] text-[#1A1A1A]">Use your saved details?</p>
+                      <p className="ml-2 font-body text-[12px] text-[var(--color-primary)]">Use your saved details?</p>
                     </div>
 
                     <div className="ml-auto flex items-center">
                       <button
                         type="button"
                         onClick={handleUseSavedDetails}
-                        className="rounded-[2px] bg-[#1A1A1A] px-5 py-2 font-body text-[10px] uppercase tracking-[0.15em] text-[#F5F0E8] transition-all duration-200 ease-in-out hover:bg-[#C4A882] hover:text-[#1A1A1A]"
+                        className="rounded-[var(--border-radius)] bg-[var(--color-primary)] px-5 py-2 font-body text-[10px] uppercase tracking-[0.15em] text-[var(--color-secondary)] transition-all duration-200 ease-in-out hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)]"
                       >
                         Use Saved Details
                       </button>
@@ -2327,7 +2363,7 @@ const Checkout = () => {
                       <button
                         type="button"
                         onClick={handleDismissSavedDetails}
-                        className="ml-4 font-body text-[10px] uppercase tracking-[0.15em] text-[#777777] transition-colors duration-200 hover:text-[#1A1A1A]"
+                        className="ml-4 font-body text-[10px] uppercase tracking-[0.15em] text-[var(--color-muted-soft)] transition-colors duration-200 hover:text-[var(--color-primary)]"
                       >
                         No thanks
                       </button>
@@ -2337,7 +2373,7 @@ const Checkout = () => {
 
                 {isSavedDetailsConfirmationVisible ? (
                   <p
-                    className={`mb-8 font-body text-[10px] text-[#C4A882] transition-opacity duration-700 ${
+                    className={`mb-8 font-body text-[10px] text-[var(--color-accent)] transition-opacity duration-700 ${
                       isSavedDetailsConfirmationFading ? "opacity-0" : "opacity-100"
                     }`}
                   >
@@ -2437,26 +2473,26 @@ const Checkout = () => {
                   />
                   <span
                     className={`mt-[2px] flex h-4 w-4 items-center justify-center border ${
-                      contactValues.marketingOptIn ? "border-[#1A1A1A] bg-[#1A1A1A]" : "border-[#d4ccc2] bg-transparent"
+                      contactValues.marketingOptIn ? "border-[var(--color-primary)] bg-[var(--color-primary)]" : "border-[var(--color-border)] bg-transparent"
                     }`}
                   >
                     {contactValues.marketingOptIn ? <Check className="h-3 w-3 text-white" /> : null}
                   </span>
-                  <span className="font-body text-[12px] text-[#555555]">
+                  <span className="font-body text-[12px] text-[var(--color-muted)]">
                     Send me updates on new arrivals and offers
                   </span>
                 </label>
 
                 <div className="mt-10">
                   {stepAdvanceError ? (
-                    <p className="mb-3 font-body text-[12px] text-[#C0392B]">{stepAdvanceError}</p>
+                    <p className="mb-3 font-body text-[12px] text-[var(--color-danger)]">{stepAdvanceError}</p>
                   ) : null}
 
                   <div className="flex flex-col-reverse gap-3 md:flex-row md:items-center md:justify-between">
                     <button
                       type="button"
                       onClick={handleBack}
-                      className="self-start font-body text-[11px] uppercase tracking-[0.12em] text-[#555555] transition-colors hover:text-[#1A1A1A]"
+                      className="self-start font-body text-[11px] uppercase tracking-[0.12em] text-[var(--color-muted)] transition-colors hover:text-[var(--color-primary)]"
                     >
                       &larr; Back
                     </button>
@@ -2464,7 +2500,7 @@ const Checkout = () => {
                     <button
                       type="button"
                       onClick={handleNextStep}
-                      className="w-full rounded-[2px] bg-[#1A1A1A] px-12 py-4 font-body text-[11px] uppercase tracking-[0.18em] text-[#F5F0E8] transition-colors duration-300 hover:bg-[#C4A882] hover:text-[#1A1A1A] md:w-auto"
+                      className="w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-12 py-4 font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] md:w-auto"
                     >
                       Next Step
                     </button>
@@ -2475,7 +2511,7 @@ const Checkout = () => {
 
             {currentStep === "delivery" ? (
               <div>
-                <h1 className="font-display text-[32px] italic text-[#1A1A1A]">Delivery Address</h1>
+                <h1 className="font-display text-[32px] italic text-[var(--color-primary)]">Delivery Address</h1>
 
                 {isSessionChecked && isLoggedIn && savedAddresses.length > 0 ? (
                   <div className="mt-6">
@@ -2488,12 +2524,12 @@ const Checkout = () => {
                             type="button"
                             onClick={() => selectSavedAddress(address)}
                             className={`border p-3 text-left transition-colors ${
-                              isSelected ? "border-[#1A1A1A]" : "border-[#d4ccc2] hover:border-[#1A1A1A]"
+                              isSelected ? "border-[var(--color-primary)]" : "border-[var(--color-border)] hover:border-[var(--color-primary)]"
                             }`}
                           >
-                            <p className="font-body text-[12px] text-[#1A1A1A]">{address.label}</p>
-                            <p className="font-body text-[12px] text-[#1A1A1A]">{address.recipientName || "Saved recipient"}</p>
-                            <p className="truncate font-body text-[12px] text-[#555555]">{address.addressLine1}</p>
+                            <p className="font-body text-[12px] text-[var(--color-primary)]">{address.label}</p>
+                            <p className="font-body text-[12px] text-[var(--color-primary)]">{address.recipientName || "Saved recipient"}</p>
+                            <p className="truncate font-body text-[12px] text-[var(--color-muted)]">{address.addressLine1}</p>
                           </button>
                         );
                       })}
@@ -2505,7 +2541,7 @@ const Checkout = () => {
                         setIsManualAddressOpen(true);
                         setSelectedSavedAddressId(null);
                       }}
-                      className="mt-3 font-body text-[11px] uppercase tracking-[0.12em] text-[#C4A882] transition-colors hover:text-[#1A1A1A]"
+                      className="mt-3 font-body text-[11px] uppercase tracking-[0.12em] text-[var(--color-accent)] transition-colors hover:text-[var(--color-primary)]"
                     >
                       Use a different address
                     </button>
@@ -2581,7 +2617,7 @@ const Checkout = () => {
                     </div>
 
                     {deliveryValues.state && shippingQuote ? (
-                      <p className="mt-2 font-body text-[11px] text-[#555555]">
+                      <p className="mt-2 font-body text-[11px] text-[var(--color-muted)]">
                         Delivery to {deliveryValues.state}: {formatPrice(shippingQuote.fee)} {"\u00B7"}{" "}
                         {shippingQuote.minDays}-
                         {shippingQuote.maxDays} business days
@@ -2640,25 +2676,25 @@ const Checkout = () => {
                     />
                     <span
                       className={`mt-[2px] flex h-4 w-4 items-center justify-center border ${
-                        deliveryValues.saveForFuture ? "border-[#1A1A1A] bg-[#1A1A1A]" : "border-[#d4ccc2] bg-transparent"
+                        deliveryValues.saveForFuture ? "border-[var(--color-primary)] bg-[var(--color-primary)]" : "border-[var(--color-border)] bg-transparent"
                       }`}
                     >
                       {deliveryValues.saveForFuture ? <Check className="h-3 w-3 text-white" /> : null}
                     </span>
-                    <span className="font-body text-[12px] text-[#555555]">Save this address for future orders</span>
+                    <span className="font-body text-[12px] text-[var(--color-muted)]">Save this address for future orders</span>
                   </label>
                 ) : null}
 
                 <div className="mt-10">
                   {stepAdvanceError ? (
-                    <p className="mb-3 font-body text-[12px] text-[#C0392B]">{stepAdvanceError}</p>
+                    <p className="mb-3 font-body text-[12px] text-[var(--color-danger)]">{stepAdvanceError}</p>
                   ) : null}
 
                   <div className="flex flex-col-reverse gap-3 md:flex-row md:items-center md:justify-between">
                     <button
                       type="button"
                       onClick={handleBack}
-                      className="self-start font-body text-[11px] uppercase tracking-[0.12em] text-[#555555] transition-colors hover:text-[#1A1A1A]"
+                      className="self-start font-body text-[11px] uppercase tracking-[0.12em] text-[var(--color-muted)] transition-colors hover:text-[var(--color-primary)]"
                     >
                       &larr; Back
                     </button>
@@ -2666,7 +2702,7 @@ const Checkout = () => {
                     <button
                       type="button"
                       onClick={handleNextStep}
-                      className="w-full rounded-[2px] bg-[#1A1A1A] px-12 py-4 font-body text-[11px] uppercase tracking-[0.18em] text-[#F5F0E8] transition-colors duration-300 hover:bg-[#C4A882] hover:text-[#1A1A1A] md:w-auto"
+                      className="w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-12 py-4 font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] md:w-auto"
                     >
                       Next Step
                     </button>
@@ -2677,7 +2713,7 @@ const Checkout = () => {
 
             {currentStep === "payment" ? (
               <div>
-                <h1 className="font-display text-[32px] italic text-[#1A1A1A]">How would you like to pay?</h1>
+                <h1 className="font-display text-[32px] italic text-[var(--color-primary)]">How would you like to pay?</h1>
 
                 <div className="mt-6 grid gap-4 md:grid-cols-2">
                   <button
@@ -2688,14 +2724,14 @@ const Checkout = () => {
                         method: "mobile_money",
                       }));
                     }}
-                    className={`rounded-[2px] border px-6 py-7 text-left transition-colors duration-200 ${
-                      paymentValues.method === "mobile_money" ? "border-[#1A1A1A]" : "border-[#d4ccc2]"
+                    className={`rounded-[var(--border-radius)] border px-6 py-7 text-left transition-colors duration-200 ${
+                      paymentValues.method === "mobile_money" ? "border-[var(--color-primary)]" : "border-[var(--color-border)]"
                     }`}
-                    style={{ backgroundColor: paymentValues.method === "mobile_money" ? "#1A1A1A08" : "transparent" }}
+                    style={{ backgroundColor: paymentValues.method === "mobile_money" ? "rgba(var(--color-primary-rgb),0.08)" : "transparent" }}
                   >
-                    <Smartphone size={28} strokeWidth={1.25} className="mb-4 text-[#C4A882]" />
-                    <p className="font-display text-[18px] italic text-[#1A1A1A]">Mobile Money</p>
-                    <p className="mt-1 font-body text-[11px] font-light text-[#555555]">
+                    <Smartphone size={28} strokeWidth={1.25} className="mb-4 text-[var(--color-accent)]" />
+                    <p className="font-display text-[18px] italic text-[var(--color-primary)]">Mobile Money</p>
+                    <p className="mt-1 font-body text-[11px] font-light text-[var(--color-muted)]">
                       Pay via MTN MoMo, Telecel Cash or AirtelTigo
                     </p>
                   </button>
@@ -2709,16 +2745,16 @@ const Checkout = () => {
                       }));
                       setPaymentErrors({});
                     }}
-                    className={`rounded-[2px] border px-6 py-7 text-left transition-colors duration-200 ${
-                      paymentValues.method === "cash_on_delivery" ? "border-[#1A1A1A]" : "border-[#d4ccc2]"
+                    className={`rounded-[var(--border-radius)] border px-6 py-7 text-left transition-colors duration-200 ${
+                      paymentValues.method === "cash_on_delivery" ? "border-[var(--color-primary)]" : "border-[var(--color-border)]"
                     }`}
                     style={{
-                      backgroundColor: paymentValues.method === "cash_on_delivery" ? "#1A1A1A08" : "transparent",
+                      backgroundColor: paymentValues.method === "cash_on_delivery" ? "rgba(var(--color-primary-rgb),0.08)" : "transparent",
                     }}
                   >
-                    <Banknote size={28} strokeWidth={1.25} className="mb-4 text-[#C4A882]" />
-                    <p className="font-display text-[18px] italic text-[#1A1A1A]">Cash on Delivery</p>
-                    <p className="mt-1 font-body text-[11px] font-light text-[#555555]">
+                    <Banknote size={28} strokeWidth={1.25} className="mb-4 text-[var(--color-accent)]" />
+                    <p className="font-display text-[18px] italic text-[var(--color-primary)]">Cash on Delivery</p>
+                    <p className="mt-1 font-body text-[11px] font-light text-[var(--color-muted)]">
                       Pay in cash when your order arrives
                     </p>
                   </button>
@@ -2750,14 +2786,14 @@ const Checkout = () => {
 
                 <div className="mt-10">
                   {stepAdvanceError ? (
-                    <p className="mb-3 font-body text-[12px] text-[#C0392B]">{stepAdvanceError}</p>
+                    <p className="mb-3 font-body text-[12px] text-[var(--color-danger)]">{stepAdvanceError}</p>
                   ) : null}
 
                   <div className="flex flex-col-reverse gap-3 md:flex-row md:items-center md:justify-between">
                     <button
                       type="button"
                       onClick={handleBack}
-                      className="self-start font-body text-[11px] uppercase tracking-[0.12em] text-[#555555] transition-colors hover:text-[#1A1A1A]"
+                      className="self-start font-body text-[11px] uppercase tracking-[0.12em] text-[var(--color-muted)] transition-colors hover:text-[var(--color-primary)]"
                     >
                       &larr; Back
                     </button>
@@ -2765,7 +2801,7 @@ const Checkout = () => {
                     <button
                       type="button"
                       onClick={handleNextStep}
-                      className="w-full rounded-[2px] bg-[#1A1A1A] px-12 py-4 font-body text-[11px] uppercase tracking-[0.18em] text-[#F5F0E8] transition-colors duration-300 hover:bg-[#C4A882] hover:text-[#1A1A1A] md:w-auto"
+                      className="w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-12 py-4 font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] md:w-auto"
                     >
                       Next Step
                     </button>
@@ -2776,9 +2812,9 @@ const Checkout = () => {
 
             {currentStep === "review" ? (
               <div>
-                <h1 className="font-display text-[32px] italic text-[#1A1A1A]">Review Your Order</h1>
+                <h1 className="font-display text-[32px] italic text-[var(--color-primary)]">Review Your Order</h1>
 
-                <div className="mt-6 space-y-4 border-b border-[#d4ccc2] pb-6">
+                <div className="mt-6 space-y-4 border-b border-[var(--color-border)] pb-6">
                   {items.map((item) => (
                     <div key={`${item.product_id}-${item.variant_id ?? "base"}`} className="flex items-start gap-4">
                       <img
@@ -2792,57 +2828,57 @@ const Checkout = () => {
                       />
 
                       <div className="min-w-0 flex-1">
-                        <p className="font-display text-[16px] italic text-[#555555]">{item.name}</p>
+                        <p className="font-display text-[16px] italic text-[var(--color-muted)]">{item.name}</p>
                         {item.variant_label ? (
-                          <p className="mt-[3px] mb-[6px] font-body text-[10px] tracking-[0.05em] text-[#555555]">
+                          <p className="mt-[3px] mb-[6px] font-body text-[10px] tracking-[0.05em] text-[var(--color-muted)]">
                             {item.variant_label}
                           </p>
                         ) : null}
-                        <p className="font-body text-[12px] text-[#555555]">Qty: {item.quantity}</p>
+                        <p className="font-body text-[12px] text-[var(--color-muted)]">Qty: {item.quantity}</p>
                       </div>
 
-                      <p className="font-body text-[13px] text-[#1A1A1A]">{formatPrice(item.price * item.quantity)}</p>
+                      <p className="font-body text-[13px] text-[var(--color-primary)]">{formatPrice(item.price * item.quantity)}</p>
                     </div>
                   ))}
                 </div>
 
-                <div className="mt-5 space-y-2 border-b border-[#d4ccc2] pb-6">
-                  <div className="flex items-center justify-between font-body text-[12px] text-[#555555]">
+                <div className="mt-5 space-y-2 border-b border-[var(--color-border)] pb-6">
+                  <div className="flex items-center justify-between font-body text-[12px] text-[var(--color-muted)]">
                     <span>Subtotal</span>
                     <span>{formatPrice(subtotal)}</span>
                   </div>
 
-                  <div className="flex items-center justify-between font-body text-[12px] text-[#555555]">
+                  <div className="flex items-center justify-between font-body text-[12px] text-[var(--color-muted)]">
                     <span>Shipping</span>
                     <span>{shippingQuote ? formatPrice(shippingQuote.fee) : "Select region"}</span>
                   </div>
 
-                  {appliedDiscount ? (
-                    <div className="flex items-center justify-between font-body text-[12px] text-[#C4A882]">
+                  {isDiscountCodesEnabled && appliedDiscount ? (
+                    <div className="flex items-center justify-between font-body text-[12px] text-[var(--color-accent)]">
                       <span>Discount</span>
                       <span>- {formatPrice(discountAmount)}</span>
                     </div>
                   ) : null}
 
-                  <div className="flex items-center justify-between font-body text-[14px] font-medium text-[#1A1A1A]">
+                  <div className="flex items-center justify-between font-body text-[14px] font-medium text-[var(--color-primary)]">
                     <span>Total</span>
                     <span>{formatPrice(orderTotal)}</span>
                   </div>
                 </div>
 
-                <div className="mt-6 border-b border-[#d4ccc2] pb-6">
+                <div className="mt-6 border-b border-[var(--color-border)] pb-6">
                   <div className="mb-2 flex items-center justify-between">
-                    <p className="font-body text-[10px] uppercase tracking-[0.12em] text-[#C4A882]">Delivering to</p>
+                    <p className="font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-accent)]">Delivering to</p>
                     <button
                       type="button"
                       onClick={() => navigate(STEP_PATH.delivery)}
-                      className="font-body text-[11px] uppercase tracking-[0.1em] text-[#555555] transition-colors hover:text-[#1A1A1A]"
+                      className="font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-muted)] transition-colors hover:text-[var(--color-primary)]"
                     >
                       Edit
                     </button>
                   </div>
 
-                  <p className="font-body text-[13px] text-[#555555]">
+                  <p className="font-body text-[13px] text-[var(--color-muted)]">
                     {deliveryValues.addressLine1}
                     {deliveryValues.addressLine2 ? `, ${deliveryValues.addressLine2}` : ""}
                     <br />
@@ -2852,38 +2888,38 @@ const Checkout = () => {
                   </p>
                 </div>
 
-                <div className="mt-6 border-b border-[#d4ccc2] pb-6">
+                <div className="mt-6 border-b border-[var(--color-border)] pb-6">
                   <div className="mb-2 flex items-center justify-between">
-                    <p className="font-body text-[10px] uppercase tracking-[0.12em] text-[#C4A882]">Contact</p>
+                    <p className="font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-accent)]">Contact</p>
                     <button
                       type="button"
                       onClick={() => navigate(STEP_PATH.contact)}
-                      className="font-body text-[11px] uppercase tracking-[0.1em] text-[#555555] transition-colors hover:text-[#1A1A1A]"
+                      className="font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-muted)] transition-colors hover:text-[var(--color-primary)]"
                     >
                       Edit
                     </button>
                   </div>
 
-                  <p className="font-body text-[13px] text-[#555555]">
+                  <p className="font-body text-[13px] text-[var(--color-muted)]">
                     {contactValues.firstName} {contactValues.lastName}
                     <br />
                     {contactValues.email}
                   </p>
                 </div>
 
-                <div className="mt-6 border-b border-[#d4ccc2] pb-6">
+                <div className="mt-6 border-b border-[var(--color-border)] pb-6">
                   <div className="mb-2 flex items-center justify-between">
-                    <p className="font-body text-[10px] uppercase tracking-[0.12em] text-[#C4A882]">Payment</p>
+                    <p className="font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-accent)]">Payment</p>
                     <button
                       type="button"
                       onClick={() => navigate(STEP_PATH.payment)}
-                      className="font-body text-[11px] uppercase tracking-[0.1em] text-[#555555] transition-colors hover:text-[#1A1A1A]"
+                      className="font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-muted)] transition-colors hover:text-[var(--color-primary)]"
                     >
                       Edit
                     </button>
                   </div>
 
-                  <p className="font-body text-[13px] text-[#555555]">
+                  <p className="font-body text-[13px] text-[var(--color-muted)]">
                     {selectedPaymentLabel}
                     {paymentValues.method === "mobile_money" && paymentValues.mobileMoneyNumber
                       ? ` (${paymentValues.mobileMoneyNumber})`
@@ -2909,30 +2945,30 @@ const Checkout = () => {
                   <button
                     type="button"
                     onClick={handleBack}
-                    className="mb-4 font-body text-[11px] uppercase tracking-[0.12em] text-[#555555] transition-colors hover:text-[#1A1A1A]"
+                    className="mb-4 font-body text-[11px] uppercase tracking-[0.12em] text-[var(--color-muted)] transition-colors hover:text-[var(--color-primary)]"
                   >
                     &larr; Back
                   </button>
 
-                  <p className="mb-4 font-body text-[11px] text-[#777777]">
+                  <p className="mb-4 font-body text-[11px] text-[var(--color-muted-soft)]">
                     By placing your order you agree to our{" "}
-                    <Link to="/contact" className="text-[#555555] transition-colors hover:text-[#1A1A1A]">
+                    <Link to="/contact" className="text-[var(--color-muted)] transition-colors hover:text-[var(--color-primary)]">
                       Terms &amp; Conditions
                     </Link>{" "}
                     and{" "}
-                    <Link to="/contact" className="text-[#555555] transition-colors hover:text-[#1A1A1A]">
+                    <Link to="/contact" className="text-[var(--color-muted)] transition-colors hover:text-[var(--color-primary)]">
                       Privacy Policy
                     </Link>
                   </p>
 
                   {checkoutValidationErrors.length > 0 ? (
                     <div className="mb-3">
-                      <p className="mb-2 font-body text-[12px] font-medium text-[#C0392B]">
+                      <p className="mb-2 font-body text-[12px] font-medium text-[var(--color-danger)]">
                         Please review the following before placing your order:
                       </p>
                       <div className="space-y-1">
                         {checkoutValidationErrors.map((error, index) => (
-                          <p key={`checkout-validation-error-${index}`} className="font-body text-[12px] text-[#C0392B]">
+                          <p key={`checkout-validation-error-${index}`} className="font-body text-[12px] text-[var(--color-danger)]">
                             <span className="mr-1" aria-hidden="true">
                               &middot;
                             </span>
@@ -2944,14 +2980,14 @@ const Checkout = () => {
                   ) : null}
 
                   {submissionError ? (
-                    <p className="mb-3 font-body text-[12px] text-[#C0392B]">{submissionError}</p>
+                    <p className="mb-3 font-body text-[12px] text-[var(--color-danger)]">{submissionError}</p>
                   ) : null}
 
                   <button
                     type="button"
                     onClick={() => void handleConfirmOrder()}
                     disabled={submissionPhase !== "idle"}
-                    className="w-full rounded-[2px] bg-[#1A1A1A] px-4 py-5 font-body text-[11px] uppercase tracking-[0.18em] text-[#F5F0E8] transition-colors duration-300 hover:bg-[#C4A882] hover:text-[#1A1A1A] disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-65"
+                    className="w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-5 font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-65"
                   >
                     {submissionPhase === "verifying"
                       ? "Verifying..."
@@ -2964,7 +3000,7 @@ const Checkout = () => {
             ) : null}
           </section>
 
-          <aside className="hidden border-l border-[#d4ccc2] pl-12 lg:block">{renderOrderSummary(false)}</aside>
+          <aside className="hidden border-l border-[var(--color-border)] pl-12 lg:block">{renderOrderSummary(false)}</aside>
         </div>
       </div>
 
@@ -2977,15 +3013,15 @@ const Checkout = () => {
             className="absolute inset-0"
           />
 
-          <div className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto bg-[#F5F0E8] px-5 pb-6 pt-5">
+          <div className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto bg-[var(--color-secondary)] px-5 pb-6 pt-5">
             <div className="mb-4 flex items-center justify-between">
-              <p className="font-body text-[10px] uppercase tracking-[0.14em] text-[#555555]">
+              <p className="font-body text-[10px] uppercase tracking-[0.14em] text-[var(--color-muted)]">
                 {orderItemCountLabel} {"\u00B7"} {formatPrice(subtotal)}
               </p>
               <button
                 type="button"
                 onClick={() => setIsMobileSummaryOpen(false)}
-                className="text-[#555555] transition-colors hover:text-[#1A1A1A]"
+                className="text-[var(--color-muted)] transition-colors hover:text-[var(--color-primary)]"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -3000,5 +3036,6 @@ const Checkout = () => {
 };
 
 export default Checkout;
+
 
 

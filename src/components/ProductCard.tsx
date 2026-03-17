@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import ProductImagePlaceholder from "@/components/products/ProductImagePlaceholder";
 import { formatPrice } from "@/lib/price";
@@ -17,7 +17,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
   }, [imageUrl, product.id]);
 
   return (
-    <div className="group bg-card rounded-[4px] overflow-hidden transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(26,26,26,0.12)]">
+    <div className="group bg-card rounded-[var(--border-radius)] overflow-hidden transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(var(--color-primary-rgb),0.12)]">
       <Link to={`/shop/${product.slug}`} className="block">
         <div className="aspect-[4/5] overflow-hidden bg-muted/20">
           {imageUrl && !hasImageError ? (
@@ -46,3 +46,4 @@ const ProductCard = ({ product }: ProductCardProps) => {
 };
 
 export default ProductCard;
+

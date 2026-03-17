@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+﻿import { Check } from "lucide-react";
 
 interface AuthCheckboxProps {
   id: string;
@@ -19,16 +19,17 @@ const AuthCheckbox = ({ id, checked, label, onChange }: AuthCheckboxProps) => {
       />
       <span
         className={`mt-[2px] flex h-4 w-4 items-center justify-center border ${
-          checked ? "border-[#1A1A1A] bg-[#1A1A1A]" : "border-[#d4ccc2] bg-transparent"
+          checked ? "border-[var(--color-primary)] bg-[var(--color-primary)]" : "border-[var(--color-border)] bg-transparent"
         }`}
       >
         {checked ? <Check className="h-3 w-3 text-white" /> : null}
       </span>
-      <span className="font-body text-[12px] text-[#555555]">{label}</span>
+      <span className="font-body text-[12px] text-[var(--color-muted)]">{label}</span>
     </label>
   );
 };
 
 export default AuthCheckbox;
+
 
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+﻿import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import AuthInputField from "@/components/auth/AuthInputField";
@@ -168,8 +168,8 @@ const Login = () => {
 
   return (
     <AuthPageLayout>
-      <h1 className="font-display text-[42px] italic leading-none text-[#1A1A1A]">Welcome back</h1>
-      <p className="mt-3 font-body text-[13px] font-light leading-[1.8] text-[#555555]">
+      <h1 className="font-display text-[42px] italic leading-none text-[var(--color-primary)]">Welcome back</h1>
+      <p className="mt-3 font-body text-[13px] font-light leading-[1.8] text-[var(--color-muted)]">
         Sign in to continue checkout, manage your account, and track orders.
       </p>
 
@@ -206,7 +206,7 @@ const Login = () => {
             <button
               type="button"
               onClick={() => setShowPassword((previous) => !previous)}
-              className="inline-flex text-[#555555] transition-colors hover:text-[#1A1A1A]"
+              className="inline-flex text-[var(--color-muted)] transition-colors hover:text-[var(--color-primary)]"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? <EyeOff size={16} strokeWidth={1.35} /> : <Eye size={16} strokeWidth={1.35} />}
@@ -217,21 +217,21 @@ const Login = () => {
         <div className="mt-2 text-right">
           <Link
             to="/auth/forgot-password"
-            className="font-body text-[11px] text-[#555555] transition-colors hover:text-[#1A1A1A]"
+            className="font-body text-[11px] text-[var(--color-muted)] transition-colors hover:text-[var(--color-primary)]"
           >
             Forgot your password?
           </Link>
         </div>
 
         {generalError ? (
-          <p className="mt-4 font-body text-[11px] text-[#C0392B]">
+          <p className="mt-4 font-body text-[11px] text-[var(--color-danger)]">
             {generalError}{" "}
             {isEmailNotVerified ? (
               <button
                 type="button"
                 onClick={() => void handleResendVerification()}
                 disabled={isResendingEmail}
-                className="underline transition-colors hover:text-[#1A1A1A] disabled:cursor-not-allowed disabled:opacity-65"
+                className="underline transition-colors hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-65"
               >
                 {isResendingEmail ? "Resending..." : "Resend verification email?"}
               </button>
@@ -239,20 +239,20 @@ const Login = () => {
           </p>
         ) : null}
 
-        {resendMessage ? <p className="mt-3 font-body text-[11px] text-[#555555]">{resendMessage}</p> : null}
+        {resendMessage ? <p className="mt-3 font-body text-[11px] text-[var(--color-muted)]">{resendMessage}</p> : null}
 
         <button
           type="submit"
           disabled={isSubmitting || isGoogleSubmitting}
-          className="mt-8 w-full rounded-[2px] bg-[#1A1A1A] px-4 py-[18px] font-body text-[11px] uppercase tracking-[0.18em] text-[#F5F0E8] transition-colors duration-300 hover:bg-[#C4A882] hover:text-[#1A1A1A] disabled:cursor-not-allowed disabled:opacity-65"
+          className="mt-8 w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-[18px] font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-65"
         >
           {isSubmitting ? "Please wait..." : "Sign In"}
         </button>
       </form>
 
-      <p className="mt-6 font-body text-[12px] text-[#555555]">
+      <p className="mt-6 font-body text-[12px] text-[var(--color-muted)]">
         Don&apos;t have an account?{" "}
-        <Link to="/auth/register" className="text-[#1A1A1A] transition-colors hover:text-[#C4A882]">
+        <Link to="/auth/register" className="text-[var(--color-primary)] transition-colors hover:text-[var(--color-accent)]">
           Create account
         </Link>
       </p>
@@ -261,4 +261,5 @@ const Login = () => {
 };
 
 export default Login;
+
 

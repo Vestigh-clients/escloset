@@ -1,4 +1,4 @@
-interface GoogleOAuthButtonProps {
+﻿interface GoogleOAuthButtonProps {
   onClick: () => void;
   disabled?: boolean;
 }
@@ -30,7 +30,7 @@ const GoogleOAuthButton = ({ onClick, disabled = false }: GoogleOAuthButtonProps
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="flex w-full items-center gap-3 rounded-[2px] border border-[#d4ccc2] bg-transparent px-4 py-[14px] font-body text-[12px] text-[#1A1A1A] transition-colors hover:border-[#1A1A1A] disabled:cursor-not-allowed disabled:opacity-65"
+      className="flex w-full items-center gap-3 rounded-[var(--border-radius)] border border-[var(--color-border)] bg-transparent px-4 py-[14px] font-body text-[12px] text-[var(--color-primary)] transition-colors hover:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-65"
     >
       <span className="inline-flex w-4 items-center justify-center">
         <GoogleIcon />
@@ -42,4 +42,5 @@ const GoogleOAuthButton = ({ onClick, disabled = false }: GoogleOAuthButtonProps
 };
 
 export default GoogleOAuthButton;
+
 

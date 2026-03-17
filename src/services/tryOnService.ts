@@ -1,16 +1,17 @@
 import type { RunJob } from "../types/tryon";
+import { storeConfig } from "@/config/store.config";
 
-const API_KEY = import.meta.env.VITE_STYLESYNCS_API_KEY;
-const BASE_URL = import.meta.env.VITE_STYLESYNCS_BASE_URL;
+const API_KEY = storeConfig.styleSyncs.apiKey;
+const BASE_URL = storeConfig.styleSyncs.apiUrl;
 
-const HEADERS: HeadersInit = {
+const getHeaders = (): HeadersInit => ({
   "Content-Type": "application/json",
   "X-API-Key": API_KEY ?? "",
-};
+});
 
 const assertTryOnConfig = () => {
   if (!API_KEY || !BASE_URL) {
-    throw new Error("StyleSyncs configuration missing. Check VITE_STYLESYNCS_API_KEY and VITE_STYLESYNCS_BASE_URL.");
+    throw new Error("StyleSyncs configuration missing. Check storeConfig.styleSyncs.apiKey and storeConfig.styleSyncs.apiUrl.");
   }
 };
 
@@ -31,7 +32,7 @@ export const startTryOnJob = async (
   const apiVersion = selectApiVersion(hasAccessories);
   const response = await fetch(`${BASE_URL}/run/${apiVersion}`, {
     method: "POST",
-    headers: HEADERS,
+    headers: getHeaders(),
     body: JSON.stringify({
       model_url: modelUrl,
       outfit_pieces: outfitPieces,
@@ -61,7 +62,7 @@ export const pollTryOnJob = async (jobId: string, apiVersion: "v1" | "v2"): Prom
 
   const response = await fetch(`${BASE_URL}/run/${apiVersion}/${jobId}`, {
     method: "GET",
-    headers: HEADERS,
+    headers: getHeaders(),
   });
 
   if (!response.ok) {

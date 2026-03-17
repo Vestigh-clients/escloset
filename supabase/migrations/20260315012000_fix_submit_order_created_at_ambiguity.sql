@@ -1,5 +1,5 @@
 CREATE OR REPLACE FUNCTION public.submit_order(
-  p_customer_id UUID DEFAULT NULL,
+  p_customer_id UUID,
   p_first_name TEXT,
   p_last_name TEXT,
   p_email TEXT,

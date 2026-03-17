@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, Json, Tables } from "@/integrations/supabase/types";
+import { storeConfig } from "@/config/store.config";
 
 type OrderStatus = Database["public"]["Enums"]["order_status"];
 type PaymentStatus = Database["public"]["Enums"]["payment_status"];
@@ -1020,6 +1021,8 @@ export const updateAdminOrderStatus = async ({
         order_number: order.order_number,
         new_status: nextStatus,
         cancel_reason: nextStatus === "cancelled" && trimmedNote ? trimmedNote : undefined,
+        store_name: storeConfig.storeName,
+        support_email: storeConfig.contact.email,
       },
     });
 

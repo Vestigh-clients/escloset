@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import AccountOrderList from "@/components/account/AccountOrderList";
 import { useAuth } from "@/contexts/AuthContext";
@@ -80,9 +80,9 @@ const AccountOrders = () => {
 
   return (
     <div>
-      <h1 className="font-display text-[42px] italic text-[#1A1A1A]">My Orders</h1>
+      <h1 className="font-display text-[42px] italic text-[var(--color-primary)]">My Orders</h1>
 
-      <div className="mt-7 border-b border-[#d4ccc2] pb-5">
+      <div className="mt-7 border-b border-[var(--color-border)] pb-5">
         <div className="flex flex-wrap gap-2.5">
           {filterTabs.map((filter) => {
             const isActive = activeFilter === filter.value;
@@ -92,10 +92,10 @@ const AccountOrders = () => {
                 key={filter.value}
                 type="button"
                 onClick={() => setActiveFilter(filter.value)}
-                className={`rounded-[2px] border px-5 py-2.5 font-body text-[11px] font-light uppercase tracking-[0.1em] transition-colors duration-300 ${
+                className={`rounded-[var(--border-radius)] border px-5 py-2.5 font-body text-[11px] font-light uppercase tracking-[0.1em] transition-colors duration-300 ${
                   isActive
-                    ? "border-[#1A1A1A] bg-[#1A1A1A] text-[#F5F0E8]"
-                    : "border-[#d4ccc2] text-[#1A1A1A] hover:border-[#1A1A1A]"
+                    ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-[var(--color-secondary)]"
+                    : "border-[var(--color-border)] text-[var(--color-primary)] hover:border-[var(--color-primary)]"
                 }`}
               >
                 {filter.label}
@@ -112,13 +112,13 @@ const AccountOrders = () => {
           <div className="lux-order-pulse h-[96px] w-full" />
         </div>
       ) : loadError ? (
-        <p className="mt-8 font-body text-[12px] text-[#C0392B]">{loadError}</p>
+        <p className="mt-8 font-body text-[12px] text-[var(--color-danger)]">{loadError}</p>
       ) : filteredOrders.length === 0 ? (
         <div className="mt-10">
-          <p className="font-display text-[24px] italic text-[#555555]">You haven't placed any orders yet.</p>
+          <p className="font-display text-[24px] italic text-[var(--color-muted)]">You haven't placed any orders yet.</p>
           <Link
             to="/shop"
-            className="mt-5 inline-block font-body text-[10px] uppercase tracking-[0.12em] text-[#C4A882] transition-colors hover:text-[#1A1A1A]"
+            className="mt-5 inline-block font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-accent)] transition-colors hover:text-[var(--color-primary)]"
           >
             Start Shopping
           </Link>
@@ -133,4 +133,5 @@ const AccountOrders = () => {
 };
 
 export default AccountOrders;
+
 

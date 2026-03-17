@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
+﻿import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import {
   createAdminCategory,
   deleteAdminCategory,
@@ -209,23 +209,23 @@ const AdminCategoriesPage = () => {
   return (
     <div className="admin-page">
       <div className="admin-page-header">
-        <h1 className="admin-page-title font-display text-[36px] italic text-[#1A1A1A]">Categories</h1>
+        <h1 className="admin-page-title font-display text-[36px] italic text-[var(--color-primary)]">Categories</h1>
         <div className="admin-page-actions">
           <button
             type="button"
             onClick={openNewForm}
-            className="rounded-[2px] bg-[#1A1A1A] px-7 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[#F5F0E8] transition-colors hover:bg-[#C4A882] hover:text-[#1A1A1A]"
+            className="rounded-[var(--border-radius)] bg-[var(--color-primary)] px-7 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)]"
           >
             Add Category
           </button>
         </div>
       </div>
 
-      {message ? <p className="mb-4 font-body text-[12px] text-[#C4A882]">{message}</p> : null}
+      {message ? <p className="mb-4 font-body text-[12px] text-[var(--color-accent)]">{message}</p> : null}
 
       {isFormOpen && !editingId ? (
-        <div className="mb-6 border border-[#d4ccc2] p-5">
-          <p className="mb-4 font-body text-[10px] uppercase tracking-[0.2em] text-[#C4A882]">Add Category</p>
+        <div className="mb-6 border border-[var(--color-border)] p-5">
+          <p className="mb-4 font-body text-[10px] uppercase tracking-[0.2em] text-[var(--color-accent)]">Add Category</p>
           <CategoryForm form={form} setForm={setForm} onUploadImage={onUploadImage} onSave={onSave} onCancel={resetForm} isSaving={isSaving} />
         </div>
       ) : null}
@@ -233,11 +233,11 @@ const AdminCategoriesPage = () => {
       <div className="hidden overflow-x-auto md:block">
         <table className="min-w-[940px] w-full border-collapse">
           <thead>
-            <tr className="border-b border-[#d4ccc2]">
+            <tr className="border-b border-[var(--color-border)]">
               {["Image", "Name", "Slug", "Products", "Order", "Status", "Actions"].map((heading) => (
                 <th
                   key={heading}
-                  className="px-2 py-3 text-left font-body text-[10px] uppercase tracking-[0.12em] text-[#777777] first:pl-0 last:pr-0"
+                  className="px-2 py-3 text-left font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-muted-soft)] first:pl-0 last:pr-0"
                 >
                   {heading}
                 </th>
@@ -247,44 +247,44 @@ const AdminCategoriesPage = () => {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={7} className="py-8 text-center font-body text-[12px] text-[#777777]">
+                <td colSpan={7} className="py-8 text-center font-body text-[12px] text-[var(--color-muted-soft)]">
                   Loading categories...
                 </td>
               </tr>
             ) : loadError ? (
               <tr>
-                <td colSpan={7} className="py-8 text-center font-body text-[12px] text-[#C0392B]">
+                <td colSpan={7} className="py-8 text-center font-body text-[12px] text-[var(--color-danger)]">
                   {loadError}
                 </td>
               </tr>
             ) : renderedCategories.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-8 text-center font-body text-[12px] text-[#777777]">
+                <td colSpan={7} className="py-8 text-center font-body text-[12px] text-[var(--color-muted-soft)]">
                   No categories yet.
                 </td>
               </tr>
             ) : (
               renderedCategories.flatMap((category) => [
-                <tr key={`row-${category.id}`} className="border-b border-[#e4dbd1] hover:bg-[rgba(196,168,130,0.04)]">
+                <tr key={`row-${category.id}`} className="border-b border-[var(--color-surface-strong)] hover:bg-[rgba(var(--color-accent-rgb),0.04)]">
                   <td className="px-2 py-4 pl-0">
-                    <div className="h-12 w-12 overflow-hidden bg-[#ede5db]">
+                    <div className="h-12 w-12 overflow-hidden bg-[var(--color-surface-alt)]">
                       {category.image_url ? (
                         <img src={category.image_url} alt={category.name} className="h-full w-full object-cover" />
                       ) : (
-                        <div className="h-full w-full bg-[#e2d9cf]" />
+                        <div className="h-full w-full bg-[var(--color-surface-strong)]" />
                       )}
                     </div>
                   </td>
-                  <td className="px-2 py-4 font-body text-[13px] text-[#1A1A1A]">{category.name}</td>
-                  <td className="px-2 py-4 font-body text-[11px] text-[#777777]">{category.slug}</td>
-                  <td className="px-2 py-4 font-body text-[12px] text-[#555555]">{category.products_count}</td>
+                  <td className="px-2 py-4 font-body text-[13px] text-[var(--color-primary)]">{category.name}</td>
+                  <td className="px-2 py-4 font-body text-[11px] text-[var(--color-muted-soft)]">{category.slug}</td>
+                  <td className="px-2 py-4 font-body text-[12px] text-[var(--color-muted)]">{category.products_count}</td>
                   <td className="px-2 py-4">
-                    <span className="font-body text-[12px] text-[#555555]">{category.display_order ?? 0}</span>
+                    <span className="font-body text-[12px] text-[var(--color-muted)]">{category.display_order ?? 0}</span>
                   </td>
                   <td className="px-2 py-4">
                     <span
-                      className={`inline-block rounded-[2px] px-2 py-1 font-body text-[9px] uppercase tracking-[0.12em] ${
-                        category.is_active ? "border border-[#C4A882] text-[#C4A882]" : "border border-[#C0392B] text-[#C0392B]"
+                      className={`inline-block rounded-[var(--border-radius)] px-2 py-1 font-body text-[9px] uppercase tracking-[0.12em] ${
+                        category.is_active ? "border border-[var(--color-accent)] text-[var(--color-accent)]" : "border border-[var(--color-danger)] text-[var(--color-danger)]"
                       }`}
                     >
                       {category.is_active ? "Active" : "Inactive"}
@@ -292,19 +292,19 @@ const AdminCategoriesPage = () => {
                   </td>
                   <td className="px-0 py-4">
                     <div className="flex items-center gap-2 font-body text-[10px] uppercase tracking-[0.1em]">
-                      <button type="button" onClick={() => openEditForm(category)} className="text-[#555555] hover:text-[#1A1A1A]">
+                      <button type="button" onClick={() => openEditForm(category)} className="text-[var(--color-muted)] hover:text-[var(--color-primary)]">
                         Edit
                       </button>
-                      <span className="text-[#d4ccc2]">|</span>
+                      <span className="text-[var(--color-border)]">|</span>
                       {category.products_count > 0 ? (
-                        <span className="text-[#C0392B]">Move or delete all {category.products_count} products before deleting.</span>
+                        <span className="text-[var(--color-danger)]">Move or delete all {category.products_count} products before deleting.</span>
                       ) : deleteConfirmId === category.id ? (
                         <span className="normal-case">
                           Delete {category.name}?{" "}
-                          <button type="button" onClick={() => void onDelete(category)} className="uppercase text-[#C0392B]">
+                          <button type="button" onClick={() => void onDelete(category)} className="uppercase text-[var(--color-danger)]">
                             Yes Delete
                           </button>{" "}
-                          <button type="button" onClick={() => setDeleteConfirmId(null)} className="uppercase text-[#555555]">
+                          <button type="button" onClick={() => setDeleteConfirmId(null)} className="uppercase text-[var(--color-muted)]">
                             Cancel
                           </button>
                         </span>
@@ -312,7 +312,7 @@ const AdminCategoriesPage = () => {
                         <button
                           type="button"
                           onClick={() => setDeleteConfirmId(category.id)}
-                          className="text-[#555555] hover:text-[#C0392B]"
+                          className="text-[var(--color-muted)] hover:text-[var(--color-danger)]"
                         >
                           Delete
                         </button>
@@ -322,8 +322,8 @@ const AdminCategoriesPage = () => {
                 </tr>,
                 isFormOpen && editingId === category.id ? (
                   <tr key={`edit-${category.id}`}>
-                    <td colSpan={7} className="border-b border-[#d4ccc2] bg-[rgba(255,255,255,0.32)] px-4 py-5">
-                      <p className="mb-4 font-body text-[10px] uppercase tracking-[0.2em] text-[#C4A882]">Edit Category</p>
+                    <td colSpan={7} className="border-b border-[var(--color-border)] bg-[rgba(var(--color-secondary-rgb),0.32)] px-4 py-5">
+                      <p className="mb-4 font-body text-[10px] uppercase tracking-[0.2em] text-[var(--color-accent)]">Edit Category</p>
                       <CategoryForm
                         form={form}
                         setForm={setForm}
@@ -341,30 +341,30 @@ const AdminCategoriesPage = () => {
         </table>
       </div>
 
-      <div className="border-t border-[#d4ccc2] md:hidden">
+      <div className="border-t border-[var(--color-border)] md:hidden">
         {isLoading ? (
-          <p className="py-8 text-center font-body text-[12px] text-[#777777]">Loading categories...</p>
+          <p className="py-8 text-center font-body text-[12px] text-[var(--color-muted-soft)]">Loading categories...</p>
         ) : loadError ? (
-          <p className="py-8 text-center font-body text-[12px] text-[#C0392B]">{loadError}</p>
+          <p className="py-8 text-center font-body text-[12px] text-[var(--color-danger)]">{loadError}</p>
         ) : renderedCategories.length === 0 ? (
-          <p className="py-8 text-center font-body text-[12px] text-[#777777]">No categories yet.</p>
+          <p className="py-8 text-center font-body text-[12px] text-[var(--color-muted-soft)]">No categories yet.</p>
         ) : (
           renderedCategories.map((category, index) => (
             <div key={`mobile-${category.id}`} className="admin-mobile-card">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className="h-8 w-8 overflow-hidden bg-[#ede5db]">
+                  <div className="h-8 w-8 overflow-hidden bg-[var(--color-surface-alt)]">
                     {category.image_url ? (
                       <img src={category.image_url} alt={category.name} className="h-full w-full object-cover" />
                     ) : (
-                      <div className="h-full w-full bg-[#e2d9cf]" />
+                      <div className="h-full w-full bg-[var(--color-surface-strong)]" />
                     )}
                   </div>
-                  <p className="truncate font-body text-[12px] text-[#1A1A1A]">{category.name}</p>
+                  <p className="truncate font-body text-[12px] text-[var(--color-primary)]">{category.name}</p>
                 </div>
                 <span
-                  className={`inline-block rounded-[2px] px-2 py-1 font-body text-[9px] uppercase tracking-[0.12em] ${
-                    category.is_active ? "border border-[#C4A882] text-[#C4A882]" : "border border-[#C0392B] text-[#C0392B]"
+                  className={`inline-block rounded-[var(--border-radius)] px-2 py-1 font-body text-[9px] uppercase tracking-[0.12em] ${
+                    category.is_active ? "border border-[var(--color-accent)] text-[var(--color-accent)]" : "border border-[var(--color-danger)] text-[var(--color-danger)]"
                   }`}
                 >
                   {category.is_active ? "Active" : "Inactive"}
@@ -372,39 +372,39 @@ const AdminCategoriesPage = () => {
               </div>
 
               <div className="mt-2 flex items-center justify-between gap-3">
-                <p className="font-body text-[10px] text-[#777777]">{category.slug}</p>
-                <p className="font-body text-[11px] text-[#555555]">{category.products_count} products</p>
+                <p className="font-body text-[10px] text-[var(--color-muted-soft)]">{category.slug}</p>
+                <p className="font-body text-[11px] text-[var(--color-muted)]">{category.products_count} products</p>
               </div>
 
-              <div className="mt-2 flex items-center justify-end gap-3 font-body text-[10px] uppercase tracking-[0.1em] text-[#888888]">
+              <div className="mt-2 flex items-center justify-end gap-3 font-body text-[10px] uppercase tracking-[0.1em] text-[var(--color-muted-soft)]">
                 <button
                   type="button"
                   disabled={isReordering || index === 0}
                   onClick={() => void onMoveCategory(category.id, "up")}
-                  className="normal-case text-[14px] text-[#888888] disabled:opacity-40"
+                  className="normal-case text-[14px] text-[var(--color-muted-soft)] disabled:opacity-40"
                 >
-                  ↑
+                  Up
                 </button>
                 <button
                   type="button"
                   disabled={isReordering || index === renderedCategories.length - 1}
                   onClick={() => void onMoveCategory(category.id, "down")}
-                  className="normal-case text-[14px] text-[#888888] disabled:opacity-40"
+                  className="normal-case text-[14px] text-[var(--color-muted-soft)] disabled:opacity-40"
                 >
-                  ↓
+                  Down
                 </button>
-                <button type="button" onClick={() => openEditForm(category)} className="text-[#555555] hover:text-[#1A1A1A]">
+                <button type="button" onClick={() => openEditForm(category)} className="text-[var(--color-muted)] hover:text-[var(--color-primary)]">
                   Edit
                 </button>
-                <span className="text-[#d4ccc2]">|</span>
+                <span className="text-[var(--color-border)]">|</span>
                 {category.products_count > 0 ? (
-                  <span className="normal-case text-[#C0392B]">Delete locked ({category.products_count})</span>
+                  <span className="normal-case text-[var(--color-danger)]">Delete locked ({category.products_count})</span>
                 ) : deleteConfirmId === category.id ? (
                   <span className="normal-case">
-                    <button type="button" onClick={() => void onDelete(category)} className="uppercase text-[#C0392B]">
+                    <button type="button" onClick={() => void onDelete(category)} className="uppercase text-[var(--color-danger)]">
                       Yes Delete
                     </button>{" "}
-                    <button type="button" onClick={() => setDeleteConfirmId(null)} className="uppercase text-[#555555]">
+                    <button type="button" onClick={() => setDeleteConfirmId(null)} className="uppercase text-[var(--color-muted)]">
                       Cancel
                     </button>
                   </span>
@@ -412,7 +412,7 @@ const AdminCategoriesPage = () => {
                   <button
                     type="button"
                     onClick={() => setDeleteConfirmId(category.id)}
-                    className="text-[#555555] hover:text-[#C0392B]"
+                    className="text-[var(--color-muted)] hover:text-[var(--color-danger)]"
                   >
                     Delete
                   </button>
@@ -420,8 +420,8 @@ const AdminCategoriesPage = () => {
               </div>
 
               {isFormOpen && editingId === category.id ? (
-                <div className="mt-4 border-t border-[#d4ccc2] pt-4">
-                  <p className="mb-3 font-body text-[10px] uppercase tracking-[0.2em] text-[#C4A882]">Edit Category</p>
+                <div className="mt-4 border-t border-[var(--color-border)] pt-4">
+                  <p className="mb-3 font-body text-[10px] uppercase tracking-[0.2em] text-[var(--color-accent)]">Edit Category</p>
                   <CategoryForm
                     form={form}
                     setForm={setForm}
@@ -458,21 +458,21 @@ const CategoryForm = ({
   return (
     <div className="grid gap-4">
       <div>
-        <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Category Name *</label>
+        <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-muted-soft)]">Category Name *</label>
         <input
           value={form.name}
           onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-          className="mt-2 w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[13px] text-[#1A1A1A] outline-none focus:border-[#1A1A1A]"
+          className="mt-2 w-full border-0 border-b border-[var(--color-border)] bg-transparent pb-2 font-body text-[13px] text-[var(--color-primary)] outline-none focus:border-[var(--color-primary)]"
         />
       </div>
 
       <div>
         <div className="flex items-center justify-between">
-          <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Slug</label>
+          <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-muted-soft)]">Slug</label>
           <button
             type="button"
             onClick={() => setForm((current) => ({ ...current, slugManual: !current.slugManual }))}
-            className="font-body text-[10px] text-[#C4A882] hover:text-[#1A1A1A]"
+            className="font-body text-[10px] text-[var(--color-accent)] hover:text-[var(--color-primary)]"
           >
             {form.slugManual ? "Lock slug" : "Edit slug"}
           </button>
@@ -486,23 +486,23 @@ const CategoryForm = ({
               slugManual: true,
             }))
           }
-          className="mt-2 w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[13px] text-[#1A1A1A] outline-none focus:border-[#1A1A1A]"
+          className="mt-2 w-full border-0 border-b border-[var(--color-border)] bg-transparent pb-2 font-body text-[13px] text-[var(--color-primary)] outline-none focus:border-[var(--color-primary)]"
         />
       </div>
 
       <div>
-        <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Description</label>
+        <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-muted-soft)]">Description</label>
         <textarea
           value={form.description}
           onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
-          className="mt-2 min-h-20 w-full resize-y border border-[#d4ccc2] bg-transparent p-3 font-body text-[13px] text-[#1A1A1A] outline-none focus:border-[#1A1A1A]"
+          className="mt-2 min-h-20 w-full resize-y border border-[var(--color-border)] bg-transparent p-3 font-body text-[13px] text-[var(--color-primary)] outline-none focus:border-[var(--color-primary)]"
         />
       </div>
 
       <div>
-        <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Image</label>
-        <label className="mt-2 block cursor-pointer border-2 border-dashed border-[#d4ccc2] p-6 text-center">
-          <p className="font-body text-[12px] text-[#777777]">Upload hero image (16:9)</p>
+        <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-muted-soft)]">Image</label>
+        <label className="mt-2 block cursor-pointer border-2 border-dashed border-[var(--color-border)] p-6 text-center">
+          <p className="font-body text-[12px] text-[var(--color-muted-soft)]">Upload hero image (16:9)</p>
           <input
             type="file"
             accept="image/jpeg,image/png,image/webp"
@@ -511,7 +511,7 @@ const CategoryForm = ({
           />
         </label>
         {form.imageUrl ? (
-          <div className="mt-3 h-24 overflow-hidden bg-[#ede5db]">
+          <div className="mt-3 h-24 overflow-hidden bg-[var(--color-surface-alt)]">
             <img src={form.imageUrl} alt={form.name || "Category image"} className="h-full w-full object-cover" />
           </div>
         ) : null}
@@ -519,21 +519,21 @@ const CategoryForm = ({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Display Order</label>
+          <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-muted-soft)]">Display Order</label>
           <input
             value={form.displayOrder}
             onChange={(event) =>
               setForm((current) => ({ ...current, displayOrder: event.target.value.replace(/[^\d-]/g, "") }))
             }
-            className="mt-2 w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[13px] text-[#1A1A1A] outline-none focus:border-[#1A1A1A]"
+            className="mt-2 w-full border-0 border-b border-[var(--color-border)] bg-transparent pb-2 font-body text-[13px] text-[var(--color-primary)] outline-none focus:border-[var(--color-primary)]"
           />
         </div>
-        <label className="mt-6 flex items-center gap-2 font-body text-[12px] text-[#1A1A1A]">
+        <label className="mt-6 flex items-center gap-2 font-body text-[12px] text-[var(--color-primary)]">
           <input
             type="checkbox"
             checked={form.isActive}
             onChange={(event) => setForm((current) => ({ ...current, isActive: event.target.checked }))}
-            className="h-3.5 w-3.5 accent-[#1A1A1A]"
+            className="h-3.5 w-3.5 accent-[var(--color-primary)]"
           />
           Is Active
         </label>
@@ -544,11 +544,11 @@ const CategoryForm = ({
           type="button"
           onClick={() => void onSave()}
           disabled={isSaving}
-          className="rounded-[2px] bg-[#1A1A1A] px-6 py-2.5 font-body text-[11px] uppercase tracking-[0.1em] text-[#F5F0E8] disabled:opacity-60"
+          className="rounded-[var(--border-radius)] bg-[var(--color-primary)] px-6 py-2.5 font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-secondary)] disabled:opacity-60"
         >
           {isSaving ? "Saving..." : "Save Category"}
         </button>
-        <button type="button" onClick={onCancel} className="font-body text-[10px] uppercase tracking-[0.1em] text-[#555555]">
+        <button type="button" onClick={onCancel} className="font-body text-[10px] uppercase tracking-[0.1em] text-[var(--color-muted)]">
           Cancel
         </button>
       </div>
@@ -557,4 +557,5 @@ const CategoryForm = ({
 };
 
 export default AdminCategoriesPage;
+
 

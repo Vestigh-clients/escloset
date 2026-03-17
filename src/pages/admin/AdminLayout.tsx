@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Bell } from "lucide-react";
+import { storeConfig } from "@/config/store.config";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   fetchAdminNotifications,
@@ -295,13 +296,13 @@ const AdminLayout = () => {
 
   return (
     <div
-      className="admin-layout-root min-h-screen bg-[#F5F0E8]"
+      className="admin-layout-root min-h-screen bg-[var(--color-secondary)]"
       style={{
         overflowX: "hidden",
         maxWidth: "100vw",
       }}
     >
-      <div className="fixed inset-x-0 top-0 z-[100] flex h-14 items-center justify-between bg-[#1A1A1A] px-5 md:hidden">
+      <div className="fixed inset-x-0 top-0 z-[100] flex h-14 items-center justify-between bg-[var(--color-primary)] px-5 md:hidden">
         <button
           type="button"
           onClick={openDrawer}
@@ -309,59 +310,59 @@ const AdminLayout = () => {
           className="flex h-9 w-9 items-center justify-center"
         >
           <span className="flex flex-col gap-[5px]">
-            <span className="block h-px w-[22px] bg-[#F5F0E8]" />
-            <span className="block h-px w-[22px] bg-[#F5F0E8]" />
-            <span className="block h-px w-[22px] bg-[#F5F0E8]" />
+            <span className="block h-px w-[22px] bg-[var(--color-secondary)]" />
+            <span className="block h-px w-[22px] bg-[var(--color-secondary)]" />
+            <span className="block h-px w-[22px] bg-[var(--color-secondary)]" />
           </span>
         </button>
 
-        <p className="font-body text-[11px] uppercase tracking-[0.2em] text-[#F5F0E8]">LUXURIANT</p>
+        <p className="font-body text-[11px] uppercase tracking-[0.2em] text-[var(--color-secondary)]">{storeConfig.storeName}</p>
 
         <div className="relative" ref={mobileDropdownRef}>
           <button
             type="button"
             onClick={() => setIsDropdownOpen((open) => !open)}
-            className="relative p-1 text-[#F5F0E8] transition-colors hover:text-[#C4A882]"
+            className="relative p-1 text-[var(--color-secondary)] transition-colors hover:text-[var(--color-accent)]"
             aria-label="Notifications"
           >
             <Bell size={20} strokeWidth={1.5} />
             {unreadCount > 0 ? (
-              <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#C0392B] px-[3px] font-body text-[9px] text-white">
+              <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-danger)] px-[3px] font-body text-[9px] text-white">
                 {unreadCount > 99 ? "99+" : unreadCount}
               </span>
             ) : null}
           </button>
 
           {isDropdownOpen ? (
-            <div className="absolute right-0 mt-3 w-[340px] max-h-[440px] max-w-[calc(100vw-24px)] overflow-y-auto border border-[#d4ccc2] bg-[#F5F0E8] shadow-[0_8px_32px_rgba(0,0,0,0.08)]">
-              <div className="flex items-center justify-between border-b border-[#d4ccc2] px-5 py-4">
-                <p className="font-display text-[18px] italic text-[#1A1A1A]">Notifications</p>
+            <div className="absolute right-0 mt-3 w-[340px] max-h-[440px] max-w-[calc(100vw-24px)] overflow-y-auto border border-[var(--color-border)] bg-[var(--color-secondary)] shadow-[0_8px_32px_rgba(var(--color-primary-rgb),0.08)]">
+              <div className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-4">
+                <p className="font-display text-[18px] italic text-[var(--color-primary)]">Notifications</p>
                 <button
                   type="button"
                   onClick={onMarkAllRead}
-                  className="font-body text-[10px] uppercase tracking-[0.1em] text-[#C4A882] transition-colors hover:text-[#1A1A1A]"
+                  className="font-body text-[10px] uppercase tracking-[0.1em] text-[var(--color-accent)] transition-colors hover:text-[var(--color-primary)]"
                 >
                   Mark all read
                 </button>
               </div>
 
               {notifications.length === 0 ? (
-                <div className="px-5 py-8 text-center font-body text-[12px] text-[#777777]">No notifications yet.</div>
+                <div className="px-5 py-8 text-center font-body text-[12px] text-[var(--color-muted-soft)]">No notifications yet.</div>
               ) : (
                 notifications.map((notification) => (
                   <button
                     key={notification.id}
                     type="button"
                     onClick={() => void onNotificationClick(notification)}
-                    className={`w-full border-b border-[#d4ccc2] px-5 py-4 text-left transition-colors hover:bg-[rgba(196,168,130,0.05)] ${
-                      notification.is_read ? "border-l-2 border-l-transparent" : "border-l-2 border-l-[#C4A882]"
+                    className={`w-full border-b border-[var(--color-border)] px-5 py-4 text-left transition-colors hover:bg-[rgba(var(--color-accent-rgb),0.05)] ${
+                      notification.is_read ? "border-l-2 border-l-transparent" : "border-l-2 border-l-[var(--color-accent)]"
                     }`}
                   >
-                    <p className="font-body text-[12px] text-[#1A1A1A]">{notification.title}</p>
-                    <p className="mt-0.5 font-body text-[11px] font-light text-[#555555]">
+                    <p className="font-body text-[12px] text-[var(--color-primary)]">{notification.title}</p>
+                    <p className="mt-0.5 font-body text-[11px] font-light text-[var(--color-muted)]">
                       {notification.description || "Tap to view details."}
                     </p>
-                    <p className="mt-1 font-body text-[10px] text-[#777777]">{formatRelativeDate(notification.created_at)}</p>
+                    <p className="mt-1 font-body text-[10px] text-[var(--color-muted-soft)]">{formatRelativeDate(notification.created_at)}</p>
                   </button>
                 ))
               )}
@@ -371,39 +372,39 @@ const AdminLayout = () => {
       </div>
 
       <div
-        className={`fixed inset-0 z-[200] bg-[rgba(0,0,0,0.5)] transition-opacity duration-300 md:hidden ${
+        className={`fixed inset-0 z-[200] bg-[rgba(var(--color-primary-rgb),0.5)] transition-opacity duration-300 md:hidden ${
           drawerOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={closeDrawer}
       />
 
       <aside
-        className={`fixed inset-y-0 left-0 z-[300] flex h-screen w-[280px] transform flex-col overflow-y-auto bg-[#1A1A1A] transition-transform duration-300 [transition-timing-function:cubic-bezier(0.77,0,0.175,1)] md:hidden ${
+        className={`fixed inset-y-0 left-0 z-[300] flex h-screen w-[280px] transform flex-col overflow-y-auto bg-[var(--color-primary)] transition-transform duration-300 [transition-timing-function:cubic-bezier(0.77,0,0.175,1)] md:hidden ${
           drawerOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         aria-hidden={!drawerOpen}
       >
-        <div className="flex items-center justify-between border-b border-[#2a2a2a] px-5 pb-5 pt-6">
-          <p className="font-display text-[20px] italic text-[#F5F0E8]">LUXURIANT</p>
+        <div className="flex items-center justify-between border-b border-[var(--color-primary)] px-5 pb-5 pt-6">
+          <p className="font-display text-[20px] italic text-[var(--color-secondary)]">{storeConfig.storeName}</p>
           <button
             type="button"
             onClick={closeDrawer}
             aria-label="Close menu"
-            className="text-[20px] text-[#666666] transition-colors hover:text-[#F5F0E8]"
+            className="text-[20px] text-[var(--color-muted-soft)] transition-colors hover:text-[var(--color-secondary)]"
           >
             &times;
           </button>
         </div>
 
-        <div className="border-b border-[#2a2a2a] px-5 py-4">
-          <p className="font-body text-[12px] text-[#888888]">{adminName}</p>
-          <p className="mt-1 font-body text-[9px] uppercase tracking-[0.1em] text-[#C4A882]">{roleLabel}</p>
+        <div className="border-b border-[var(--color-primary)] px-5 py-4">
+          <p className="font-body text-[12px] text-[var(--color-muted-soft)]">{adminName}</p>
+          <p className="mt-1 font-body text-[9px] uppercase tracking-[0.1em] text-[var(--color-accent)]">{roleLabel}</p>
         </div>
 
         <nav className="flex-1 py-2">
           {visibleNavGroups.map((group) => (
             <div key={`mobile-drawer-${group.label}`}>
-              <p className="px-5 pb-2 pt-5 font-body text-[9px] uppercase tracking-[0.2em] text-[#444444]">{group.label}</p>
+              <p className="px-5 pb-2 pt-5 font-body text-[9px] uppercase tracking-[0.2em] text-[var(--color-muted)]">{group.label}</p>
               {group.links.map((link) => (
                 <NavLink
                   key={`mobile-drawer-link-${link.to}`}
@@ -413,8 +414,8 @@ const AdminLayout = () => {
                   className={({ isActive }) =>
                     `block border-l-2 px-5 py-[14px] font-body text-[11px] uppercase tracking-[0.1em] transition-all duration-200 ${
                       isActive
-                        ? "border-l-[#C4A882] bg-[rgba(255,255,255,0.03)] text-[#F5F0E8]"
-                        : "border-l-transparent text-[#666666] hover:text-[#F5F0E8]"
+                        ? "border-l-[var(--color-accent)] bg-[rgba(var(--color-secondary-rgb),0.03)] text-[var(--color-secondary)]"
+                        : "border-l-transparent text-[var(--color-muted-soft)] hover:text-[var(--color-secondary)]"
                     }`
                   }
                 >
@@ -425,12 +426,12 @@ const AdminLayout = () => {
           ))}
         </nav>
 
-        <div className="mt-auto border-t border-[#2a2a2a] p-5">
+        <div className="mt-auto border-t border-[var(--color-primary)] p-5">
           <a
             href="/"
             target="_blank"
             rel="noreferrer"
-            className="mb-3 block font-body text-[10px] uppercase tracking-[0.12em] text-[#555555] transition-colors hover:text-[#888888]"
+            className="mb-3 block font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-muted)] transition-colors hover:text-[var(--color-muted-soft)]"
           >
             View Store &rarr;
           </a>
@@ -440,25 +441,25 @@ const AdminLayout = () => {
               closeDrawer();
               void onSignOut();
             }}
-            className="font-body text-[10px] uppercase tracking-[0.12em] text-[#555555] transition-colors hover:text-[#C0392B]"
+            className="font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-muted)] transition-colors hover:text-[var(--color-danger)]"
           >
             Sign Out
           </button>
         </div>
       </aside>
 
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[240px] flex-col bg-[#1A1A1A] lg:flex">
-        <div className="border-b border-[#2a2a2a] px-6 pb-4">
-          <Link to="/" className="block pt-8 font-display text-[22px] italic text-[#F5F0E8]">
-            Luxuriant
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[240px] flex-col bg-[var(--color-primary)] lg:flex">
+        <div className="border-b border-[var(--color-primary)] px-6 pb-4">
+          <Link to="/" className="block pt-8 font-display text-[22px] italic text-[var(--color-secondary)]">
+            {storeConfig.storeName}
           </Link>
-          <p className="mt-4 font-body text-[10px] uppercase tracking-[0.15em] text-[#555555]">Admin Panel</p>
+          <p className="mt-4 font-body text-[10px] uppercase tracking-[0.15em] text-[var(--color-muted)]">Admin Panel</p>
         </div>
 
         <nav className="flex-1 overflow-y-auto">
           {visibleNavGroups.map((group) => (
             <div key={group.label}>
-              <p className="px-6 pt-6 pb-2 font-body text-[9px] uppercase tracking-[0.2em] text-[#444444]">{group.label}</p>
+              <p className="px-6 pt-6 pb-2 font-body text-[9px] uppercase tracking-[0.2em] text-[var(--color-muted)]">{group.label}</p>
               {group.links.map((link) => (
                 <NavLink
                   key={link.to}
@@ -467,8 +468,8 @@ const AdminLayout = () => {
                   className={({ isActive }) =>
                     `block border-l-2 px-6 py-3 font-body text-[11px] uppercase tracking-[0.1em] transition-all duration-200 ${
                       isActive
-                        ? "border-[#C4A882] bg-[rgba(255,255,255,0.03)] text-[#F5F0E8]"
-                        : "border-transparent text-[#666666] hover:text-[#F5F0E8]"
+                        ? "border-[var(--color-accent)] bg-[rgba(var(--color-secondary-rgb),0.03)] text-[var(--color-secondary)]"
+                        : "border-transparent text-[var(--color-muted-soft)] hover:text-[var(--color-secondary)]"
                     }`
                   }
                 >
@@ -479,21 +480,21 @@ const AdminLayout = () => {
           ))}
         </nav>
 
-        <div className="border-t border-[#2a2a2a] p-6">
-          <p className="font-body text-[12px] text-[#888888]">{adminName}</p>
-          <p className="mt-1 font-body text-[9px] uppercase tracking-[0.1em] text-[#C4A882]">{roleLabel}</p>
+        <div className="border-t border-[var(--color-primary)] p-6">
+          <p className="font-body text-[12px] text-[var(--color-muted-soft)]">{adminName}</p>
+          <p className="mt-1 font-body text-[9px] uppercase tracking-[0.1em] text-[var(--color-accent)]">{roleLabel}</p>
           <a
             href="/"
             target="_blank"
             rel="noreferrer"
-            className="mt-5 block font-body text-[10px] uppercase tracking-[0.12em] text-[#555555] transition-colors hover:text-[#888888]"
+            className="mt-5 block font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-muted)] transition-colors hover:text-[var(--color-muted-soft)]"
           >
             View Store &rarr;
           </a>
           <button
             type="button"
             onClick={onSignOut}
-            className="mt-4 font-body text-[10px] uppercase tracking-[0.12em] text-[#555555] transition-colors hover:text-[#C0392B]"
+            className="mt-4 font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-muted)] transition-colors hover:text-[var(--color-danger)]"
           >
             Sign Out
           </button>
@@ -501,11 +502,11 @@ const AdminLayout = () => {
       </aside>
 
       <div className="min-h-screen pt-14 md:pt-0 lg:ml-[240px]">
-        <header className="sticky top-0 z-20 hidden h-16 items-center justify-between border-b border-[#d4ccc2] bg-[#F5F0E8] px-6 md:flex lg:px-[60px]">
-          <div className="flex flex-wrap items-center gap-2 font-body text-[11px] text-[#555555]">
+        <header className="sticky top-0 z-20 hidden h-16 items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-secondary)] px-6 md:flex lg:px-[60px]">
+          <div className="flex flex-wrap items-center gap-2 font-body text-[11px] text-[var(--color-muted)]">
             {breadcrumb.map((item, index) => (
               <span key={`${item}-${index}`} className="flex items-center gap-2">
-                {index > 0 ? <span className="text-[#d4ccc2]">/</span> : null}
+                {index > 0 ? <span className="text-[var(--color-border)]">/</span> : null}
                 <span>{item}</span>
               </span>
             ))}
@@ -516,47 +517,47 @@ const AdminLayout = () => {
               <button
                 type="button"
                 onClick={() => setIsDropdownOpen((open) => !open)}
-                className="relative p-1 text-[#1A1A1A] transition-colors hover:text-[#C4A882]"
+                className="relative p-1 text-[var(--color-primary)] transition-colors hover:text-[var(--color-accent)]"
                 aria-label="Notifications"
               >
                 <Bell size={22} strokeWidth={1.5} />
                 {unreadCount > 0 ? (
-                  <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#C0392B] px-[3px] font-body text-[9px] text-white">
+                  <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-danger)] px-[3px] font-body text-[9px] text-white">
                     {unreadCount > 99 ? "99+" : unreadCount}
                   </span>
                 ) : null}
               </button>
 
               {isDropdownOpen ? (
-                <div className="absolute right-0 mt-3 w-[340px] max-h-[440px] overflow-y-auto border border-[#d4ccc2] bg-[#F5F0E8] shadow-[0_8px_32px_rgba(0,0,0,0.08)]">
-                  <div className="flex items-center justify-between border-b border-[#d4ccc2] px-5 py-4">
-                    <p className="font-display text-[18px] italic text-[#1A1A1A]">Notifications</p>
+                <div className="absolute right-0 mt-3 w-[340px] max-h-[440px] overflow-y-auto border border-[var(--color-border)] bg-[var(--color-secondary)] shadow-[0_8px_32px_rgba(var(--color-primary-rgb),0.08)]">
+                  <div className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-4">
+                    <p className="font-display text-[18px] italic text-[var(--color-primary)]">Notifications</p>
                     <button
                       type="button"
                       onClick={onMarkAllRead}
-                      className="font-body text-[10px] uppercase tracking-[0.1em] text-[#C4A882] transition-colors hover:text-[#1A1A1A]"
+                      className="font-body text-[10px] uppercase tracking-[0.1em] text-[var(--color-accent)] transition-colors hover:text-[var(--color-primary)]"
                     >
                       Mark all read
                     </button>
                   </div>
 
                   {notifications.length === 0 ? (
-                    <div className="px-5 py-8 text-center font-body text-[12px] text-[#777777]">No notifications yet.</div>
+                    <div className="px-5 py-8 text-center font-body text-[12px] text-[var(--color-muted-soft)]">No notifications yet.</div>
                   ) : (
                     notifications.map((notification) => (
                       <button
                         key={notification.id}
                         type="button"
                         onClick={() => void onNotificationClick(notification)}
-                        className={`w-full border-b border-[#d4ccc2] px-5 py-4 text-left transition-colors hover:bg-[rgba(196,168,130,0.05)] ${
-                          notification.is_read ? "border-l-2 border-l-transparent" : "border-l-2 border-l-[#C4A882]"
+                        className={`w-full border-b border-[var(--color-border)] px-5 py-4 text-left transition-colors hover:bg-[rgba(var(--color-accent-rgb),0.05)] ${
+                          notification.is_read ? "border-l-2 border-l-transparent" : "border-l-2 border-l-[var(--color-accent)]"
                         }`}
                       >
-                        <p className="font-body text-[12px] text-[#1A1A1A]">{notification.title}</p>
-                        <p className="mt-0.5 font-body text-[11px] font-light text-[#555555]">
+                        <p className="font-body text-[12px] text-[var(--color-primary)]">{notification.title}</p>
+                        <p className="mt-0.5 font-body text-[11px] font-light text-[var(--color-muted)]">
                           {notification.description || "Tap to view details."}
                         </p>
-                        <p className="mt-1 font-body text-[10px] text-[#777777]">{formatRelativeDate(notification.created_at)}</p>
+                        <p className="mt-1 font-body text-[10px] text-[var(--color-muted-soft)]">{formatRelativeDate(notification.created_at)}</p>
                       </button>
                     ))
                   )}
@@ -564,13 +565,13 @@ const AdminLayout = () => {
               ) : null}
             </div>
 
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1A1A1A] font-body text-[12px] text-[#F5F0E8]">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-primary)] font-body text-[12px] text-[var(--color-secondary)]">
               {avatarInitial}
             </div>
           </div>
         </header>
 
-        <div className="hidden border-b border-[#d4ccc2] md:block lg:hidden">
+        <div className="hidden border-b border-[var(--color-border)] md:block lg:hidden">
           <div className="admin-filter-scroll flex items-center gap-3 overflow-x-auto px-6 py-3">
             {compactNavLinks.map((link) => (
               <NavLink
@@ -579,7 +580,7 @@ const AdminLayout = () => {
                 end={link.to === "/admin"}
                 className={({ isActive }) =>
                   `whitespace-nowrap border-b pb-1 font-body text-[10px] uppercase tracking-[0.1em] ${
-                    isActive ? "border-[#1A1A1A] text-[#1A1A1A]" : "border-transparent text-[#555555]"
+                    isActive ? "border-[var(--color-primary)] text-[var(--color-primary)]" : "border-transparent text-[var(--color-muted)]"
                   }`
                 }
               >
@@ -589,7 +590,7 @@ const AdminLayout = () => {
             <button
               type="button"
               onClick={onSignOut}
-              className="whitespace-nowrap border-b border-transparent pb-1 font-body text-[10px] uppercase tracking-[0.1em] text-[#555555] hover:text-[#C0392B]"
+              className="whitespace-nowrap border-b border-transparent pb-1 font-body text-[10px] uppercase tracking-[0.1em] text-[var(--color-muted)] hover:text-[var(--color-danger)]"
             >
               Sign Out
             </button>
@@ -599,7 +600,7 @@ const AdminLayout = () => {
             href="/"
             target="_blank"
             rel="noreferrer"
-            className="mb-3 ml-6 inline-block font-body text-[10px] uppercase tracking-[0.1em] text-[#555555] transition-colors hover:text-[#888888]"
+            className="mb-3 ml-6 inline-block font-body text-[10px] uppercase tracking-[0.1em] text-[var(--color-muted)] transition-colors hover:text-[var(--color-muted-soft)]"
           >
             View Store &rarr;
           </a>
@@ -614,10 +615,10 @@ const AdminLayout = () => {
         {toasts.map((toastItem) => (
           <div
             key={toastItem.id}
-            className="w-[320px] max-w-[calc(100vw-3rem)] border-l-[3px] border-[#C4A882] bg-[#1A1A1A] px-5 py-[14px] text-[#F5F0E8] shadow-[0_8px_24px_rgba(0,0,0,0.18)]"
+            className="w-[320px] max-w-[calc(100vw-3rem)] border-l-[3px] border-[var(--color-accent)] bg-[var(--color-primary)] px-5 py-[14px] text-[var(--color-secondary)] shadow-[0_8px_24px_rgba(var(--color-primary-rgb),0.18)]"
           >
             <p className="font-body text-[12px]">{toastItem.title}</p>
-            {toastItem.description ? <p className="mt-1 font-body text-[11px] text-[#c6c0b7]">{toastItem.description}</p> : null}
+            {toastItem.description ? <p className="mt-1 font-body text-[11px] text-[var(--color-border)]">{toastItem.description}</p> : null}
           </div>
         ))}
       </div>
@@ -626,4 +627,5 @@ const AdminLayout = () => {
 };
 
 export default AdminLayout;
+
 

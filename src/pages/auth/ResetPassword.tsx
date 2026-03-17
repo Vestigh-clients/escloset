@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+﻿import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthInputField from "@/components/auth/AuthInputField";
@@ -133,13 +133,13 @@ const ResetPassword = () => {
   if (!isLoading && !canResetPassword) {
     return (
       <AuthPageLayout>
-        <h1 className="font-display text-[42px] italic leading-none text-[#1A1A1A]">Invalid reset link</h1>
-        <p className="mt-4 font-body text-[13px] font-light leading-[1.8] text-[#555555]">
+        <h1 className="font-display text-[42px] italic leading-none text-[var(--color-primary)]">Invalid reset link</h1>
+        <p className="mt-4 font-body text-[13px] font-light leading-[1.8] text-[var(--color-muted)]">
           This link is invalid or has expired. Request a new password reset email.
         </p>
         <Link
           to="/auth/forgot-password"
-          className="mt-8 inline-flex font-body text-[11px] uppercase tracking-[0.15em] text-[#1A1A1A] transition-colors hover:text-[#C4A882]"
+          className="mt-8 inline-flex font-body text-[11px] uppercase tracking-[0.15em] text-[var(--color-primary)] transition-colors hover:text-[var(--color-accent)]"
         >
           Request New Link
         </Link>
@@ -149,8 +149,8 @@ const ResetPassword = () => {
 
   return (
     <AuthPageLayout>
-      <h1 className="font-display text-[42px] italic leading-none text-[#1A1A1A]">Reset password</h1>
-      <p className="mt-3 font-body text-[13px] font-light leading-[1.8] text-[#555555]">
+      <h1 className="font-display text-[42px] italic leading-none text-[var(--color-primary)]">Reset password</h1>
+      <p className="mt-3 font-body text-[13px] font-light leading-[1.8] text-[var(--color-muted)]">
         Set a new password for your account.
       </p>
 
@@ -171,7 +171,7 @@ const ResetPassword = () => {
               <button
                 type="button"
                 onClick={() => setShowNewPassword((previous) => !previous)}
-                className="inline-flex text-[#555555] transition-colors hover:text-[#1A1A1A]"
+                className="inline-flex text-[var(--color-muted)] transition-colors hover:text-[var(--color-primary)]"
                 aria-label={showNewPassword ? "Hide password" : "Show password"}
               >
                 {showNewPassword ? <EyeOff size={16} strokeWidth={1.35} /> : <Eye size={16} strokeWidth={1.35} />}
@@ -194,7 +194,7 @@ const ResetPassword = () => {
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword((previous) => !previous)}
-                className="inline-flex text-[#555555] transition-colors hover:text-[#1A1A1A]"
+                className="inline-flex text-[var(--color-muted)] transition-colors hover:text-[var(--color-primary)]"
                 aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
               >
                 {showConfirmPassword ? <EyeOff size={16} strokeWidth={1.35} /> : <Eye size={16} strokeWidth={1.35} />}
@@ -202,20 +202,20 @@ const ResetPassword = () => {
             }
           />
 
-          {generalError ? <p className="mt-4 font-body text-[11px] text-[#C0392B]">{generalError}</p> : null}
+          {generalError ? <p className="mt-4 font-body text-[11px] text-[var(--color-danger)]">{generalError}</p> : null}
 
           <button
             type="submit"
             disabled={isSubmitting || isLoading}
-            className="mt-8 w-full rounded-[2px] bg-[#1A1A1A] px-4 py-[18px] font-body text-[11px] uppercase tracking-[0.18em] text-[#F5F0E8] transition-colors duration-300 hover:bg-[#C4A882] hover:text-[#1A1A1A] disabled:cursor-not-allowed disabled:opacity-65"
+            className="mt-8 w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-[18px] font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-65"
           >
             {isSubmitting ? "Please wait..." : "Update Password"}
           </button>
         </form>
       ) : (
         <div className="mt-8">
-          <p className="font-body text-[13px] text-[#555555]">Password updated successfully.</p>
-          <p className="mt-3 font-body text-[12px] text-[#555555]">Redirecting in {countdown}s</p>
+          <p className="font-body text-[13px] text-[var(--color-muted)]">Password updated successfully.</p>
+          <p className="mt-3 font-body text-[12px] text-[var(--color-muted)]">Redirecting in {countdown}s</p>
         </div>
       )}
     </AuthPageLayout>
@@ -223,4 +223,5 @@ const ResetPassword = () => {
 };
 
 export default ResetPassword;
+
 

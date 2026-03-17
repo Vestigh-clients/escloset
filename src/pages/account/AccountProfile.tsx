@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -234,15 +234,15 @@ const AccountProfile = () => {
 
   return (
     <div>
-      <h1 className="font-display text-[42px] italic text-[#1A1A1A]">Personal Details</h1>
+      <h1 className="font-display text-[42px] italic text-[var(--color-primary)]">Personal Details</h1>
 
       <form onSubmit={handleSubmit} className="mt-8">
         <div className="mb-8">
-          <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-[#1A1A1A]">
+          <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-[var(--color-primary)]">
             {avatarUrl ? (
               <img src={avatarUrl} alt="Profile avatar" className="h-full w-full object-cover" />
             ) : (
-              <span className="font-body text-[30px] text-[#F5F0E8]">{avatarInitial}</span>
+              <span className="font-body text-[30px] text-[var(--color-secondary)]">{avatarInitial}</span>
             )}
           </div>
 
@@ -258,12 +258,12 @@ const AccountProfile = () => {
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isAvatarUploading}
-            className="mt-3 font-body text-[10px] uppercase tracking-[0.12em] text-[#C4A882] transition-colors hover:text-[#1A1A1A] disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-3 font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-accent)] transition-colors hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isAvatarUploading ? "Uploading..." : "Change Photo"}
           </button>
 
-          {avatarError ? <p className="mt-2 font-body text-[11px] text-[#C0392B]">{avatarError}</p> : null}
+          {avatarError ? <p className="mt-2 font-body text-[11px] text-[var(--color-danger)]">{avatarError}</p> : null}
         </div>
 
         <div className="grid gap-x-6 md:grid-cols-2">
@@ -351,7 +351,7 @@ const AccountProfile = () => {
               }))
             }
             className={`relative h-6 w-11 shrink-0 cursor-pointer overflow-hidden rounded-full border-0 p-0 transition-colors ${
-              formValues.marketingOptIn ? "bg-[#1A1A1A]" : "bg-[#d4ccc2]"
+              formValues.marketingOptIn ? "bg-[var(--color-primary)]" : "bg-[var(--color-border)]"
             }`}
           >
             <span
@@ -361,12 +361,12 @@ const AccountProfile = () => {
             />
           </button>
 
-          <p className="font-body text-[12px] text-[#555555]">Receive updates on new arrivals and offers</p>
+          <p className="font-body text-[12px] text-[var(--color-muted)]">Receive updates on new arrivals and offers</p>
         </div>
 
-        {submitError ? <p className="mt-4 font-body text-[11px] text-[#C0392B]">{submitError}</p> : null}
+        {submitError ? <p className="mt-4 font-body text-[11px] text-[var(--color-danger)]">{submitError}</p> : null}
         <p
-          className={`mt-4 font-body text-[12px] text-[#C4A882] transition-opacity duration-500 ${
+          className={`mt-4 font-body text-[12px] text-[var(--color-accent)] transition-opacity duration-500 ${
             showSavedMessage ? "opacity-100" : "opacity-0"
           }`}
         >
@@ -376,7 +376,7 @@ const AccountProfile = () => {
         <button
           type="submit"
           disabled={isSaving}
-          className="mt-8 rounded-[2px] bg-[#1A1A1A] px-8 py-3 font-body text-[11px] uppercase tracking-[0.14em] text-[#F5F0E8] transition-colors hover:bg-[#C4A882] hover:text-[#1A1A1A] disabled:cursor-not-allowed disabled:opacity-65"
+          className="mt-8 rounded-[var(--border-radius)] bg-[var(--color-primary)] px-8 py-3 font-body text-[11px] uppercase tracking-[0.14em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-65"
         >
           {isSaving ? "Saving..." : "Save Changes"}
         </button>
@@ -386,4 +386,5 @@ const AccountProfile = () => {
 };
 
 export default AccountProfile;
+
 

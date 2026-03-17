@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { Navigate } from "react-router-dom";
+import { storeKeyPrefix } from "@/config/store.config";
 import { clearTestOrders, fetchSiteSettings, saveSiteSetting, buildFullDataExportZip, type SiteSettingRow } from "@/services/adminManagementService";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatDateShort } from "@/lib/adminFormatting";
@@ -216,7 +217,7 @@ const AdminSettingsPage = () => {
       const link = document.createElement("a");
       const dateLabel = new Date().toISOString().split("T")[0];
       link.href = url;
-      link.setAttribute("download", `luxuriant-export-${dateLabel}.zip`);
+      link.setAttribute("download", `${storeKeyPrefix}-export-${dateLabel}.zip`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -269,20 +270,20 @@ const AdminSettingsPage = () => {
   }
 
   if (isLoading) {
-    return <div className="admin-page font-body text-[12px] text-[#555555]">Loading settings...</div>;
+    return <div className="admin-page font-body text-[12px] text-[var(--color-muted)]">Loading settings...</div>;
   }
 
   return (
     <div className="admin-page">
-      <h1 className="admin-page-title mb-8 font-display text-[36px] italic text-[#1A1A1A]">Site Settings</h1>
+      <h1 className="admin-page-title mb-8 font-display text-[36px] italic text-[var(--color-primary)]">Site Settings</h1>
 
-      {loadError ? <p className="mb-4 font-body text-[12px] text-[#C0392B]">{loadError}</p> : null}
-      {message ? <p className="mb-4 font-body text-[12px] text-[#C4A882]">{message}</p> : null}
+      {loadError ? <p className="mb-4 font-body text-[12px] text-[var(--color-danger)]">{loadError}</p> : null}
+      {message ? <p className="mb-4 font-body text-[12px] text-[var(--color-accent)]">{message}</p> : null}
 
-      <section className="settings-section-card mb-6 rounded-[2px] border border-[#d4ccc2] bg-transparent px-6 py-7 lg:px-10">
-        <h2 className="admin-section-title font-display text-[22px] italic text-[#1A1A1A]">General</h2>
-        <p className="mt-1 font-body text-[11px] text-[#777777]">Basic store information</p>
-        <div className="my-5 border-b border-[#d4ccc2]" />
+      <section className="settings-section-card mb-6 rounded-[var(--border-radius)] border border-[var(--color-border)] bg-transparent px-6 py-7 lg:px-10">
+        <h2 className="admin-section-title font-display text-[22px] italic text-[var(--color-primary)]">General</h2>
+        <p className="mt-1 font-body text-[11px] text-[var(--color-muted-soft)]">Basic store information</p>
+        <div className="my-5 border-b border-[var(--color-border)]" />
 
         <div className="grid gap-5">
           <Field
@@ -320,25 +321,25 @@ const AdminSettingsPage = () => {
         </div>
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-          <p className="font-body text-[10px] text-[#777777]">
-            {generalMeta ? `Last updated ${generalMeta.date} by ${generalMeta.adminName}` : "Last updated —"}
+          <p className="font-body text-[10px] text-[var(--color-muted-soft)]">
+            {generalMeta ? `Last updated ${generalMeta.date} by ${generalMeta.adminName}` : "Last updated -"}
           </p>
           <button
             type="button"
             onClick={() => void saveSection("general")}
             disabled={sectionSaving.general}
-            className="settings-save-button rounded-[2px] bg-[#1A1A1A] px-8 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[#F5F0E8] transition-colors hover:bg-[#C4A882] hover:text-[#1A1A1A] disabled:cursor-not-allowed disabled:opacity-65"
+            className="settings-save-button rounded-[var(--border-radius)] bg-[var(--color-primary)] px-8 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-65"
           >
             {sectionSaving.general ? "Saving..." : "Save General"}
           </button>
         </div>
-        {sectionSaved.general ? <p className="mt-2 font-body text-[11px] text-[#C4A882]">Settings saved.</p> : null}
+        {sectionSaved.general ? <p className="mt-2 font-body text-[11px] text-[var(--color-accent)]">Settings saved.</p> : null}
       </section>
 
-      <section className="settings-section-card mb-6 rounded-[2px] border border-[#d4ccc2] bg-transparent px-6 py-7 lg:px-10">
-        <h2 className="admin-section-title font-display text-[22px] italic text-[#1A1A1A]">Orders</h2>
-        <p className="mt-1 font-body text-[11px] text-[#777777]">Order processing settings</p>
-        <div className="my-5 border-b border-[#d4ccc2]" />
+      <section className="settings-section-card mb-6 rounded-[var(--border-radius)] border border-[var(--color-border)] bg-transparent px-6 py-7 lg:px-10">
+        <h2 className="admin-section-title font-display text-[22px] italic text-[var(--color-primary)]">Orders</h2>
+        <p className="mt-1 font-body text-[11px] text-[var(--color-muted-soft)]">Order processing settings</p>
+        <div className="my-5 border-b border-[var(--color-border)]" />
 
         <div className="grid gap-5">
           <Field
@@ -357,11 +358,11 @@ const AdminSettingsPage = () => {
             onChange={(value) => setSetting("order_number_prefix", value.toUpperCase().slice(0, 5))}
           />
           <div>
-            <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">Default Currency</label>
+            <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-muted-soft)]">Default Currency</label>
             <select
               value={settingsMap.default_currency || "GHS"}
               onChange={(event) => setSetting("default_currency", event.target.value)}
-              className="mt-2 w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[14px] text-[#1A1A1A] outline-none focus:border-[#1A1A1A]"
+              className="mt-2 w-full border-0 border-b border-[var(--color-border)] bg-transparent pb-2 font-body text-[14px] text-[var(--color-primary)] outline-none focus:border-[var(--color-primary)]"
             >
               <option value="GHS">GHS</option>
               <option value="USD">USD</option>
@@ -371,25 +372,25 @@ const AdminSettingsPage = () => {
         </div>
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-          <p className="font-body text-[10px] text-[#777777]">
-            {orderMeta ? `Last updated ${orderMeta.date} by ${orderMeta.adminName}` : "Last updated —"}
+          <p className="font-body text-[10px] text-[var(--color-muted-soft)]">
+            {orderMeta ? `Last updated ${orderMeta.date} by ${orderMeta.adminName}` : "Last updated -"}
           </p>
           <button
             type="button"
             onClick={() => void saveSection("orders")}
             disabled={sectionSaving.orders}
-            className="settings-save-button rounded-[2px] bg-[#1A1A1A] px-8 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[#F5F0E8] transition-colors hover:bg-[#C4A882] hover:text-[#1A1A1A] disabled:cursor-not-allowed disabled:opacity-65"
+            className="settings-save-button rounded-[var(--border-radius)] bg-[var(--color-primary)] px-8 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-65"
           >
             {sectionSaving.orders ? "Saving..." : "Save Orders"}
           </button>
         </div>
-        {sectionSaved.orders ? <p className="mt-2 font-body text-[11px] text-[#C4A882]">Settings saved.</p> : null}
+        {sectionSaved.orders ? <p className="mt-2 font-body text-[11px] text-[var(--color-accent)]">Settings saved.</p> : null}
       </section>
 
-      <section className="settings-section-card mb-6 rounded-[2px] border border-[#d4ccc2] bg-transparent px-6 py-7 lg:px-10">
-        <h2 className="admin-section-title font-display text-[22px] italic text-[#1A1A1A]">Notifications</h2>
-        <p className="mt-1 font-body text-[11px] text-[#777777]">Email addresses for admin alerts and summaries</p>
-        <div className="my-5 border-b border-[#d4ccc2]" />
+      <section className="settings-section-card mb-6 rounded-[var(--border-radius)] border border-[var(--color-border)] bg-transparent px-6 py-7 lg:px-10">
+        <h2 className="admin-section-title font-display text-[22px] italic text-[var(--color-primary)]">Notifications</h2>
+        <p className="mt-1 font-body text-[11px] text-[var(--color-muted-soft)]">Email addresses for admin alerts and summaries</p>
+        <div className="my-5 border-b border-[var(--color-border)]" />
 
         <div className="grid gap-5">
           <Field
@@ -419,60 +420,60 @@ const AdminSettingsPage = () => {
         </div>
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-          <p className="font-body text-[10px] text-[#777777]">
-            {notificationMeta ? `Last updated ${notificationMeta.date} by ${notificationMeta.adminName}` : "Last updated —"}
+          <p className="font-body text-[10px] text-[var(--color-muted-soft)]">
+            {notificationMeta ? `Last updated ${notificationMeta.date} by ${notificationMeta.adminName}` : "Last updated -"}
           </p>
           <button
             type="button"
             onClick={() => void saveSection("notifications")}
             disabled={sectionSaving.notifications}
-            className="settings-save-button rounded-[2px] bg-[#1A1A1A] px-8 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[#F5F0E8] transition-colors hover:bg-[#C4A882] hover:text-[#1A1A1A] disabled:cursor-not-allowed disabled:opacity-65"
+            className="settings-save-button rounded-[var(--border-radius)] bg-[var(--color-primary)] px-8 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-65"
           >
             {sectionSaving.notifications ? "Saving..." : "Save Notifications"}
           </button>
         </div>
-        {sectionSaved.notifications ? <p className="mt-2 font-body text-[11px] text-[#C4A882]">Settings saved.</p> : null}
+        {sectionSaved.notifications ? <p className="mt-2 font-body text-[11px] text-[var(--color-accent)]">Settings saved.</p> : null}
       </section>
 
-      <section className="settings-section-card mb-6 rounded-[2px] border border-[rgba(192,57,43,0.3)] bg-transparent px-6 py-7 lg:px-10">
-        <h2 className="admin-section-title font-display text-[22px] italic text-[#1A1A1A]">Danger Zone</h2>
-        <p className="mt-1 font-body text-[11px] text-[#777777]">Irreversible actions — proceed with caution</p>
-        <div className="my-5 border-b border-[#d4ccc2]" />
+      <section className="settings-section-card mb-6 rounded-[var(--border-radius)] border border-[rgba(var(--color-danger-rgb),0.3)] bg-transparent px-6 py-7 lg:px-10">
+        <h2 className="admin-section-title font-display text-[22px] italic text-[var(--color-primary)]">Danger Zone</h2>
+        <p className="mt-1 font-body text-[11px] text-[var(--color-muted-soft)]">Irreversible actions - proceed with caution</p>
+        <div className="my-5 border-b border-[var(--color-border)]" />
 
         <button
           type="button"
           onClick={() => void exportAllData()}
           disabled={isExporting}
-          className="rounded-[2px] border border-[#d4ccc2] bg-transparent px-7 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[#1A1A1A] transition-colors hover:border-[#1A1A1A] disabled:opacity-65"
+          className="rounded-[var(--border-radius)] border border-[var(--color-border)] bg-transparent px-7 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-primary)] transition-colors hover:border-[var(--color-primary)] disabled:opacity-65"
         >
           {isExporting ? "Exporting..." : "Export All Data"}
         </button>
 
-        <div className="my-6 border-b border-[#d4ccc2]" />
+        <div className="my-6 border-b border-[var(--color-border)]" />
 
         {!showConfirmClear ? (
           <button
             type="button"
             onClick={() => setShowConfirmClear(true)}
-            className="rounded-[2px] border border-[rgba(192,57,43,0.3)] bg-transparent px-7 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[#C0392B] transition-colors hover:bg-[#C0392B] hover:text-white"
+            className="rounded-[var(--border-radius)] border border-[rgba(var(--color-danger-rgb),0.3)] bg-transparent px-7 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-danger)] transition-colors hover:bg-[var(--color-danger)] hover:text-white"
           >
             Clear All Test Orders
           </button>
         ) : (
           <div className="w-full max-w-[560px]">
-            <p className="mb-3 font-body text-[11px] text-[#555555]">
+            <p className="mb-3 font-body text-[11px] text-[var(--color-muted)]">
               Type CONFIRM to delete all orders where customer email contains &apos;test&apos; or order total is GH₵0.00
             </p>
             <input
               value={confirmValue}
               onChange={(event) => setConfirmValue(event.target.value)}
-              className="w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[14px] text-[#1A1A1A] outline-none focus:border-[#1A1A1A]"
+              className="w-full border-0 border-b border-[var(--color-border)] bg-transparent pb-2 font-body text-[14px] text-[var(--color-primary)] outline-none focus:border-[var(--color-primary)]"
             />
             <button
               type="button"
               onClick={() => void clearOrders()}
               disabled={confirmValue !== "CONFIRM" || isClearingOrders}
-              className="mt-4 rounded-[2px] bg-[#C0392B] px-6 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-white disabled:cursor-not-allowed disabled:opacity-50"
+              className="mt-4 rounded-[var(--border-radius)] bg-[var(--color-danger)] px-6 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isClearingOrders ? "Deleting..." : "Delete Test Orders"}
             </button>
@@ -501,19 +502,20 @@ const Field = ({
   inputMode?: "text" | "decimal" | "numeric" | "email";
 }) => (
   <div>
-    <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[#777777]">{label}</label>
+    <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-muted-soft)]">{label}</label>
     <input
       value={value}
       inputMode={inputMode}
       onBlur={(event) => onBlur?.(event.target.value)}
       onChange={(event) => onChange(event.target.value)}
-      className="mt-2 w-full border-0 border-b border-[#d4ccc2] bg-transparent pb-2 font-body text-[14px] text-[#1A1A1A] outline-none focus:border-[#1A1A1A]"
+      className="mt-2 w-full border-0 border-b border-[var(--color-border)] bg-transparent pb-2 font-body text-[14px] text-[var(--color-primary)] outline-none focus:border-[var(--color-primary)]"
     />
-    {helper ? <p className="mt-1 font-body text-[10px] text-[#777777]">{helper}</p> : null}
-    {error ? <p className="mt-1 font-body text-[11px] text-[#C0392B]">{error}</p> : null}
+    {helper ? <p className="mt-1 font-body text-[10px] text-[var(--color-muted-soft)]">{helper}</p> : null}
+    {error ? <p className="mt-1 font-body text-[11px] text-[var(--color-danger)]">{error}</p> : null}
   </div>
 );
 
 export default AdminSettingsPage;
+
 
 

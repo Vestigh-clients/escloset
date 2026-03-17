@@ -2,37 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import ProductFetchErrorState from "@/components/products/ProductFetchErrorState";
 import ProductImagePlaceholder from "@/components/products/ProductImagePlaceholder";
-import { categoryImages } from "@/data/images";
-import { categoryLabels, getCategorySkeletonCount, isStorefrontCategorySlug, type StorefrontCategorySlug } from "@/lib/categories";
+import { storeConfig } from "@/config/store.config";
 import { formatPrice } from "@/lib/price";
 import { getProductsByCategory } from "@/services/productService";
 import { getPrimaryImage, isInStock, type Product } from "@/types/product";
 
 type SortOption = "featured" | "price-low-high" | "price-high-low" | "newest";
 
-const editorialQuotes: Record<StorefrontCategorySlug, string> = {
-  "hair-care": "Your hair deserves a ritual, not a routine.",
-  "mens-fashion": "Built for the man who notices the details.",
-  "womens-fashion": "Worn with intention. Made to last.",
-  bags: "The right bag changes everything.",
-  shoes: "Stand in something worth remembering.",
-};
-
-const editorialDescriptions: Record<StorefrontCategorySlug, string> = {
-  "hair-care": "Formulas selected for strength, softness, and long-term hair health.\nLuxury begins with consistency.",
-  "mens-fashion": "Tailored essentials shaped by clean lines and durable construction.\nA focused wardrobe for everyday confidence.",
-  "womens-fashion": "Refined silhouettes designed to move between day and evening.\nQuiet confidence in every detail.",
-  bags: "Structured and soft forms curated for function and statement.\nCarry pieces that complete the look.",
-  shoes: "Footwear built for comfort, finish, and timeless wear.\nEvery step grounded in quality.",
-};
-
-const heroDescriptions: Record<StorefrontCategorySlug, string> = {
-  "hair-care": "A focused edit of treatments and cleansers for healthy, luminous hair.",
-  "mens-fashion": "Modern essentials for a precise and elevated wardrobe.",
-  "womens-fashion": "Intentional pieces created for everyday elegance.",
-  bags: "Distinctive bags designed for utility and style in equal measure.",
-  shoes: "Curated footwear designed for comfort, balance, and impact.",
-};
+const CATEGORY_SKELETON_COUNT = 4;
 
 interface CategoryProductCardProps {
   product: Product;
@@ -50,7 +27,7 @@ const CategoryProductCard = ({ product, variant }: CategoryProductCardProps) => 
 
   if (variant === "banner") {
     return (
-      <article className="group border-t border-[#d4ccc2] pt-8">
+      <article className="group border-t border-[var(--color-border)] pt-8">
         <div className="grid grid-cols-1 md:grid-cols-5">
           <div className="relative overflow-hidden md:col-span-3">
             <Link to={`/shop/${product.slug}`} className="block">
@@ -68,22 +45,22 @@ const CategoryProductCard = ({ product, variant }: CategoryProductCardProps) => 
             </Link>
           </div>
 
-          <div className="md:col-span-2 flex flex-col justify-center border-[#d4ccc2] px-6 py-8 transition-colors duration-300 ease-in-out md:border-l md:px-8 group-hover:bg-[#1A1A1A]">
+          <div className="md:col-span-2 flex flex-col justify-center border-[var(--color-border)] px-6 py-8 transition-colors duration-300 ease-in-out md:border-l md:px-8 group-hover:bg-[var(--color-primary)]">
             <Link to={`/shop/${product.slug}`}>
-              <h3 className="font-display text-[16px] font-normal italic leading-snug text-foreground transition-colors duration-300 ease-in-out group-hover:text-[#F5F0E8]">
+              <h3 className="font-display text-[16px] font-normal italic leading-snug text-foreground transition-colors duration-300 ease-in-out group-hover:text-[var(--color-secondary)]">
                 {product.name}
               </h3>
             </Link>
-            <p className="mt-2 font-body text-[13px] font-normal text-[#555555] transition-colors duration-300 ease-in-out group-hover:text-[#F5F0E8]">
+            <p className="mt-2 font-body text-[13px] font-normal text-[var(--color-muted)] transition-colors duration-300 ease-in-out group-hover:text-[var(--color-secondary)]">
               {formatPrice(product.price)}
             </p>
             {isOutOfStock ? (
-              <p className="mt-1 font-['Inter'] text-[10px] uppercase tracking-[0.08em] text-[#777777] transition-colors duration-300 ease-in-out group-hover:text-[#d4ccc2]">
+              <p className="mt-1 font-body text-[10px] uppercase tracking-[0.08em] text-[var(--color-muted-soft)] transition-colors duration-300 ease-in-out group-hover:text-[var(--color-border)]">
                 Out of Stock
               </p>
             ) : null}
 
-            <p className="mt-4 font-body text-[13px] font-light leading-[1.8] text-[#666666] transition-colors duration-300 ease-in-out group-hover:text-[#F5F0E8]">
+            <p className="mt-4 font-body text-[13px] font-light leading-[1.8] text-[var(--color-muted-soft)] transition-colors duration-300 ease-in-out group-hover:text-[var(--color-secondary)]">
               {product.short_description || product.description || ""}
             </p>
           </div>
@@ -119,9 +96,9 @@ const CategoryProductCard = ({ product, variant }: CategoryProductCardProps) => 
         <Link to={`/shop/${product.slug}`}>
           <h3 className="font-display text-[16px] font-normal italic leading-snug text-foreground">{product.name}</h3>
         </Link>
-        <p className="mt-1 font-body text-[13px] font-normal text-[#555555]">{formatPrice(product.price)}</p>
+        <p className="mt-1 font-body text-[13px] font-normal text-[var(--color-muted)]">{formatPrice(product.price)}</p>
         {isOutOfStock ? (
-          <p className="mt-1 font-['Inter'] text-[10px] uppercase tracking-[0.08em] text-[#777777]">Out of Stock</p>
+          <p className="mt-1 font-body text-[10px] uppercase tracking-[0.08em] text-[var(--color-muted-soft)]">Out of Stock</p>
         ) : null}
       </div>
     </article>
@@ -139,10 +116,10 @@ const CardSkeleton = ({ variant }: { variant: "large" | "standard" }) => (
 );
 
 const BannerSkeleton = () => (
-  <article className="border-t border-[#d4ccc2] pt-8">
+  <article className="border-t border-[var(--color-border)] pt-8">
     <div className="grid grid-cols-1 md:grid-cols-5">
       <div className="lux-product-shimmer h-[320px] md:h-[420px] w-full md:col-span-3" />
-      <div className="md:col-span-2 border-[#d4ccc2] px-6 py-8 md:border-l md:px-8">
+      <div className="md:col-span-2 border-[var(--color-border)] px-6 py-8 md:border-l md:px-8">
         <div className="space-y-3">
           <div className="lux-product-shimmer h-4 w-2/3" />
           <div className="lux-product-shimmer h-3 w-1/3" />
@@ -154,17 +131,40 @@ const BannerSkeleton = () => (
 );
 
 const CategoryPage = () => {
-  const { categorySlug } = useParams<{ categorySlug: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const [sortBy, setSortBy] = useState<SortOption>("featured");
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const isValidCategory = isStorefrontCategorySlug(categorySlug || "");
-  const category = (categorySlug || "hair-care") as StorefrontCategorySlug;
+  const enabledCategories = useMemo(() => {
+    const seen = new Set<string>();
+    return storeConfig.categories
+      .filter((category) => category.enabled)
+      .map((category) => ({
+        ...category,
+        slug: category.slug.trim().toLowerCase(),
+      }))
+      .filter((category) => category.slug.length > 0)
+      .filter((category) => {
+        if (seen.has(category.slug)) {
+          return false;
+        }
+        seen.add(category.slug);
+        return true;
+      });
+  }, []);
+
+  const categoryBySlug = useMemo(() => {
+    return Object.fromEntries(enabledCategories.map((category) => [category.slug, category]));
+  }, [enabledCategories]);
+
+  const requestedSlug = (slug ?? "").trim().toLowerCase();
+  const category = categoryBySlug[requestedSlug] ?? null;
+  const uiText = storeConfig.categoryPage.uiText;
 
   useEffect(() => {
-    if (!categorySlug || !isValidCategory) {
+    if (!requestedSlug || !category) {
       setLoading(false);
       setProducts([]);
       return;
@@ -174,7 +174,7 @@ const CategoryPage = () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await getProductsByCategory(categorySlug);
+        const data = await getProductsByCategory(requestedSlug);
         setProducts(data ?? []);
       } catch (err) {
         console.error(err);
@@ -185,7 +185,7 @@ const CategoryPage = () => {
     };
 
     void fetchProducts();
-  }, [categorySlug, isValidCategory]);
+  }, [category, requestedSlug]);
 
   const sortedProducts = useMemo(() => {
     const indexed = products.map((product, index) => ({ product, index }));
@@ -217,23 +217,22 @@ const CategoryPage = () => {
   }, [sortedProducts]);
 
   const skeletonChunks = useMemo(() => {
-    const skeletonCount = getCategorySkeletonCount(categorySlug);
     const chunked: number[][] = [];
-    const items = Array.from({ length: skeletonCount }).map((_, index) => index);
+    const items = Array.from({ length: CATEGORY_SKELETON_COUNT }).map((_, index) => index);
 
     for (let index = 0; index < items.length; index += 4) {
       chunked.push(items.slice(index, index + 4));
     }
 
     return chunked;
-  }, [categorySlug]);
+  }, []);
 
-  if (!isValidCategory) {
+  if (!category) {
     return (
       <div className="container mx-auto px-4 py-20 text-center">
-        <h1 className="font-display text-3xl font-bold mb-4">Category Not Found</h1>
+        <h1 className="font-display text-3xl font-bold mb-4">{uiText.notFoundTitle}</h1>
         <Link to="/shop" className="font-body text-accent hover:underline">
-          {"\u2190 Back to Shop"}
+          {uiText.backToShopLabel}
         </Link>
       </div>
     );
@@ -247,28 +246,39 @@ const CategoryPage = () => {
     );
   }
 
+  const copyDefaults = storeConfig.categoryPage.defaults;
+  const copyForCategory = storeConfig.categoryPage.bySlug[category.slug] ?? {};
+  const heroDescription = copyForCategory.heroDescription?.trim() || category.description.trim() || copyDefaults.heroDescription;
+  const editorialQuote = copyForCategory.editorialQuote?.trim() || copyDefaults.editorialQuote;
+  const editorialDescription = copyForCategory.editorialDescription?.trim() || copyDefaults.editorialDescription;
+  const heroImageUrl = category.imageUrl.trim();
+
   return (
-    <div className="bg-[#F5F0E8] text-foreground">
+    <div className="bg-[var(--color-secondary)] text-foreground">
       <div className="space-y-[80px]">
         <section className="relative min-h-[70vh] overflow-hidden">
-          <img src={categoryImages[category]} alt={categoryLabels[category]} className="absolute inset-0 h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.65)_0%,rgba(0,0,0,0.05)_100%)]" />
+          {heroImageUrl ? (
+            <img src={heroImageUrl} alt={category.name} className="absolute inset-0 h-full w-full object-cover" />
+          ) : (
+            <div className="absolute inset-0 bg-[rgba(var(--color-primary-rgb),0.15)]" />
+          )}
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(var(--color-primary-rgb),0.65)_0%,rgba(var(--color-primary-rgb),0.05)_100%)]" />
 
           <div className="absolute bottom-8 left-6 right-6 z-10 max-w-[520px] text-left md:bottom-[80px] md:left-[80px] md:right-auto">
-            <p className="mb-3 font-body text-[10px] font-medium uppercase tracking-[0.2em] text-accent">{categoryLabels[category]}</p>
-            <h1 className="font-display text-[46px] md:text-[64px] font-light italic leading-[1.05] text-white">{categoryLabels[category]}</h1>
-            <p className="mt-4 max-w-[400px] font-body text-[14px] font-light leading-relaxed text-white/70">{heroDescriptions[category]}</p>
+            <p className="mb-3 font-body text-[10px] font-medium uppercase tracking-[0.2em] text-accent">{category.name}</p>
+            <h1 className="font-display text-[46px] md:text-[64px] font-light italic leading-[1.05] text-white">{category.name}</h1>
+            <p className="mt-4 max-w-[400px] font-body text-[14px] font-light leading-relaxed text-white/70">{heroDescription}</p>
           </div>
         </section>
 
-        <section className="border-b border-[#d4ccc2] pb-8">
+        <section className="border-b border-[var(--color-border)] pb-8">
           <div className="container mx-auto px-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <p className="font-body text-[11px] font-light text-[#555555]">
-              Showing {loading ? getCategorySkeletonCount(categorySlug) : sortedProducts.length} products
+            <p className="font-body text-[11px] font-light text-[var(--color-muted)]">
+              Showing {loading ? CATEGORY_SKELETON_COUNT : sortedProducts.length} products
             </p>
 
             <div className="relative inline-flex items-center gap-2 self-start sm:self-auto">
-              <span className="font-body text-[11px] font-light text-[#555555]">Sort by:</span>
+              <span className="font-body text-[11px] font-light text-[var(--color-muted)]">Sort by:</span>
               <select
                 value={sortBy}
                 onChange={(event) => setSortBy(event.target.value as SortOption)}
@@ -281,7 +291,7 @@ const CategoryPage = () => {
                 <option value="price-high-low">Price High-Low</option>
                 <option value="newest">Newest</option>
               </select>
-              <span className="pointer-events-none absolute right-0 font-body text-[11px] text-[#555555]">v</span>
+              <span className="pointer-events-none absolute right-0 font-body text-[11px] text-[var(--color-muted)]">v</span>
             </div>
           </div>
         </section>
@@ -322,11 +332,11 @@ const CategoryPage = () => {
                         <div className="bg-foreground px-8 py-[100px] md:px-[80px]">
                           <div className="grid grid-cols-1 md:grid-cols-5 gap-10 md:gap-16 items-start">
                             <p className="md:col-span-3 font-display text-[34px] md:text-[40px] font-light italic leading-[1.2] text-background">
-                              {editorialQuotes[category]}
+                              {editorialQuote}
                             </p>
 
-                            <p className="md:col-span-2 max-w-[340px] whitespace-pre-line font-body text-[14px] font-normal leading-[2] text-[#aaa]">
-                              {editorialDescriptions[category]}
+                            <p className="md:col-span-2 max-w-[340px] whitespace-pre-line font-body text-[14px] font-normal leading-[2] text-[var(--color-muted-soft)]">
+                              {editorialDescription}
                             </p>
                           </div>
                         </div>
@@ -340,7 +350,7 @@ const CategoryPage = () => {
                   const [firstProduct, secondProduct, thirdProduct, bannerProduct] = chunk;
 
                   return (
-                    <div key={`${category}-chunk-${chunkIndex}`} className="space-y-[80px]">
+                    <div key={`${category.slug}-chunk-${chunkIndex}`} className="space-y-[80px]">
                       <div className="grid grid-cols-1 gap-8 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] md:items-stretch md:gap-6">
                         {firstProduct ? (
                           <div className="h-full">
@@ -369,11 +379,11 @@ const CategoryPage = () => {
                         <div className="bg-foreground px-8 py-[100px] md:px-[80px]">
                           <div className="grid grid-cols-1 md:grid-cols-5 gap-10 md:gap-16 items-start">
                             <p className="md:col-span-3 font-display text-[34px] md:text-[40px] font-light italic leading-[1.2] text-background">
-                              {editorialQuotes[category]}
+                              {editorialQuote}
                             </p>
 
-                            <p className="md:col-span-2 max-w-[340px] whitespace-pre-line font-body text-[14px] font-normal leading-[2] text-[#aaa]">
-                              {editorialDescriptions[category]}
+                            <p className="md:col-span-2 max-w-[340px] whitespace-pre-line font-body text-[14px] font-normal leading-[2] text-[var(--color-muted-soft)]">
+                              {editorialDescription}
                             </p>
                           </div>
                         </div>
@@ -385,8 +395,8 @@ const CategoryPage = () => {
                 })}
 
             {!loading && sortedProducts.length === 0 ? (
-              <div className="border border-[#d4ccc2] px-6 py-8 text-center">
-                <p className="font-body text-[12px] text-[#555555]">No products available in this category right now.</p>
+              <div className="border border-[var(--color-border)] px-6 py-8 text-center">
+                <p className="font-body text-[12px] text-[var(--color-muted)]">{uiText.emptyCategoryMessage}</p>
               </div>
             ) : null}
           </div>
@@ -397,5 +407,3 @@ const CategoryPage = () => {
 };
 
 export default CategoryPage;
-
-

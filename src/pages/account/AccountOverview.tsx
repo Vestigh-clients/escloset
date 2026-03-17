@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import AccountOrderList from "@/components/account/AccountOrderList";
 import { formatPrice } from "@/lib/price";
@@ -85,33 +85,33 @@ const AccountOverview = () => {
 
   return (
     <div>
-      <h1 className="font-display text-[36px] italic text-[#1A1A1A]">Welcome back, {firstName}.</h1>
+      <h1 className="font-display text-[36px] italic text-[var(--color-primary)]">Welcome back, {firstName}.</h1>
 
       <div className="mt-10 grid gap-8 md:grid-cols-3">
-        <div className="border-b-2 border-[#C4A882] pb-4">
-          <p className="font-display text-[32px] text-[#1A1A1A]">{totalOrders}</p>
-          <p className="mt-1 font-body text-[10px] uppercase tracking-[0.12em] text-[#666666]">Total Orders</p>
+        <div className="border-b-2 border-[var(--color-accent)] pb-4">
+          <p className="font-display text-[32px] text-[var(--color-primary)]">{totalOrders}</p>
+          <p className="mt-1 font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-muted-soft)]">Total Orders</p>
         </div>
 
-        <div className="border-b-2 border-[#C4A882] pb-4">
-          <p className="font-display text-[32px] text-[#1A1A1A]">{formatPrice(totalSpent)}</p>
-          <p className="mt-1 font-body text-[10px] uppercase tracking-[0.12em] text-[#666666]">
+        <div className="border-b-2 border-[var(--color-accent)] pb-4">
+          <p className="font-display text-[32px] text-[var(--color-primary)]">{formatPrice(totalSpent)}</p>
+          <p className="mt-1 font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-muted-soft)]">
             Total Spent (GH&#8373;)
           </p>
         </div>
 
-        <div className="border-b-2 border-[#C4A882] pb-4">
-          <p className="font-display text-[32px] text-[#1A1A1A]">{formatMemberSince(profile?.created_at)}</p>
-          <p className="mt-1 font-body text-[10px] uppercase tracking-[0.12em] text-[#666666]">Member Since</p>
+        <div className="border-b-2 border-[var(--color-accent)] pb-4">
+          <p className="font-display text-[32px] text-[var(--color-primary)]">{formatMemberSince(profile?.created_at)}</p>
+          <p className="mt-1 font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-muted-soft)]">Member Since</p>
         </div>
       </div>
 
       <section className="mt-14">
         <div className="mb-4 flex items-center justify-between gap-4">
-          <h2 className="font-display text-[30px] italic text-[#1A1A1A]">Recent Orders</h2>
+          <h2 className="font-display text-[30px] italic text-[var(--color-primary)]">Recent Orders</h2>
           <Link
             to="/account/orders"
-            className="font-body text-[10px] uppercase tracking-[0.12em] text-[#1A1A1A] transition-colors hover:text-[#C4A882]"
+            className="font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-primary)] transition-colors hover:text-[var(--color-accent)]"
           >
             View All Orders
           </Link>
@@ -124,13 +124,13 @@ const AccountOverview = () => {
             <div className="lux-order-pulse h-[92px] w-full" />
           </div>
         ) : ordersError ? (
-          <p className="font-body text-[12px] text-[#C0392B]">{ordersError}</p>
+          <p className="font-body text-[12px] text-[var(--color-danger)]">{ordersError}</p>
         ) : recentOrders.length === 0 ? (
-          <div className="border-t border-[#d4ccc2] pt-8">
-            <p className="font-display text-[24px] italic text-[#555555]">You haven't placed any orders yet.</p>
+          <div className="border-t border-[var(--color-border)] pt-8">
+            <p className="font-display text-[24px] italic text-[var(--color-muted)]">You haven't placed any orders yet.</p>
             <Link
               to="/shop"
-              className="mt-5 inline-block font-body text-[10px] uppercase tracking-[0.12em] text-[#C4A882] transition-colors hover:text-[#1A1A1A]"
+              className="mt-5 inline-block font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-accent)] transition-colors hover:text-[var(--color-primary)]"
             >
               Start Shopping
             </Link>
@@ -144,5 +144,6 @@ const AccountOverview = () => {
 };
 
 export default AccountOverview;
+
 
 

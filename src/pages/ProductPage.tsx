@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState, type TouchEvent } from "react";
+﻿import { useEffect, useMemo, useRef, useState, type TouchEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import ShopProductCard from "@/components/ShopProductCard";
 import TryOnModal from "@/components/TryOnModal";
 import ProductFetchErrorState from "@/components/products/ProductFetchErrorState";
 import ProductImagePlaceholder from "@/components/products/ProductImagePlaceholder";
+import { storeConfig } from "@/config/store.config";
 import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { getCategoryLabel } from "@/lib/categories";
@@ -95,7 +96,7 @@ const ProductPageSkeleton = () => {
           <div className="lux-product-shimmer mb-5 h-12 w-3/4" />
           <div className="lux-product-shimmer h-8 w-40" />
           <div className="mt-7 lux-product-shimmer h-11 w-44" />
-          <div className="my-6 border-b border-[#d4ccc2]" />
+          <div className="my-6 border-b border-[var(--color-border)]" />
           <div className="space-y-3">
             <div className="lux-product-shimmer h-4 w-full" />
             <div className="lux-product-shimmer h-4 w-[90%]" />
@@ -501,7 +502,9 @@ const ProductPage = () => {
     product?.price,
   );
   const normalizedCategorySlug = categorySlug.toLowerCase();
-  const showTryOn = TRYON_CATEGORY_KEYWORDS.some((keyword) => normalizedCategorySlug.includes(keyword));
+  const showTryOn = storeConfig.features.tryOn
+    ? TRYON_CATEGORY_KEYWORDS.some((keyword) => normalizedCategorySlug.includes(keyword))
+    : false;
   const isShoeCategory = categorySlug.includes("shoe");
   const isBagCategory = categorySlug.includes("bag");
   const sizeOptionType = useMemo(
@@ -594,12 +597,12 @@ const ProductPage = () => {
   }, [hasVariants, isOutOfStock, product, productStockQuantity, selectedVariant]);
   const stockStatusToneClass =
     stockStatus.tone === "danger"
-      ? "text-[#555555]"
+      ? "text-[var(--color-muted)]"
       : stockStatus.tone === "accent"
-        ? "text-[#C4A882]"
+        ? "text-[var(--color-accent)]"
         : stockStatus.tone === "muted"
-          ? "text-[#777777]"
-          : "text-[#555555]";
+          ? "text-[var(--color-muted-soft)]"
+          : "text-[var(--color-muted)]";
 
   useEffect(() => {
     if (!hasVariants) {
@@ -816,24 +819,24 @@ const ProductPage = () => {
       <div className="mb-10 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <Link
           to="/shop"
-          className="font-body text-[11px] uppercase tracking-[0.1em] text-[#555555] transition-colors hover:text-foreground"
+          className="font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-muted)] transition-colors hover:text-foreground"
         >
           {"\u2190 Back to Shop"}
         </Link>
 
-        <div className="flex flex-wrap items-center gap-2 font-body text-[11px] font-light text-[#555555]">
+        <div className="flex flex-wrap items-center gap-2 font-body text-[11px] font-light text-[var(--color-muted)]">
           <Link to="/" className="transition-colors hover:text-foreground">
             Home
           </Link>
-          <span className="text-[#aaaaaa]">/</span>
+          <span className="text-[var(--color-muted-soft)]">/</span>
           <Link to="/shop" className="transition-colors hover:text-foreground">
             Shop
           </Link>
-          <span className="text-[#aaaaaa]">/</span>
+          <span className="text-[var(--color-muted-soft)]">/</span>
           <Link to={`/category/${categorySlug}`} className="transition-colors hover:text-foreground">
             {categoryLabel}
           </Link>
-          <span className="text-[#aaaaaa]">/</span>
+          <span className="text-[var(--color-muted-soft)]">/</span>
           <span>{product.name}</span>
         </div>
       </div>
@@ -855,8 +858,8 @@ const ProductPage = () => {
                         setHasActiveImageError(false);
                         setLightboxIndex(index);
                       }}
-                      className={`h-[75px] w-[56px] shrink-0 overflow-hidden rounded-[2px] border-2 transition-all duration-200 ease-in md:h-24 md:w-[72px] ${
-                        isActive ? "border-[#1A1A1A] opacity-100" : "border-transparent opacity-60 hover:opacity-100"
+                      className={`h-[75px] w-[56px] shrink-0 overflow-hidden rounded-[var(--border-radius)] border-2 transition-all duration-200 ease-in md:h-24 md:w-[72px] ${
+                        isActive ? "border-[var(--color-primary)] opacity-100" : "border-transparent opacity-60 hover:opacity-100"
                       }`}
                       aria-label={`View image ${index + 1}`}
                     >
@@ -884,11 +887,11 @@ const ProductPage = () => {
                 <button
                   type="button"
                   onClick={handleOpenLightbox}
-                  className="group block w-full cursor-zoom-in overflow-hidden rounded-[2px]"
+                  className="group block w-full cursor-zoom-in overflow-hidden rounded-[var(--border-radius)]"
                   aria-label="Open full image"
                 >
                   {activeImage && !hasActiveImageError ? (
-                    <div className="aspect-[3/4] overflow-hidden rounded-[2px]">
+                    <div className="aspect-[3/4] overflow-hidden rounded-[var(--border-radius)]">
                       <img
                         src={activeImage}
                         alt={product.name}
@@ -897,30 +900,30 @@ const ProductPage = () => {
                       />
                     </div>
                   ) : (
-                    <ProductImagePlaceholder className="aspect-[3/4] w-full rounded-[2px]" />
+                    <ProductImagePlaceholder className="aspect-[3/4] w-full rounded-[var(--border-radius)]" />
                   )}
                 </button>
               </div>
             </div>
           ) : (
-            <ProductImagePlaceholder className="aspect-[3/4] w-full rounded-[2px]" />
+            <ProductImagePlaceholder className="aspect-[3/4] w-full rounded-[var(--border-radius)]" />
           )}
         </div>
 
         <div className="flex flex-col">
-          <span className="mb-2 font-body text-[10px] font-medium uppercase tracking-[0.2em] text-[#C4A882]">{categoryLabel}</span>
-          <h1 className="mb-4 font-display text-[36px] font-light italic leading-[1.2] text-[#1A1A1A]">{product.name}</h1>
+          <span className="mb-2 font-body text-[10px] font-medium uppercase tracking-[0.2em] text-[var(--color-accent)]">{categoryLabel}</span>
+          <h1 className="mb-4 font-display text-[36px] font-light italic leading-[1.2] text-[var(--color-primary)]">{product.name}</h1>
           <div className="flex items-end gap-3">
             {displayComparePrice !== null && displayComparePrice > displayPrice ? (
-              <p className="font-body text-[16px] font-light text-[#777777] line-through">{formatPrice(displayComparePrice)}</p>
+              <p className="font-body text-[16px] font-light text-[var(--color-muted-soft)] line-through">{formatPrice(displayComparePrice)}</p>
             ) : null}
-            <p className="font-display text-[28px] font-normal text-[#1A1A1A]">{formatPrice(displayPrice)}</p>
+            <p className="font-display text-[28px] font-normal text-[var(--color-primary)]">{formatPrice(displayPrice)}</p>
           </div>
           {showPriceVariesByVariantNote ? (
-            <p className="mt-1 font-body text-[10px] text-[#777777]">Price varies by variant</p>
+            <p className="mt-1 font-body text-[10px] text-[var(--color-muted-soft)]">Price varies by variant</p>
           ) : null}
 
-          <div className="my-5 border-t border-[#d4ccc2]" />
+          <div className="my-5 border-t border-[var(--color-border)]" />
 
           {hasVariants ? (
             <div className="space-y-5">
@@ -933,16 +936,16 @@ const ProductPage = () => {
                 return (
                   <div key={optionType.id}>
                     <div className="mb-3 flex items-center justify-between">
-                      <p className="font-body text-[10px] uppercase tracking-[0.2em] text-[#C4A882]">{optionType.name}</p>
+                      <p className="font-body text-[10px] uppercase tracking-[0.2em] text-[var(--color-accent)]">{optionType.name}</p>
                       <div className="flex items-center gap-4">
                         {selectedValue ? (
-                          <p className="font-body text-[11px] text-[#1A1A1A]">{selectedValue.value}</p>
+                          <p className="font-body text-[11px] text-[var(--color-primary)]">{selectedValue.value}</p>
                         ) : null}
                         {sizeOptionType?.id === optionType.id ? (
                           <button
                             type="button"
                             onClick={() => setSizeGuideOpen(true)}
-                            className="font-body text-[10px] uppercase tracking-[0.1em] text-[#777777] transition-colors duration-200 hover:text-[#1A1A1A]"
+                            className="font-body text-[10px] uppercase tracking-[0.1em] text-[var(--color-muted-soft)] transition-colors duration-200 hover:text-[var(--color-primary)]"
                           >
                             Size guide
                           </button>
@@ -968,16 +971,16 @@ const ProductPage = () => {
                                 }))
                               }
                               className={`relative h-7 w-7 rounded-full border-2 transition-all duration-150 ease-in ${
-                                isSelected ? "scale-110 border-[#1A1A1A]" : "border-transparent"
+                                isSelected ? "scale-110 border-[var(--color-primary)]" : "border-transparent"
                               } ${isUnavailable ? "cursor-not-allowed opacity-35" : "cursor-pointer"}`}
-                              style={{ backgroundColor: optionValue.color_hex || "#000000" }}
+                              style={{ backgroundColor: optionValue.color_hex || storeConfig.theme.primaryColor }}
                             >
                               {isUnavailable ? (
                                 <span
                                   className="pointer-events-none absolute inset-0 rounded-full"
                                   style={{
                                     background:
-                                      "linear-gradient(135deg, transparent 45%, rgba(255,255,255,0.8) 45%, rgba(255,255,255,0.8) 55%, transparent 55%)",
+                                      "linear-gradient(135deg, transparent 45%, rgba(var(--color-secondary-rgb),0.8) 45%, rgba(var(--color-secondary-rgb),0.8) 55%, transparent 55%)",
                                   }}
                                 />
                               ) : null}
@@ -1001,12 +1004,12 @@ const ProductPage = () => {
                                   [optionType.id]: optionValue.id,
                                 }))
                               }
-                              className={`min-w-11 rounded-[2px] border px-[14px] py-2 text-center font-body text-[11px] transition-colors duration-150 ease-in ${
+                              className={`min-w-11 rounded-[var(--border-radius)] border px-[14px] py-2 text-center font-body text-[11px] transition-colors duration-150 ease-in ${
                                 isSelected
-                                  ? "border-[#1A1A1A] bg-[#1A1A1A] text-[#F5F0E8]"
+                                  ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-[var(--color-secondary)]"
                                   : isUnavailable
-                                    ? "cursor-not-allowed border-[#e8e2d9] text-[#d4ccc2] line-through"
-                                    : "border-[#d4ccc2] bg-transparent text-[#555555] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
+                                    ? "cursor-not-allowed border-[var(--color-surface)] text-[var(--color-border)] line-through"
+                                    : "border-[var(--color-border)] bg-transparent text-[var(--color-muted)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
                               }`}
                             >
                               {optionValue.value}
@@ -1023,16 +1026,16 @@ const ProductPage = () => {
 
           <p className={`mt-5 font-body text-[11px] uppercase tracking-[0.1em] ${stockStatusToneClass}`}>{stockStatus.text}</p>
 
-          <div className="my-5 border-t border-[#d4ccc2]" />
+          <div className="my-5 border-t border-[var(--color-border)]" />
 
           <button
             type="button"
             onClick={handleAddToCart}
             disabled={isAddToCartDisabled}
-            className={`w-full rounded-[2px] border-0 px-4 py-[18px] font-body text-[11px] uppercase tracking-[0.18em] transition-all duration-200 ease-in ${
+            className={`w-full rounded-[var(--border-radius)] border-0 px-4 py-[18px] font-body text-[11px] uppercase tracking-[0.18em] transition-all duration-200 ease-in ${
               isAddToCartDisabled
-                ? "cursor-not-allowed bg-[#d4ccc2] text-[#555555]"
-                : "cursor-pointer bg-[#1A1A1A] text-[#F5F0E8] hover:bg-[#C4A882] hover:text-[#1A1A1A]"
+                ? "cursor-not-allowed bg-[var(--color-border)] text-[var(--color-muted)]"
+                : "cursor-pointer bg-[var(--color-primary)] text-[var(--color-secondary)] hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)]"
             }`}
           >
             {addToCartButtonText}
@@ -1043,12 +1046,12 @@ const ProductPage = () => {
               <button
                 type="button"
                 onClick={() => setTryOnOpen(true)}
-                className="mt-[10px] flex w-full items-center justify-center gap-2 rounded-[2px] border border-[#1A1A1A] bg-transparent px-4 py-[18px] font-body text-[11px] uppercase tracking-[0.18em] text-[#1A1A1A] transition-all duration-200 ease-in hover:bg-[#1A1A1A] hover:text-[#F5F0E8]"
+                className="mt-[10px] flex w-full items-center justify-center gap-2 rounded-[var(--border-radius)] border border-[var(--color-primary)] bg-transparent px-4 py-[18px] font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-primary)] transition-all duration-200 ease-in hover:bg-[var(--color-primary)] hover:text-[var(--color-secondary)]"
               >
                 <WandSparkles size={16} strokeWidth={1.4} />
                 Try it On
               </button>
-              <p className="mt-[6px] text-center font-body text-[9px] tracking-[0.1em] text-[#777777]">Powered by StyleSyncs</p>
+              <p className="mt-[6px] text-center font-body text-[9px] tracking-[0.1em] text-[var(--color-muted-soft)]">Powered by StyleSyncs</p>
             </>
           ) : null}
 
@@ -1058,20 +1061,20 @@ const ProductPage = () => {
 
               return (
                 <div key={item.label} className="flex flex-1 flex-col items-center gap-1.5 text-center">
-                  <Icon size={18} strokeWidth={1.4} className="text-[#C4A882]" />
-                  <p className="font-body text-[9px] uppercase tracking-[0.12em] text-[#666666]">{item.label}</p>
+                  <Icon size={18} strokeWidth={1.4} className="text-[var(--color-accent)]" />
+                  <p className="font-body text-[9px] uppercase tracking-[0.12em] text-[var(--color-muted-soft)]">{item.label}</p>
                 </div>
               );
             })}
           </div>
 
-          <div className="my-7 border-t border-[#d4ccc2]" />
+          <div className="my-7 border-t border-[var(--color-border)]" />
 
-          <p className="font-body text-[14px] font-light leading-[1.8] text-[#444444]">
+          <p className="font-body text-[14px] font-light leading-[1.8] text-[var(--color-muted)]">
             {product.short_description || product.description || ""}
           </p>
 
-          <div className="mt-7 grid grid-cols-2 border border-[#d4ccc2]">
+          <div className="mt-7 grid grid-cols-2 border border-[var(--color-border)]">
             {benefitTiles.map((benefit, index) => {
               const Icon = benefitIcons[index % benefitIcons.length];
 
@@ -1079,27 +1082,27 @@ const ProductPage = () => {
                 <div
                   key={`${benefit}-${index}`}
                   className={`flex min-h-[108px] flex-col items-center justify-center px-3 text-center ${
-                    index % 2 === 0 ? "border-r border-[#d4ccc2]" : ""
-                  } ${index < 2 ? "border-b border-[#d4ccc2]" : ""}`}
+                    index % 2 === 0 ? "border-r border-[var(--color-border)]" : ""
+                  } ${index < 2 ? "border-b border-[var(--color-border)]" : ""}`}
                 >
-                  <Icon size={20} className="mb-3 text-[#1A1A1A]" />
-                  <span className="font-body text-[11px] font-light uppercase tracking-[0.1em] text-[#555555]">{benefit}</span>
+                  <Icon size={20} className="mb-3 text-[var(--color-primary)]" />
+                  <span className="font-body text-[11px] font-light uppercase tracking-[0.1em] text-[var(--color-muted)]">{benefit}</span>
                 </div>
               );
             })}
           </div>
 
-          <div className="my-7 border-t border-[#d4ccc2]" />
+          <div className="my-7 border-t border-[var(--color-border)]" />
         </div>
       </div>
 
       {relatedProducts.length > 0 ? (
         <>
-          <div className="my-12 border-t border-[#d4ccc2]" />
+          <div className="my-12 border-t border-[var(--color-border)]" />
 
           <section>
-            <p className="mb-2 font-body text-[10px] uppercase tracking-[0.2em] text-[#C4A882]">RELATED PRODUCTS</p>
-            <h2 className="mb-10 font-display text-[32px] font-light italic leading-[1.1] text-[#1A1A1A]">You May Also Like</h2>
+            <p className="mb-2 font-body text-[10px] uppercase tracking-[0.2em] text-[var(--color-accent)]">RELATED PRODUCTS</p>
+            <h2 className="mb-10 font-display text-[32px] font-light italic leading-[1.1] text-[var(--color-primary)]">You May Also Like</h2>
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
               {relatedProducts.map((item) => (
@@ -1112,7 +1115,7 @@ const ProductPage = () => {
 
       {isLightboxOpen ? (
         <div
-          className="fixed inset-0 z-[2000] cursor-zoom-out bg-[rgba(0,0,0,0.95)]"
+          className="fixed inset-0 z-[2000] cursor-zoom-out bg-[rgba(var(--color-primary-rgb),0.95)]"
           onClick={handleCloseLightbox}
           onTouchStart={handleLightboxTouchStart}
           onTouchEnd={handleLightboxTouchEnd}
@@ -1192,7 +1195,7 @@ const ProductPage = () => {
                   event.stopPropagation();
                   navigateLightboxTo(index);
                 }}
-                className={`h-[53px] w-10 shrink-0 overflow-hidden rounded-[2px] border-b-2 transition-opacity duration-150 ease-in ${
+                className={`h-[53px] w-10 shrink-0 overflow-hidden rounded-[var(--border-radius)] border-b-2 transition-opacity duration-150 ease-in ${
                   lightboxIndex === index ? "border-white opacity-100" : "border-transparent opacity-50 hover:opacity-80"
                 }`}
                 aria-label={`Open image ${index + 1}`}
@@ -1213,29 +1216,29 @@ const ProductPage = () => {
           aria-label="Size Guide"
         >
           <div
-            className="relative max-h-[80vh] w-full max-w-[480px] overflow-y-auto rounded-[2px] bg-[#F5F0E8] p-8 sm:p-10"
+            className="relative max-h-[80vh] w-full max-w-[480px] overflow-y-auto rounded-[var(--border-radius)] bg-[var(--color-secondary)] p-8 sm:p-10"
             onClick={(event) => event.stopPropagation()}
           >
             <button
               type="button"
               onClick={() => setSizeGuideOpen(false)}
-              className="absolute right-5 top-5 text-[#555555] transition-colors duration-200 hover:text-[#1A1A1A]"
+              className="absolute right-5 top-5 text-[var(--color-muted)] transition-colors duration-200 hover:text-[var(--color-primary)]"
               aria-label="Close size guide"
             >
               <X size={20} strokeWidth={1.4} />
             </button>
 
-            <h3 className="font-display text-[28px] italic text-[#1A1A1A]">Size Guide</h3>
-            <p className="mb-8 font-body text-[11px] text-[#777777]">{categoryLabel}</p>
+            <h3 className="font-display text-[28px] italic text-[var(--color-primary)]">Size Guide</h3>
+            <p className="mb-8 font-body text-[11px] text-[var(--color-muted-soft)]">{categoryLabel}</p>
 
             {isBagCategory ? (
-              <p className="font-body text-[12px] leading-[1.8] text-[#555555]">
+              <p className="font-body text-[12px] leading-[1.8] text-[var(--color-muted)]">
                 One size - see product dimensions in the description.
               </p>
             ) : isShoeCategory ? (
               <table className="w-full border-collapse">
                 <thead>
-                  <tr className="bg-[#1A1A1A] font-body text-[10px] uppercase tracking-[0.08em] text-[#F5F0E8]">
+                  <tr className="bg-[var(--color-primary)] font-body text-[10px] uppercase tracking-[0.08em] text-[var(--color-secondary)]">
                     <th className="px-4 py-3 text-left">UK</th>
                     <th className="px-4 py-3 text-left">EU</th>
                     <th className="px-4 py-3 text-left">US</th>
@@ -1244,11 +1247,11 @@ const ProductPage = () => {
                 </thead>
                 <tbody>
                   {shoeSizeGuideRows.map((row, index) => (
-                    <tr key={row.uk} className={index % 2 === 0 ? "bg-[#F5F0E8]" : "bg-[rgba(26,26,26,0.03)]"}>
-                      <td className="px-4 py-2.5 font-body text-[12px] text-[#555555]">{row.uk}</td>
-                      <td className="px-4 py-2.5 font-body text-[12px] text-[#555555]">{row.eu}</td>
-                      <td className="px-4 py-2.5 font-body text-[12px] text-[#555555]">{row.us}</td>
-                      <td className="px-4 py-2.5 font-body text-[12px] text-[#555555]">{row.foot}</td>
+                    <tr key={row.uk} className={index % 2 === 0 ? "bg-[var(--color-secondary)]" : "bg-[rgba(var(--color-primary-rgb),0.03)]"}>
+                      <td className="px-4 py-2.5 font-body text-[12px] text-[var(--color-muted)]">{row.uk}</td>
+                      <td className="px-4 py-2.5 font-body text-[12px] text-[var(--color-muted)]">{row.eu}</td>
+                      <td className="px-4 py-2.5 font-body text-[12px] text-[var(--color-muted)]">{row.us}</td>
+                      <td className="px-4 py-2.5 font-body text-[12px] text-[var(--color-muted)]">{row.foot}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1256,7 +1259,7 @@ const ProductPage = () => {
             ) : (
               <table className="w-full border-collapse">
                 <thead>
-                  <tr className="bg-[#1A1A1A] font-body text-[10px] uppercase tracking-[0.08em] text-[#F5F0E8]">
+                  <tr className="bg-[var(--color-primary)] font-body text-[10px] uppercase tracking-[0.08em] text-[var(--color-secondary)]">
                     <th className="px-4 py-3 text-left">Size</th>
                     <th className="px-4 py-3 text-left">Chest (cm)</th>
                     <th className="px-4 py-3 text-left">Waist (cm)</th>
@@ -1265,18 +1268,18 @@ const ProductPage = () => {
                 </thead>
                 <tbody>
                   {clothingSizeGuideRows.map((row, index) => (
-                    <tr key={row.size} className={index % 2 === 0 ? "bg-[#F5F0E8]" : "bg-[rgba(26,26,26,0.03)]"}>
-                      <td className="px-4 py-2.5 font-body text-[12px] text-[#555555]">{row.size}</td>
-                      <td className="px-4 py-2.5 font-body text-[12px] text-[#555555]">{row.chest}</td>
-                      <td className="px-4 py-2.5 font-body text-[12px] text-[#555555]">{row.waist}</td>
-                      <td className="px-4 py-2.5 font-body text-[12px] text-[#555555]">{row.hips}</td>
+                    <tr key={row.size} className={index % 2 === 0 ? "bg-[var(--color-secondary)]" : "bg-[rgba(var(--color-primary-rgb),0.03)]"}>
+                      <td className="px-4 py-2.5 font-body text-[12px] text-[var(--color-muted)]">{row.size}</td>
+                      <td className="px-4 py-2.5 font-body text-[12px] text-[var(--color-muted)]">{row.chest}</td>
+                      <td className="px-4 py-2.5 font-body text-[12px] text-[var(--color-muted)]">{row.waist}</td>
+                      <td className="px-4 py-2.5 font-body text-[12px] text-[var(--color-muted)]">{row.hips}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             )}
 
-            <p className="mt-4 font-body text-[11px] leading-[1.8] text-[#777777]">
+            <p className="mt-4 font-body text-[11px] leading-[1.8] text-[var(--color-muted-soft)]">
               Measurements are approximate. If you are between sizes we recommend sizing up.
             </p>
           </div>
@@ -1289,4 +1292,5 @@ const ProductPage = () => {
 };
 
 export default ProductPage;
+
 

@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -44,6 +45,8 @@ import AdminDiscountCodesPage from "./pages/admin/AdminDiscountCodesPage";
 import AdminShippingRatesPage from "./pages/admin/AdminShippingRatesPage";
 import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
+import { ThemeProvider } from "@/contexts/ThemeContext";
+import { storeConfig } from "@/config/store.config";
 
 const queryClient = new QueryClient();
 
@@ -53,6 +56,26 @@ const AppShell = () => {
   const isAdminRoute = location.pathname.startsWith("/admin");
   const hideStoreChrome = isAuthRoute || isAdminRoute;
 
+  useEffect(() => {
+    document.title = storeConfig.storeName;
+
+    const descriptionMeta = document.querySelector('meta[name="description"]');
+    if (descriptionMeta) {
+      descriptionMeta.setAttribute("content", storeConfig.storeTagline || storeConfig.storeName);
+    }
+
+    const existingFavicon = document.querySelector("link[rel='icon']") as HTMLLinkElement | null;
+    if (existingFavicon) {
+      existingFavicon.href = storeConfig.faviconUrl;
+      return;
+    }
+
+    const favicon = document.createElement("link");
+    favicon.rel = "icon";
+    favicon.href = storeConfig.faviconUrl;
+    document.head.appendChild(favicon);
+  }, [location.pathname]);
+
   return (
     <>
       {!hideStoreChrome ? <Navbar /> : null}
@@ -61,13 +84,16 @@ const AppShell = () => {
           <Route path="/" element={<Index />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="/shop/:slug" element={<ProductPage />} />
-          <Route path="/category/:categorySlug" element={<CategoryPage />} />
+          <Route path="/category/:slug" element={<CategoryPage />} />
           <Route
             path="/checkout/confirmation"
             element={<CheckoutConfirmation />}
           />
           <Route path="/checkout" element={<CheckoutEntry />} />
-          <Route path="/orders/:orderNumber" element={<OrderTracking />} />
+          <Route
+            path="/orders/:orderNumber"
+            element={storeConfig.features.orderTracking ? <OrderTracking /> : <Navigate to="/" replace />}
+          />
           <Route path="/checkout/*" element={<Checkout />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
@@ -148,9 +174,11 @@ const App = () => (
       <Sonner />
       <AuthProvider>
         <CartProvider>
-          <BrowserRouter>
-            <AppShell />
-          </BrowserRouter>
+          <ThemeProvider>
+            <BrowserRouter>
+              <AppShell />
+            </BrowserRouter>
+          </ThemeProvider>
         </CartProvider>
       </AuthProvider>
     </TooltipProvider>

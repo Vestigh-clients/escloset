@@ -1,8 +1,9 @@
 import type { AuthChangeEvent, Session, User } from "@supabase/supabase-js";
+import { storeConfig, storeKeyPrefix } from "@/config/store.config";
 import { supabase } from "@/integrations/supabase/client";
 
-export const REDIRECT_AFTER_LOGIN_KEY = "luxuriant_redirect_after_login";
-export const VERIFY_EMAIL_STORAGE_KEY = "luxuriant_verify_email_target";
+export const REDIRECT_AFTER_LOGIN_KEY = `${storeKeyPrefix}_redirect_after_login`;
+export const VERIFY_EMAIL_STORAGE_KEY = `${storeKeyPrefix}_verify_email_target`;
 
 export type CustomerRole = "customer" | "admin" | "super_admin" | null;
 
@@ -183,6 +184,8 @@ const triggerWelcomeEmail = async (customerId: string): Promise<void> => {
   const { error } = await supabase.functions.invoke("send_welcome_email", {
     body: {
       customer_id: customerId,
+      store_name: storeConfig.storeName,
+      support_email: storeConfig.contact.email,
     },
   });
 

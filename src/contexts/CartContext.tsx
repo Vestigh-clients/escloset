@@ -9,10 +9,11 @@ import {
   type ReactNode,
 } from "react";
 import { toast } from "@/components/ui/sonner";
+import { storeKeyPrefix } from "@/config/store.config";
 import { validateCartStock } from "@/services/stockService";
 
-const CART_STORAGE_KEY = "luxuriant_cart";
-const CART_VERSION_STORAGE_KEY = "luxuriant_cart_version";
+const CART_STORAGE_KEY = `${storeKeyPrefix}_cart`;
+const CART_VERSION_STORAGE_KEY = `${storeKeyPrefix}_cart_version`;
 const CART_SCHEMA_VERSION = 3;
 const CART_TOAST_DURATION_MS = 2500;
 
