@@ -13,7 +13,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SITE_URL = Deno.env.get("SITE_URL") ?? "https://example.com";
+const SITE_URL = Deno.env.get("SITE_URL") ?? "https://escloset.vestigh.com";
 
 interface OrderItemRow {
   product_id: string;

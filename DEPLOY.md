@@ -1,4 +1,4 @@
-## Vestigh Store - New Client Deployment Checklist
+## E & S closet - New Client Deployment Checklist
 
 Target time: under 2 hours end-to-end.
 

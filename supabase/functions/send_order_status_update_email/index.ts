@@ -15,7 +15,7 @@ const corsHeaders = {
 
 const supportedStatuses = ["confirmed", "processing", "shipped", "delivered", "cancelled"] as const;
 type SupportedStatus = (typeof supportedStatuses)[number];
-const SITE_URL = Deno.env.get("SITE_URL") ?? "https://example.com";
+const SITE_URL = Deno.env.get("SITE_URL") ?? "https://escloset.vestigh.com";
 
 interface OrderItemRow {
   product_name: string;

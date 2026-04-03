@@ -1,4 +1,4 @@
-﻿# Vestigh Store Supabase Setup (Fresh Client Project)
+# E & S closet Supabase Setup (Fresh Client Project)
 
 This guide is for provisioning a brand-new client backend from this codebase in under an hour.
 It includes:
@@ -643,7 +643,8 @@ EXECUTE FUNCTION public.sync_product_stock_from_variants();
 -- =====================
 INSERT INTO public.site_settings (key, value)
 VALUES
-  ('site_name', 'Vestigh Store'),
+  ('site_name', 'E & S closet'),
+  ('site_url', 'https://escloset.vestigh.com'),
   ('site_tagline', ''),
   ('support_email', ''),
   ('support_phone', ''),
@@ -2202,3 +2203,4 @@ After this, role management can happen through `assign_customer_role` RPC or adm
    - checkout/submit order
    - order confirmation/tracking
    - admin notifications
+

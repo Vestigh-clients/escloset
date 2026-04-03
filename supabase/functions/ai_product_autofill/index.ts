@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY")
-const SITE_URL = Deno.env.get("SITE_URL") ?? "https://example.com"
+const SITE_URL = Deno.env.get("SITE_URL") ?? "https://escloset.vestigh.com"
 const API_ENDPOINT = "aiplatform.googleapis.com"
 const MODEL_ID = "gemini-3.1-flash-lite-preview"
 const GENERATE_CONTENT_API = "streamGenerateContent"

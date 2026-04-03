@@ -1,7 +1,7 @@
 import type { BrandingConfig } from "./store.types.ts";
 
 export const brandingConfig: BrandingConfig = {
-  storeName: "Vestigh Store",
+  storeName: "E & S closet",
   storeTagline: "Your store tagline",
   logoUrl: "assets/vicky_logo_white.png",
   faviconUrl: "/favicon.ico",
