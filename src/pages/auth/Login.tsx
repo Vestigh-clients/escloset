@@ -10,6 +10,11 @@ import { AuthServiceError, REDIRECT_AFTER_LOGIN_KEY } from "@/services/authServi
 
 type LoginField = "email" | "password";
 
+interface LoginLocationState {
+  justRegistered?: boolean;
+  email?: string;
+}
+
 const sanitizeRedirectPath = (candidate: string | null): string | null => {
   const value = candidate?.trim() ?? "";
   if (!value || !value.startsWith("/") || value.startsWith("//")) {
@@ -37,6 +42,7 @@ const readPostLoginRedirect = (search: string): string => {
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const locationState = location.state as LoginLocationState | null;
   const { isAuthenticated, isLoading, login, loginWithGoogle, resendEmailVerification } = useAuth();
 
   const [email, setEmail] = useState("");
@@ -172,6 +178,12 @@ const Login = () => {
       <p className="mt-3 font-body text-[13px] font-light leading-[1.8] text-[var(--color-muted)]">
         Sign in to continue checkout, manage your account, and track orders.
       </p>
+
+      {locationState?.justRegistered ? (
+        <p className="mt-4 font-body text-[11px] text-[var(--color-success)]">
+          Account created successfully{locationState.email ? ` for ${locationState.email}` : ""}. Please sign in.
+        </p>
+      ) : null}
 
       <div className="mt-8">
         <GoogleOAuthButton onClick={handleGoogleSignIn} disabled={isSubmitting || isGoogleSubmitting} />

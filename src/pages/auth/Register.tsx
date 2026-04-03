@@ -15,7 +15,7 @@ import {
   getRequiredError,
   sanitizeInputText,
 } from "@/lib/authValidation";
-import { AuthServiceError, VERIFY_EMAIL_STORAGE_KEY } from "@/services/authService";
+import { AuthServiceError } from "@/services/authService";
 
 type RegisterField = "firstName" | "lastName" | "email" | "phone" | "password" | "confirmPassword";
 
@@ -105,13 +105,10 @@ const Register = () => {
         marketingOptIn,
       });
 
-      if (typeof window !== "undefined") {
-        window.sessionStorage.setItem(VERIFY_EMAIL_STORAGE_KEY, normalizedEmail);
-      }
-
-      navigate("/auth/verify-email", {
+      navigate("/auth/login", {
         replace: true,
         state: {
+          justRegistered: true,
           email: normalizedEmail,
         },
       });

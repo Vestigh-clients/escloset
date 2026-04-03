@@ -1,100 +1,203 @@
-import { Instagram } from "lucide-react";
-import { Link } from "react-router-dom";
-import StoreLogo from "@/components/StoreLogo";
+import { FormEvent, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { contentConfig } from "@/config/content.config";
 import { useStorefrontConfig } from "@/contexts/StorefrontConfigContext";
 import { buildWhatsAppContactLink } from "@/lib/contact";
 
-interface FooterSocialLink {
+type FooterLink = {
   label: string;
   href: string;
-}
+};
+
+const isAbsoluteUrl = (href: string) => /^https?:\/\//i.test(href);
+const isSpecialProtocol = (href: string) => href.startsWith("mailto:") || href.startsWith("tel:");
 
 const Footer = () => {
-  const { storefrontConfig } = useStorefrontConfig();
+  const { storefrontConfig, storefrontCategories } = useStorefrontConfig();
+  const navigate = useNavigate();
+  const [newsletterEmail, setNewsletterEmail] = useState("");
 
-  const socialLinks: FooterSocialLink[] = [
-    { label: "Instagram", href: storefrontConfig.socials.instagram },
-    { label: "Facebook", href: storefrontConfig.socials.facebook },
-    { label: "Twitter", href: storefrontConfig.socials.twitter },
-    { label: "TikTok", href: storefrontConfig.socials.tiktok },
-  ].filter((entry) => Boolean(entry.href.trim()));
+  const quickLinks = useMemo<FooterLink[]>(() => {
+    return storefrontCategories.slice(0, 6).map((category) => ({
+      label: category.name.trim() || "Category",
+      href: `/shop?category=${encodeURIComponent(category.slug)}`,
+    }));
+  }, [storefrontCategories]);
+
+  const companyLinks = useMemo<FooterLink[]>(() => {
+    const fromConfig = contentConfig.footer.companyLinks
+      .map((link) => ({ label: link.label.trim(), href: link.href.trim() }))
+      .filter((link) => Boolean(link.label) && Boolean(link.href));
+
+    const supportLinks: FooterLink[] = [];
+
+    if (storefrontConfig.contact.whatsapp.trim()) {
+      supportLinks.push({
+        label: "WhatsApp Support",
+        href: buildWhatsAppContactLink(storefrontConfig.storeName, storefrontConfig.contact.whatsapp),
+      });
+    }
+
+    if (storefrontConfig.contact.email.trim()) {
+      supportLinks.push({
+        label: "Email Us",
+        href: `mailto:${storefrontConfig.contact.email.trim()}`,
+      });
+    }
+
+    if (storefrontConfig.contact.phone.trim()) {
+      supportLinks.push({
+        label: "Call Us",
+        href: `tel:${storefrontConfig.contact.phone.trim()}`,
+      });
+    }
+
+    return [...fromConfig, ...supportLinks];
+  }, [storefrontConfig.contact.email, storefrontConfig.contact.phone, storefrontConfig.contact.whatsapp, storefrontConfig.storeName]);
+
+  const socialLinks = useMemo<FooterLink[]>(() => {
+    const entries = [
+      { label: "Instagram", href: storefrontConfig.socials.instagram.trim(), icon: "photo_camera" },
+      { label: "Facebook", href: storefrontConfig.socials.facebook.trim(), icon: "thumb_up" },
+      { label: "Twitter", href: storefrontConfig.socials.twitter.trim(), icon: "alternate_email" },
+      { label: "TikTok", href: storefrontConfig.socials.tiktok.trim(), icon: "music_note" },
+    ].filter((item) => Boolean(item.href));
+
+    const seen = new Set<string>();
+    return entries.filter((item) => {
+      if (seen.has(item.href)) {
+        return false;
+      }
+      seen.add(item.href);
+      return true;
+    });
+  }, [storefrontConfig.socials.facebook, storefrontConfig.socials.instagram, storefrontConfig.socials.tiktok, storefrontConfig.socials.twitter]);
+
+  const renderLink = (link: FooterLink, className: string) => {
+    if (isAbsoluteUrl(link.href) || isSpecialProtocol(link.href)) {
+      const opensNewTab = isAbsoluteUrl(link.href);
+
+      return (
+        <a
+          href={link.href}
+          className={className}
+          target={opensNewTab ? "_blank" : undefined}
+          rel={opensNewTab ? "noopener noreferrer" : undefined}
+        >
+          {link.label}
+        </a>
+      );
+    }
+
+    return (
+      <Link to={link.href.startsWith("/") ? link.href : `/${link.href}`} className={className}>
+        {link.label}
+      </Link>
+    );
+  };
+
+  const handleNewsletterSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const normalizedEmail = newsletterEmail.trim();
+    if (!normalizedEmail) {
+      return;
+    }
+
+    const supportEmail = storefrontConfig.contact.email.trim();
+    if (!supportEmail) {
+      navigate("/contact");
+      return;
+    }
+
+    const subject = encodeURIComponent(`${storefrontConfig.storeName} newsletter signup`);
+    const body = encodeURIComponent(`Please add this email to the newsletter list:\n\n${normalizedEmail}`);
+    window.location.href = `mailto:${supportEmail}?subject=${subject}&body=${body}`;
+    setNewsletterEmail("");
+  };
 
   return (
-    <footer className="bg-primary text-primary-foreground">
-      <div className="container mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-4">
-          <div className="md:col-span-1">
-            <div className="mb-2">
-              <StoreLogo className="h-9 w-auto" textClassName="text-2xl font-bold tracking-wider text-primary-foreground" />
-            </div>
-            <p className="mb-3 font-body text-xs italic text-primary-foreground/60">{storefrontConfig.storeTagline}</p>
-            <p className="font-body text-sm leading-relaxed text-primary-foreground/70">{contentConfig.footer.description}</p>
-          </div>
+    <footer className="w-full bg-[#F3F3F4]">
+      <div className="grid w-full grid-cols-1 gap-12 px-6 py-16 md:grid-cols-4 md:px-12">
+        <div className="col-span-1">
+          <div className="mb-6 font-notoSerif text-lg font-bold text-[#D81B60]">{storefrontConfig.storeName}</div>
+          <p className="max-w-xs font-manrope text-xs font-light leading-relaxed text-[#5E5E5E]">{contentConfig.footer.description}</p>
+        </div>
 
-          <div>
-            <h4 className="mb-4 font-display text-sm font-semibold uppercase tracking-wider">Shop</h4>
-            <div className="flex flex-col gap-2">
-              {contentConfig.footer.shopLinks.map((link) => (
-                <Link key={link.href} to={link.href} className="font-body text-sm text-primary-foreground/70 transition-colors hover:text-accent">
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-          </div>
+        <div>
+          <h5 className="mb-6 font-manrope text-xs font-semibold uppercase tracking-[0.18em] text-[#B0004A]">Quick Links</h5>
+          <ul className="space-y-4">
+            {quickLinks.map((link) => (
+              <li key={`${link.label}-${link.href}`}>
+                {renderLink(link, "font-manrope text-xs text-[#5E5E5E] transition-colors hover:text-[#D81B60]")}
+              </li>
+            ))}
+          </ul>
+        </div>
 
-          <div>
-            <h4 className="mb-4 font-display text-sm font-semibold uppercase tracking-wider">Company</h4>
-            <div className="flex flex-col gap-2">
-              {contentConfig.footer.companyLinks.map((link) => (
-                <Link key={link.href} to={link.href} className="font-body text-sm text-primary-foreground/70 transition-colors hover:text-accent">
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-          </div>
+        <div>
+          <h5 className="mb-6 font-manrope text-xs font-semibold uppercase tracking-[0.18em] text-[#B0004A]">Company</h5>
+          <ul className="space-y-4">
+            {companyLinks.map((link) => (
+              <li key={`${link.label}-${link.href}`}>
+                {renderLink(link, "font-manrope text-xs text-[#5E5E5E] transition-colors hover:text-[#D81B60]")}
+              </li>
+            ))}
+          </ul>
+        </div>
 
-          <div>
-            <h4 className="mb-4 font-display text-sm font-semibold uppercase tracking-wider">Connect</h4>
-            <div className="flex flex-col gap-3">
-              {storefrontConfig.contact.whatsapp ? (
-                <a
-                  href={buildWhatsAppContactLink(storefrontConfig.storeName, storefrontConfig.contact.whatsapp)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-body text-sm text-primary-foreground/70 transition-colors hover:text-accent"
-                >
-                  WhatsApp: {storefrontConfig.contact.whatsapp}
-                </a>
-              ) : null}
-              {storefrontConfig.contact.email ? (
-                <a
-                  href={`mailto:${storefrontConfig.contact.email}`}
-                  className="font-body text-sm text-primary-foreground/70 transition-colors hover:text-accent"
-                >
-                  Email: {storefrontConfig.contact.email}
-                </a>
-              ) : null}
+        <div>
+          <h5 className="mb-6 font-manrope text-xs font-semibold uppercase tracking-[0.18em] text-[#B0004A]">Newsletter</h5>
+          <p className="mb-4 font-manrope text-xs font-light text-[#5E5E5E]">Join our inner circle for exclusive drops.</p>
+          <form onSubmit={handleNewsletterSubmit} className="flex items-end gap-3">
+            <input
+              type="email"
+              value={newsletterEmail}
+              onChange={(event) => setNewsletterEmail(event.target.value)}
+              required
+              placeholder="Email Address"
+              className="w-full border-b border-[rgba(227,189,199,0.15)] bg-transparent pb-2 font-manrope text-xs text-[#1A1C1C] placeholder:text-[#8f6e78] focus:border-[#D81B60] focus:border-b-2 focus:outline-none"
+            />
+            <button
+              type="submit"
+              className="bg-[#D81B60] px-4 py-2 font-manrope text-xs font-semibold text-white transition-all duration-300 hover:-translate-y-1 hover:bg-[#B0004A]"
+            >
+              JOIN
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div className="px-6 pb-8 md:px-12">
+        <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+          <p className="font-manrope text-xs text-[#5E5E5E]">
+            &copy; {new Date().getFullYear()} {storefrontConfig.storeName}. All rights reserved.
+          </p>
+          {socialLinks.length > 0 ? (
+            <div className="flex gap-6">
               {socialLinks.map((social) => (
                 <a
-                  key={social.label}
+                  key={`${social.label}-${social.href}`}
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 font-body text-sm text-primary-foreground/70 transition-colors hover:text-accent"
+                  aria-label={social.label}
+                  title={social.label}
+                  className="inline-flex text-[#5E5E5E] transition-colors hover:text-[#D81B60]"
                 >
-                  {social.label === "Instagram" ? <Instagram size={16} /> : null}
-                  {social.label}
+                  <span className="material-symbols-outlined">
+                    {social.label === "Instagram"
+                      ? "photo_camera"
+                      : social.label === "Facebook"
+                        ? "thumb_up"
+                        : social.label === "Twitter"
+                          ? "alternate_email"
+                          : "music_note"}
+                  </span>
                 </a>
               ))}
             </div>
-          </div>
-        </div>
-
-        <div className="mt-12 border-t border-primary-foreground/20 pt-8 text-center">
-          <p className="font-body text-xs text-primary-foreground/50">
-            © {new Date().getFullYear()} {storefrontConfig.storeName}. All rights reserved.
-          </p>
+          ) : null}
         </div>
       </div>
     </footer>

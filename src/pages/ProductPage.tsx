@@ -1,6 +1,6 @@
 ﻿import { useEffect, useMemo, useRef, useState, type TouchEvent } from "react";
 import { Link, useParams } from "react-router-dom";
-import ShopProductCard from "@/components/ShopProductCard";
+import StorefrontProductCard from "@/components/products/StorefrontProductCard";
 import TryOnModal from "@/components/TryOnModal";
 import ProductFetchErrorState from "@/components/products/ProductFetchErrorState";
 import ProductImagePlaceholder from "@/components/products/ProductImagePlaceholder";
@@ -839,7 +839,7 @@ const ProductPage = () => {
             Shop
           </Link>
           <span className="text-[var(--color-muted-soft)]">/</span>
-          <Link to={`/category/${categorySlug}`} className="transition-colors hover:text-foreground">
+          <Link to="/shop" className="transition-colors hover:text-foreground">
             {categoryLabel}
           </Link>
           <span className="text-[var(--color-muted-soft)]">/</span>
@@ -1112,7 +1112,7 @@ const ProductPage = () => {
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
               {relatedProducts.map((item) => (
-                <ShopProductCard key={item.id} product={item} size="regular" />
+                <StorefrontProductCard key={item.id} product={item} actionLabel="View Product" />
               ))}
             </div>
           </section>

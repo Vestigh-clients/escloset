@@ -1,30 +1,46 @@
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from "react";
 import { resolveStorefrontConfig, type ResolvedStorefrontConfig } from "@/config/storefront.config";
 import { fetchPublicSiteSettings, type PublicSiteSettings } from "@/services/publicSiteSettingsService";
+import {
+  fetchStorefrontCategories,
+  type StorefrontCategory,
+} from "@/services/storefrontCategoryService";
 
 interface StorefrontConfigContextValue {
   storefrontConfig: ResolvedStorefrontConfig;
   publicSettings: PublicSiteSettings | null;
+  storefrontCategories: StorefrontCategory[];
 }
 
 const StorefrontConfigContext = createContext<StorefrontConfigContextValue | undefined>(undefined);
 
 export const StorefrontConfigProvider = ({ children }: { children: ReactNode }) => {
   const [publicSettings, setPublicSettings] = useState<PublicSiteSettings | null>(null);
+  const [storefrontCategories, setStorefrontCategories] = useState<StorefrontCategory[]>([]);
 
   useEffect(() => {
     let isActive = true;
 
     const load = async () => {
-      try {
-        const data = await fetchPublicSiteSettings();
-        if (isActive) {
-          setPublicSettings(data);
-        }
-      } catch {
-        if (isActive) {
-          setPublicSettings(null);
-        }
+      const [settingsResult, categoriesResult] = await Promise.allSettled([
+        fetchPublicSiteSettings(),
+        fetchStorefrontCategories(),
+      ]);
+
+      if (!isActive) {
+        return;
+      }
+
+      if (settingsResult.status === "fulfilled") {
+        setPublicSettings(settingsResult.value);
+      } else {
+        setPublicSettings(null);
+      }
+
+      if (categoriesResult.status === "fulfilled") {
+        setStorefrontCategories(categoriesResult.value);
+      } else {
+        setStorefrontCategories([]);
       }
     };
 
@@ -38,7 +54,7 @@ export const StorefrontConfigProvider = ({ children }: { children: ReactNode }) 
   const storefrontConfig = useMemo(() => resolveStorefrontConfig(publicSettings), [publicSettings]);
 
   return (
-    <StorefrontConfigContext.Provider value={{ storefrontConfig, publicSettings }}>
+    <StorefrontConfigContext.Provider value={{ storefrontConfig, publicSettings, storefrontCategories }}>
       {children}
     </StorefrontConfigContext.Provider>
   );

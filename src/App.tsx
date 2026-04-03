@@ -13,7 +13,6 @@ import { CartProvider } from "@/contexts/CartContext";
 import Index from "./pages/Index";
 import Shop from "./pages/Shop";
 import ProductPage from "./pages/ProductPage";
-import CategoryPage from "./pages/CategoryPage";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Checkout from "./pages/Checkout";
@@ -57,7 +56,9 @@ const AppShell = () => {
   const location = useLocation();
   const isAuthRoute = location.pathname.startsWith("/auth/");
   const isAdminRoute = location.pathname.startsWith("/admin");
-  const hideStoreChrome = isAuthRoute || isAdminRoute;
+  const showNavbar = !isAuthRoute && !isAdminRoute;
+  const showFooter = !isAuthRoute && !isAdminRoute;
+  const showCartDrawer = !isAuthRoute && !isAdminRoute;
 
   useEffect(() => {
     document.title = storefrontConfig.storeName;
@@ -81,13 +82,12 @@ const AppShell = () => {
 
   return (
     <>
-      {!hideStoreChrome ? <Navbar /> : null}
-      <main className={hideStoreChrome ? "" : "min-h-screen"}>
+      {showNavbar ? <Navbar /> : null}
+      <main className={showFooter ? "min-h-screen" : ""}>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="/shop/:slug" element={<ProductPage />} />
-          <Route path="/category/:slug" element={<CategoryPage />} />
           <Route
             path="/checkout/confirmation"
             element={<CheckoutConfirmation />}
@@ -165,8 +165,8 @@ const AppShell = () => {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
-      {!hideStoreChrome ? <Footer /> : null}
-      {!hideStoreChrome ? <CartDrawer /> : null}
+      {showFooter ? <Footer /> : null}
+      {showCartDrawer ? <CartDrawer /> : null}
     </>
   );
 };

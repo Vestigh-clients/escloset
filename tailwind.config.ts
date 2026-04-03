@@ -18,6 +18,11 @@ export default {
         body: ["var(--font-body)", "system-ui", "sans-serif"],
       },
       colors: {
+        surface: "#F9F9F9",
+        "on-background": "#1A1C1C",
+        "on-surface": "#1A1C1C",
+        "on-surface-variant": "#5B3F48",
+        "surface-container-high": "#E8E8E8",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

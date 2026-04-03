@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>E&amp;S Closet | The Shop</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400;1,700&amp;family=Manrope:wght@200;300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-highest": "#e2e2e2",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#1b8700",
+                        "surface-container-high": "#e8e8e8",
+                        "on-primary-fixed": "#3e001f",
+                        "outline": "#8f6e78",
+                        "on-tertiary-fixed-variant": "#0d5300",
+                        "surface-dim": "#dadada",
+                        "surface-container": "#eeeeee",
+                        "on-error": "#ffffff",
+                        "on-tertiary-container": "#f8ffef",
+                        "background": "#f9f9f9",
+                        "on-error-container": "#93000a",
+                        "secondary-fixed-dim": "#c6c6c6",
+                        "secondary": "#5e5e5e",
+                        "outline-variant": "#e3bdc7",
+                        "on-secondary": "#ffffff",
+                        "surface-variant": "#e2e2e2",
+                        "surface": "#f9f9f9",
+                        "inverse-on-surface": "#f1f1f1",
+                        "on-primary-container": "#fffbff",
+                        "tertiary": "#136b00",
+                        "primary": "#D81B60",
+                        "on-secondary-fixed-variant": "#474747",
+                        "on-secondary-container": "#646464",
+                        "primary-container": "#D81B60",
+                        "on-primary-fixed-variant": "#8d004e",
+                        "primary-fixed-dim": "#ffb0ca",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-primary": "#ffb0ca",
+                        "secondary-container": "#e2e2e2",
+                        "on-secondary-fixed": "#1b1b1b",
+                        "secondary-fixed": "#e2e2e2",
+                        "on-tertiary-fixed": "#022100",
+                        "on-background": "#1a1c1c",
+                        "on-surface": "#1a1c1c",
+                        "surface-container-low": "#f3f3f3",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed": "#86fd66",
+                        "error": "#ba1a1a",
+                        "on-tertiary": "#ffffff",
+                        "primary-fixed": "#fce4ec",
+                        "inverse-surface": "#2f3131",
+                        "tertiary-fixed-dim": "#6ae04d",
+                        "surface-bright": "#f9f9f9",
+                        "on-surface-variant": "#5b3f48",
+                        "surface-tint": "#D81B60"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "notoSerif": ["Noto Serif"],
+                        "manrope": ["Manrope"],
+                        "headline": ["Noto Serif"],
+                        "body": ["Manrope"],
+                        "label": ["Manrope"]
+                    }
+                },
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-surface font-manrope text-on-surface">
+<!-- Shared TopNavBar -->
+<nav class="bg-surface/80 dark:bg-zinc-950/80 backdrop-blur-xl docked full-width top-0 sticky z-50 shadow-sm dark:shadow-none">
+<div class="flex justify-between items-center w-full px-8 py-4 max-w-screen-2xl mx-auto">
+<div class="font-notoSerif text-2xl italic font-bold text-on-background dark:text-white">
+                E&amp;S Closet
+            </div>
+<div class="hidden md:flex items-center gap-8">
+<a class="font-notoSerif text-sm tracking-wide uppercase text-on-surface-variant hover:text-[#D81B60] transition-colors" href="#">Men</a>
+<a class="font-notoSerif text-sm tracking-wide uppercase text-on-surface-variant hover:text-[#D81B60] transition-colors" href="#">Women</a>
+<a class="font-notoSerif text-sm tracking-wide uppercase text-on-surface-variant hover:text-[#D81B60] transition-colors" href="#">Bags</a>
+<a class="font-notoSerif text-sm tracking-wide uppercase text-on-surface-variant hover:text-[#D81B60] transition-colors" href="#">Accessories</a>
+<a class="font-notoSerif text-sm tracking-wide uppercase text-on-surface-variant hover:text-[#D81B60] transition-colors" href="#">About</a>
+<a class="font-notoSerif text-sm tracking-wide uppercase text-on-surface-variant hover:text-[#D81B60] transition-colors" href="#">Contact</a>
+</div>
+<div class="flex items-center gap-6">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-[#D81B60] transition-all active:scale-95 duration-200">shopping_bag</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-[#D81B60] transition-all active:scale-95 duration-200">person</button>
+</div>
+</div>
+</nav>
+<!-- Page Header -->
+<header class="max-w-screen-2xl mx-auto px-8 pt-16 pb-12">
+<h1 class="font-notoSerif text-6xl md:text-8xl font-bold tracking-tight text-on-background">
+            The <span class="text-primary italic">Shop</span>
+</h1>
+<p class="mt-4 font-manrope text-on-surface-variant max-w-xl text-lg">
+            Discover a curated collection of premium Ghanaian fashion and international elegance. Designed for the bold and the beautiful.
+        </p>
+</header>
+<main class="max-w-screen-2xl mx-auto px-8 grid grid-cols-1 md:grid-cols-12 gap-12">
+<!-- Left Sidebar Filters -->
+<aside class="md:col-span-3 space-y-10">
+<!-- Category Filter -->
+<section>
+<h3 class="font-notoSerif text-xl font-bold mb-6">Category</h3>
+<div class="space-y-3">
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" type="checkbox"/>
+<span class="font-manrope text-sm group-hover:text-primary transition-colors">Women</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" type="checkbox"/>
+<span class="font-manrope text-sm group-hover:text-primary transition-colors">Men</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" type="checkbox"/>
+<span class="font-manrope text-sm group-hover:text-primary transition-colors">Bags</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" type="checkbox"/>
+<span class="font-manrope text-sm group-hover:text-primary transition-colors">Accessories</span>
+</label>
+</div>
+</section>
+<!-- Size Filter -->
+<section>
+<h3 class="font-notoSerif text-xl font-bold mb-6">Size</h3>
+<div class="grid grid-cols-3 gap-2">
+<button class="py-2 text-xs font-medium border border-outline-variant hover:border-primary hover:text-primary transition-all rounded">XS</button>
+<button class="py-2 text-xs font-medium border border-outline-variant hover:border-primary hover:text-primary transition-all rounded">S</button>
+<button class="py-2 text-xs font-medium border border-outline-variant hover:border-primary hover:text-primary transition-all rounded">M</button>
+<button class="py-2 text-xs font-medium border border-outline-variant hover:border-primary hover:text-primary transition-all rounded">L</button>
+<button class="py-2 text-xs font-medium border border-outline-variant hover:border-primary hover:text-primary transition-all rounded">XL</button>
+<button class="py-2 text-xs font-medium border border-outline-variant hover:border-primary hover:text-primary transition-all rounded">XXL</button>
+</div>
+</section>
+<!-- Color Filter -->
+<section>
+<h3 class="font-notoSerif text-xl font-bold mb-6">Color</h3>
+<div class="flex flex-wrap gap-3">
+<button class="w-8 h-8 rounded-full border border-outline-variant bg-zinc-950" title="Black"></button>
+<button class="w-8 h-8 rounded-full border border-outline-variant bg-white" title="White"></button>
+<button class="w-8 h-8 rounded-full border border-outline-variant bg-[#D81B60]" title="Signature Magenta"></button>
+<button class="w-8 h-8 rounded-full border border-outline-variant bg-[#136b00]" title="Deep Green"></button>
+<button class="w-8 h-8 rounded-full border border-outline-variant bg-[#e3bdc7]" title="Nude"></button>
+<button class="w-8 h-8 rounded-full border border-outline-variant bg-[#5b3f48]" title="Mauve"></button>
+</div>
+</section>
+<!-- Price Range -->
+<section>
+<h3 class="font-notoSerif text-xl font-bold mb-6">Price Range</h3>
+<input class="w-full h-1 bg-surface-variant rounded-lg appearance-none cursor-pointer accent-primary" max="1000" min="0" type="range"/>
+<div class="flex justify-between mt-4 text-xs font-medium text-on-surface-variant uppercase tracking-widest">
+<span>$0</span>
+<span>$1000+</span>
+</div>
+</section>
+</aside>
+<!-- Product Grid Area -->
+<div class="md:col-span-9">
+<!-- Sorting & Results Count -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-4">
+<p class="text-sm text-on-surface-variant">Showing 12 results of 48 items</p>
+<div class="flex items-center gap-4">
+<span class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Sort By</span>
+<select class="bg-transparent border-none text-sm font-semibold focus:ring-0 cursor-pointer text-primary p-0">
+<option>Newest Arrivals</option>
+<option>Price: Low to High</option>
+<option>Price: High to Low</option>
+<option>Most Popular</option>
+</select>
+</div>
+</div>
+<!-- Product Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
+<!-- Product Card 1 -->
+<div class="group relative">
+<div class="aspect-[4/5] bg-surface-container-lowest overflow-hidden rounded-lg mb-6 transition-all duration-500 group-hover:bg-primary-fixed">
+<img class="w-full h-full object-cover mix-blend-multiply group-hover:scale-105 transition-transform duration-700" data-alt="high fashion editorial shot of a woman in a vibrant pink architectural dress against a minimalist grey background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCj4UBuR1wLgldooAi3aV13larvUIP7uNWZpffXCMYUb4A6EiJCHZUaGJsDY5pcTd0S6grVsU-mZwORjf4D2pOCfITrWrEoKPXuk5A91CrSNvILzlOmAFsT0leEYqVyTYe7ltrbNh26PJxYunqdVowemP4-NRz9bfmyWAbE_qEz__3gjMH9NTbaGwBMQC9L-Rx9jwT5-rBammXgP0t3UCO0MYHajzz72EnK4VCh6fMbnVm8qOM9fSj3K_mgNHx1c4HNCdOuRQvEVPQ"/>
+<button class="absolute bottom-10 right-4 w-12 h-12 bg-primary text-on-primary rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300 shadow-xl">
+<span class="material-symbols-outlined">shopping_bag</span>
+</button>
+</div>
+<div class="flex justify-between items-start">
+<div>
+<h4 class="font-notoSerif text-lg font-bold group-hover:text-primary transition-colors">Avenue Silk Gown</h4>
+<p class="font-manrope text-sm text-on-surface-variant">Evening Wear</p>
+</div>
+<p class="font-notoSerif text-lg font-bold">$420</p>
+</div>
+</div>
+<!-- Product Card 2 -->
+<div class="group relative">
+<div class="aspect-[4/5] bg-surface-container-lowest overflow-hidden rounded-lg mb-6 transition-all duration-500 group-hover:bg-primary-fixed">
+<img class="w-full h-full object-cover mix-blend-multiply group-hover:scale-105 transition-transform duration-700" data-alt="close up of a luxury leather handbag with gold hardware placed on a marble surface with soft atmospheric lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCszvulvJprXRXBWQ3utfmtGu73c8Wudzq8Tua4YuOotdCeEv7q86NWhZXti62HyCArtAScTde9AMUwwpojHdZieCrq1lNlfKBZCDMRcmFqQaP0BewByNT_MCBmS4Ik3vooOVHvMaYPmFCFTVUoaYCmOPg-rfhmE9K9pM4SgZr9by9bMnlD4b9zAHmyeQQmmnDlzeDHKoriQIgK0bcW_VmS6m8ZPtAPXNm5JNvgg9ilQ84S-I8EZm01icbQDEUEaAI6cpSY55zyU-U"/>
+<button class="absolute bottom-10 right-4 w-12 h-12 bg-primary text-on-primary rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300 shadow-xl">
+<span class="material-symbols-outlined">shopping_bag</span>
+</button>
+</div>
+<div class="flex justify-between items-start">
+<div>
+<h4 class="font-notoSerif text-lg font-bold group-hover:text-primary transition-colors">Heritage Tote</h4>
+<p class="font-manrope text-sm text-on-surface-variant">Handcrafted Leather</p>
+</div>
+<p class="font-notoSerif text-lg font-bold">$280</p>
+</div>
+</div>
+<!-- Product Card 3 -->
+<div class="group relative">
+<div class="aspect-[4/5] bg-surface-container-lowest overflow-hidden rounded-lg mb-6 transition-all duration-500 group-hover:bg-primary-fixed">
+<img class="w-full h-full object-cover mix-blend-multiply group-hover:scale-105 transition-transform duration-700" data-alt="man in a sharp tailored linen suit standing in a sunlit garden with dramatic shadows and warm tones" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmlYETz_tYojQzbBLF3xLbHHpgZ67ofSjdMM7wBGE0eDdWwuIPYZffmj53I1Lzwo6a8C-e3hB6-CsVbs6DP-X0z_PnRovlDcwmkO9o-fXAnANFpLF0NTnA-TqbHl7N1GVr_eIHpQH1_IM4gd_JRfhFM996HYHLMd_UMdP_MTg13wcs5U1jEln5OC9_F4GrYGRsJh0JlE4P93OaxoDlN82cjWf9aXGwIKIUSSyaUZG5mMSqTW_d-MBLvH4IHiwmtou8NS4f-ouiHTI"/>
+<button class="absolute bottom-10 right-4 w-12 h-12 bg-primary text-on-primary rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300 shadow-xl">
+<span class="material-symbols-outlined">shopping_bag</span>
+</button>
+</div>
+<div class="flex justify-between items-start">
+<div>
+<h4 class="font-notoSerif text-lg font-bold group-hover:text-primary transition-colors">Linen Blazer</h4>
+<p class="font-manrope text-sm text-on-surface-variant">Men's Essentials</p>
+</div>
+<p class="font-notoSerif text-lg font-bold">$195</p>
+</div>
+</div>
+<!-- Product Card 4 -->
+<div class="group relative">
+<div class="aspect-[4/5] bg-surface-container-lowest overflow-hidden rounded-lg mb-6 transition-all duration-500 group-hover:bg-primary-fixed">
+<img class="w-full h-full object-cover mix-blend-multiply group-hover:scale-105 transition-transform duration-700" data-alt="detail of intricate african wax print fabric used in a modern jumpsuit design fashion studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCCP23694rR8M-avJuRR3AGGIwMdRUZ8cOC8vgLSjJdWqWGHkk-RldZdGt-U1JyiMrWKe2Dd4wRRpaXmsNzhuqlcogDtCPlQo0BumcyyjyboqvSvDW-o0QEnpe1KJnlkYh-_L63S8D5oCL00XCwF4lRUPSgW56IXYNlT_-XjGZYDXO7cIs9CUm1z16c6-0ZT4s1BGt7boaqrv2gVL-mHlzSdrJ_W-vbj35WMceWFA-7zuTSorXKeAC1xkgTbUq09xHaJJa-eEVpfqU"/>
+<button class="absolute bottom-10 right-4 w-12 h-12 bg-primary text-on-primary rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300 shadow-xl">
+<span class="material-symbols-outlined">shopping_bag</span>
+</button>
+</div>
+<div class="flex justify-between items-start">
+<div>
+<h4 class="font-notoSerif text-lg font-bold group-hover:text-primary transition-colors">Kente Fusion Wrap</h4>
+<p class="font-manrope text-sm text-on-surface-variant">New Arrival</p>
+</div>
+<p class="font-notoSerif text-lg font-bold">$310</p>
+</div>
+</div>
+<!-- Product Card 5 -->
+<div class="group relative">
+<div class="aspect-[4/5] bg-surface-container-lowest overflow-hidden rounded-lg mb-6 transition-all duration-500 group-hover:bg-primary-fixed">
+<img class="w-full h-full object-cover mix-blend-multiply group-hover:scale-105 transition-transform duration-700" data-alt="luxury sunglasses on a light reflective surface with bright minimalist aesthetic and clean lines" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8Ib2GaUtPfJRAjxRbzWBzMYIJvxH9oYCuKrgFOT8e4LoGpW3bmoUWW-00zS2Ea4s7eZVvKfZv-TXkUAsbr1vYQzqva6YjjRZXaqmDXcFY-B6E4EMrn0jafjYh3-5nHqmZtoV9VRR2MzQdS08_hJJBlxoUJzrtSBjHvpBaS_ikjJfJZKAHDKQ0U2BppnRBSyHzwBON8eehU91pgjPJJ9GiSOfseYq-ncrcRP6nat3_tV7LuNOcwY3Iq9Pje2ZGNrHZ7F8r6PwlCIQ"/>
+<button class="absolute bottom-10 right-4 w-12 h-12 bg-primary text-on-primary rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300 shadow-xl">
+<span class="material-symbols-outlined">shopping_bag</span>
+</button>
+</div>
+<div class="flex justify-between items-start">
+<div>
+<h4 class="font-notoSerif text-lg font-bold group-hover:text-primary transition-colors">Eclipse Shades</h4>
+<p class="font-manrope text-sm text-on-surface-variant">Accessories</p>
+</div>
+<p class="font-notoSerif text-lg font-bold">$125</p>
+</div>
+</div>
+<!-- Product Card 6 -->
+<div class="group relative">
+<div class="aspect-[4/5] bg-surface-container-lowest overflow-hidden rounded-lg mb-6 transition-all duration-500 group-hover:bg-primary-fixed">
+<img class="w-full h-full object-cover mix-blend-multiply group-hover:scale-105 transition-transform duration-700" data-alt="chic leather clutch bag in a soft nude tone held by a model with manicured hands" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwm31GX8-wsmvZVCKA9kgMbV_DGByaym1_yY1DuM_ib3ZWbpOHqHAl6RMbs1GaYW7liERFyn0TKB35TSRLHBUKyOeSC5D4wXEx-8qpm1U5vnEVyImKrmTP1WQnO8mofNU3aolkJUPgE2pBUZb6-hEWhrEsKeZY_X3dPrU7S2BSarfqx68k9CZXX3WPJTt4YHu6XCRlvoZnWQ94vSSt6xRUsqicMXM0akFjDfyk5b85Dq5rvinhOd8EAgW7HGeBMJuG9IRGYgqiYxc"/>
+<button class="absolute bottom-10 right-4 w-12 h-12 bg-primary text-on-primary rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300 shadow-xl">
+<span class="material-symbols-outlined">shopping_bag</span>
+</button>
+</div>
+<div class="flex justify-between items-start">
+<div>
+<h4 class="font-notoSerif text-lg font-bold group-hover:text-primary transition-colors">Luna Clutch</h4>
+<p class="font-manrope text-sm text-on-surface-variant">Bags</p>
+</div>
+<p class="font-notoSerif text-lg font-bold">$180</p>
+</div>
+</div>
+</div>
+<!-- Pagination -->
+<div class="flex justify-center items-center mt-20 gap-4">
+<button class="w-10 h-10 flex items-center justify-center rounded border border-outline-variant hover:border-primary transition-colors">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<span class="font-notoSerif text-sm font-bold text-primary underline">1</span>
+<span class="font-notoSerif text-sm font-medium hover:text-primary cursor-pointer">2</span>
+<span class="font-notoSerif text-sm font-medium hover:text-primary cursor-pointer">3</span>
+<button class="w-10 h-10 flex items-center justify-center rounded border border-outline-variant hover:border-primary transition-colors">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</main>
+<!-- Shared Footer -->
+<footer class="w-full mt-20 bg-surface-container-low dark:bg-zinc-900 border-t border-outline-variant/10">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-12 px-12 py-16 w-full max-w-screen-2xl mx-auto">
+<div class="space-y-6">
+<div class="font-notoSerif text-lg font-bold text-[#D81B60]">E&amp;S Closet</div>
+<p class="font-manrope text-xs font-light opacity-70 leading-relaxed">
+                    Elevating the everyday through curated fashion and timeless accessories. Your premier destination for style in Ghana.
+                </p>
+</div>
+<div class="space-y-4">
+<h4 class="font-manrope text-xs font-bold uppercase tracking-widest text-[#D81B60]">Customer Care</h4>
+<nav class="flex flex-col gap-2">
+<a class="font-manrope text-xs font-light opacity-70 hover:opacity-100 hover:text-[#D81B60] transition-opacity duration-300" href="#">WhatsApp Support</a>
+<a class="font-manrope text-xs font-light opacity-70 hover:opacity-100 hover:text-[#D81B60] transition-opacity duration-300" href="#">Email Us</a>
+<a class="font-manrope text-xs font-light opacity-70 hover:opacity-100 hover:text-[#D81B60] transition-opacity duration-300" href="#">Shipping Policy</a>
+<a class="font-manrope text-xs font-light opacity-70 hover:opacity-100 hover:text-[#D81B60] transition-opacity duration-300 underline font-medium" href="#">Returns</a>
+</nav>
+</div>
+<div class="space-y-4">
+<h4 class="font-manrope text-xs font-bold uppercase tracking-widest text-[#D81B60]">Company</h4>
+<nav class="flex flex-col gap-2">
+<a class="font-manrope text-xs font-light opacity-70 hover:opacity-100 hover:text-[#D81B60] transition-opacity duration-300" href="#">Store Locations Ghana</a>
+<a class="font-manrope text-xs font-light opacity-70 hover:opacity-100 hover:text-[#D81B60] transition-opacity duration-300" href="#">Our Story</a>
+<a class="font-manrope text-xs font-light opacity-70 hover:opacity-100 hover:text-[#D81B60] transition-opacity duration-300" href="#">Sustainability</a>
+</nav>
+</div>
+<div class="space-y-4">
+<h4 class="font-manrope text-xs font-bold uppercase tracking-widest text-[#D81B60]">Newsletter</h4>
+<form class="space-y-4">
+<div class="relative">
+<input class="w-full bg-transparent border-b border-outline-variant py-2 font-manrope text-xs focus:outline-none focus:border-primary transition-colors" placeholder="Email Address" type="email"/>
+<button class="absolute right-0 top-2 material-symbols-outlined text-sm text-[#D81B60]" type="submit">arrow_forward</button>
+</div>
+</form>
+</div>
+</div>
+<div class="px-12 py-8 border-t border-outline-variant/10 w-full max-w-screen-2xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+<p class="font-manrope text-xs font-light opacity-70 text-center md:text-left">© 2024 E&amp;S Closet. All rights reserved.</p>
+<div class="flex gap-6">
+<span class="material-symbols-outlined text-lg opacity-70 hover:text-primary transition-colors cursor-pointer">social_leaderboard</span>
+<span class="material-symbols-outlined text-lg opacity-70 hover:text-primary transition-colors cursor-pointer">photo_camera</span>
+<span class="material-symbols-outlined text-lg opacity-70 hover:text-primary transition-colors cursor-pointer">alternate_email</span>
+</div>
+</div>
+</footer>
+<!-- Mobile Floating Shopping Bag -->
+<button class="md:hidden fixed bottom-8 right-8 w-16 h-16 bg-surface/80 backdrop-blur-xl border border-primary/20 rounded-full flex items-center justify-center shadow-xl text-primary z-50">
+<span class="material-symbols-outlined">shopping_bag</span>
+</button>
+</body></html>

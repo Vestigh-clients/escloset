@@ -50,7 +50,7 @@ export const contentConfig: ContentConfig = {
         subtext: "Premium formulas for healthy, beautiful hair.",
         cta: {
           text: "Shop Hair Care",
-          href: "/category/hair-care",
+          href: "/shop",
           tone: "outline",
         },
       },
@@ -63,7 +63,7 @@ export const contentConfig: ContentConfig = {
         subtext: "Elevated essentials for the modern wardrobe.",
         cta: {
           text: "Shop Men",
-          href: "/category/mens-fashion",
+          href: "/shop",
           tone: "primary",
         },
       },
@@ -76,7 +76,7 @@ export const contentConfig: ContentConfig = {
         subtext: "Timeless pieces for the discerning woman.",
         cta: {
           text: "Explore Women",
-          href: "/category/womens-fashion",
+          href: "/shop",
           tone: "outline",
         },
       },
@@ -89,7 +89,7 @@ export const contentConfig: ContentConfig = {
         subtext: "Handcrafted leather and refined silhouettes.",
         cta: {
           text: "Shop Bags",
-          href: "/category/bags",
+          href: "/shop",
           tone: "accent",
         },
       },
@@ -102,7 +102,7 @@ export const contentConfig: ContentConfig = {
         subtext: "Every step, considered.",
         cta: {
           text: "Shop Shoes",
-          href: "/category/shoes",
+          href: "/shop",
           tone: "primary",
         },
       },
@@ -115,11 +115,11 @@ export const contentConfig: ContentConfig = {
   footer: {
     description: "Luxury fashion essentials, curated for your store.",
     shopLinks: [
-      { label: "Hair Care", href: "/category/hair-care" },
-      { label: "Men's Fashion", href: "/category/mens-fashion" },
-      { label: "Women's Fashion", href: "/category/womens-fashion" },
-      { label: "Bags", href: "/category/bags" },
-      { label: "Shoes", href: "/category/shoes" },
+      { label: "Hair Care", href: "/shop" },
+      { label: "Men's Fashion", href: "/shop" },
+      { label: "Women's Fashion", href: "/shop" },
+      { label: "Bags", href: "/shop" },
+      { label: "Shoes", href: "/shop" },
     ],
     companyLinks: [
       { label: "About", href: "/about" },

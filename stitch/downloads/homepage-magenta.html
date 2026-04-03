@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>E&amp;S Closet | High-End Ghanaian Fashion</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400;1,700&amp;family=Manrope:wght@200;300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-highest": "#e2e2e2",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#1b8700",
+                        "surface-container-high": "#e8e8e8",
+                        "on-primary-fixed": "#3e001f",
+                        "outline": "#8f6e78",
+                        "on-tertiary-fixed-variant": "#0d5300",
+                        "surface-dim": "#dadada",
+                        "surface-container": "#eeeeee",
+                        "on-error": "#ffffff",
+                        "on-tertiary-container": "#f8ffef",
+                        "background": "#f9f9f9",
+                        "on-error-container": "#93000a",
+                        "secondary-fixed-dim": "#c6c6c6",
+                        "secondary": "#5e5e5e",
+                        "outline-variant": "#e3bdc7",
+                        "on-secondary": "#ffffff",
+                        "surface-variant": "#e2e2e2",
+                        "surface": "#f9f9f9",
+                        "inverse-on-surface": "#f1f1f1",
+                        "on-primary-container": "#fffbff",
+                        "tertiary": "#136b00",
+                        "primary": "#D81B60",
+                        "on-secondary-fixed-variant": "#474747",
+                        "on-secondary-container": "#646464",
+                        "primary-container": "#f06292",
+                        "on-primary-fixed-variant": "#8d004e",
+                        "primary-fixed-dim": "#ffb0ca",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-primary": "#ffb0ca",
+                        "secondary-container": "#e2e2e2",
+                        "on-secondary-fixed": "#1b1b1b",
+                        "secondary-fixed": "#e2e2e2",
+                        "on-tertiary-fixed": "#022100",
+                        "on-background": "#1a1c1c",
+                        "on-surface": "#1a1c1c",
+                        "surface-container-low": "#f3f3f3",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed": "#86fd66",
+                        "error": "#ba1a1a",
+                        "on-tertiary": "#ffffff",
+                        "primary-fixed": "#fce4ec",
+                        "inverse-surface": "#2f3131",
+                        "tertiary-fixed-dim": "#6ae04d",
+                        "surface-bright": "#f9f9f9",
+                        "on-surface-variant": "#5b3f48",
+                        "surface-tint": "#D81B60"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Noto Serif"],
+                        "body": ["Manrope"],
+                        "label": ["Manrope"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .font-notoSerif { font-family: 'Noto Serif', serif; }
+        .font-manrope { font-family: 'Manrope', sans-serif; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- TopNavBar -->
+<header class="bg-surface/80 dark:bg-zinc-950/80 backdrop-blur-xl docked full-width top-0 sticky z-50 shadow-sm dark:shadow-none">
+<nav class="flex justify-between items-center w-full px-8 py-4 max-w-screen-2xl mx-auto">
+<div class="flex items-center gap-8">
+<a class="font-notoSerif text-2xl italic font-bold text-on-background dark:text-white" href="#">E&amp;S Closet</a>
+<div class="hidden md:flex gap-6 items-center">
+<a class="font-notoSerif text-sm tracking-wide uppercase text-[#D81B60] border-b-2 border-[#D81B60] pb-1" href="#">Men</a>
+<a class="font-notoSerif text-sm tracking-wide uppercase text-on-surface-variant hover:text-[#D81B60] transition-colors" href="#">Women</a>
+<a class="font-notoSerif text-sm tracking-wide uppercase text-on-surface-variant hover:text-[#D81B60] transition-colors" href="#">Bags</a>
+<a class="font-notoSerif text-sm tracking-wide uppercase text-on-surface-variant hover:text-[#D81B60] transition-colors" href="#">Accessories</a>
+<a class="font-notoSerif text-sm tracking-wide uppercase text-on-surface-variant hover:text-[#D81B60] transition-colors" href="#">About</a>
+<a class="font-notoSerif text-sm tracking-wide uppercase text-on-surface-variant hover:text-[#D81B60] transition-colors" href="#">Contact</a>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden lg:flex items-center bg-surface-container-high px-4 py-2 rounded-lg gap-2">
+<span class="material-symbols-outlined text-on-surface-variant text-sm">search</span>
+<input class="bg-transparent border-none text-xs focus:ring-0 w-32 placeholder:text-on-surface-variant" placeholder="Search..." type="text"/>
+</div>
+<div class="flex items-center gap-4 text-[#D81B60] dark:text-[#fce4ec]">
+<button class="hover:opacity-80 transition-all duration-300 Active: scale-95 duration-200">
+<span class="material-symbols-outlined">shopping_bag</span>
+</button>
+<button class="hover:opacity-80 transition-all duration-300 Active: scale-95 duration-200">
+<span class="material-symbols-outlined">person</span>
+</button>
+<button class="md:hidden">
+<span class="material-symbols-outlined text-on-surface">menu</span>
+</button>
+</div>
+</div>
+</nav>
+</header>
+<main>
+<!-- Hero Section -->
+<section class="relative h-[921px] flex items-center overflow-hidden bg-surface-container">
+<div class="absolute inset-0 grid grid-cols-2">
+<div class="relative overflow-hidden">
+<img alt="Editorial male model in charcoal grey suit" class="w-full h-full object-cover" data-alt="Editorial portrait of a handsome Ghanaian man wearing a sharp tailored charcoal grey suit against a minimalist architectural background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3f9jYXGfvt1P6Lgk1hbWAdxbZcUmvY80TyZ_aa1CBmBxavQhPcJJEfwq-krnJWkdUrPm2NvB9vD_tAu0VQ7fQQf55UvpF8vrB_3NVgOhSfXko4nyD56yxdnBq2K3O3ECsg784u7DuAchGjhHKHWeGquXRpXP7yRnmEQcowWdvL9IbQMXsC2TO-FEttRIejDjl3lvvCt8sEhA1201Ri4HOrtY8cSDUn_Iv1_5qedhC09dI6UeF7MMorilAj_KCdDZ7-KA9sRJVmpQ"/>
+</div>
+<div class="relative overflow-hidden">
+<img alt="Editorial female model in vibrant pink silk" class="w-full h-full object-cover" data-alt="High-fashion editorial of a woman in a flowing vibrant magenta silk dress, soft afternoon sunlight, elegant movement and luxury feel" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGPVas7T5HsblTTLyVgGyZteedwrjIUHqR1_j0xaIBnzcoR2eATLvu6VDWcrbqTZHgMQVMdL93i2eb5VhRbKBUhgl5BoDgn5TXdqeYmQwB3vIpFAM69Tz2O3SzCzvGc8JbZVi40arj1f8YHCE1u8kbrDX2zS4StMxWE12cbwQLnDJtcaG19dLPBaxDzahs57x1azeuwKKPte76Qz9Qjre73q5PyKAUCYxlbf2mIENv4d1UD8qiXIKCEMuZfHybt5c9t8o6dWUrnI4"/>
+</div>
+</div>
+<div class="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent"></div>
+<div class="relative z-10 w-full max-w-screen-2xl mx-auto px-8">
+<div class="max-w-2xl bg-surface/40 backdrop-blur-md p-10 rounded-xl">
+<h1 class="font-headline text-7xl font-bold leading-tight mb-6">
+                        Your Wardrobe, <br/><span class="text-primary italic">Our Closet</span>
+</h1>
+<p class="font-body text-xl mb-8 text-on-surface-variant leading-relaxed">
+                        Curated high-end Ghanaian fashion, redefined for the contemporary aesthetic. Luxury accessible to your everyday.
+                    </p>
+<button class="bg-gradient-to-r from-primary to-primary-container text-on-primary px-10 py-4 rounded-md font-bold tracking-widest uppercase text-sm hover:opacity-90 transition-all shadow-lg active:scale-95">
+                        Shop Now
+                    </button>
+</div>
+</div>
+</section>
+<!-- Category Grid -->
+<section class="py-24 px-8 max-w-screen-2xl mx-auto">
+<div class="flex flex-col md:flex-row gap-8">
+<div class="flex-1 group cursor-pointer relative overflow-hidden rounded-xl aspect-[3/4] bg-surface-container-lowest">
+<img alt="Women's Collection" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="Close up of high-end women's designer garments hanging on a minimalist brass rail in a sunlit boutique store" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBvrlgZjRa6VyHVVoPe1TPzovj-6KLzXGP0QuwNtPjwwiPjEazImg7_zPb5DNR5JSxRtucfAAEjBNKSQ5evKJtwRcIByme7PR1Q8dtjwHAzgNFIFAHfUMJT2C7OJ4yQ6xTX0rMfpagmWWxX7KdZ11gpjqoJWf_gpRTs-m6s7GR9F57u7w9k7eTMCJBxEWZsZ0dupJevh9J3wJTmD8el9mbB8bDhTCXBbmMLTkpkbViuzw6zNzP_4cQTbQn5UofqkUPyPL2LbrSICLE"/>
+<div class="absolute inset-0 bg-black/10 group-hover:bg-primary/20 transition-colors duration-500"></div>
+<div class="absolute bottom-8 left-8">
+<h3 class="font-headline text-3xl text-white font-bold mb-2">Women</h3>
+<div class="w-12 h-1 bg-primary group-hover:w-full transition-all duration-500"></div>
+</div>
+</div>
+<div class="flex-1 group cursor-pointer relative overflow-hidden rounded-xl aspect-[3/4] bg-surface-container-lowest">
+<img alt="Men's Collection" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="Sophisticated men's accessories including leather shoes and a classic watch arranged on a dark oak table" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDA_gEj3u1W2RtI6Wlrnm5B4-Ctsw0HKFiBOkz8raSjBqY_bedqmRbW1ED29vbcFxXX-EyU4ZVwy6Zx_oSGSxpguh7pP2V7WvjinYNihmgHMBa2Dhu-sk-EfXMii41YXSi-dZl6yU1oNNjbD49cp8eeGaZE4bujvOZOWC8EHPNz3hJu7HLApg2DK-glv79WoFAhHxS1E7Ve2c61IBMXgUcB43bLp2dwS6NrT3AcOTgv04SvoEmCHJ8Xw7GFBbueViLmqldIkh0hJKk"/>
+<div class="absolute inset-0 bg-black/10 group-hover:bg-primary/20 transition-colors duration-500"></div>
+<div class="absolute bottom-8 left-8">
+<h3 class="font-headline text-3xl text-white font-bold mb-2">Men</h3>
+<div class="w-12 h-1 bg-primary group-hover:w-full transition-all duration-500"></div>
+</div>
+</div>
+<div class="flex-1 group cursor-pointer relative overflow-hidden rounded-xl aspect-[3/4] bg-surface-container-lowest">
+<img alt="Bags &amp; Accessories" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="Luxury leather crossbody bag sitting on a marble pedestal, dramatic lighting with soft pink backglow" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDfRSAMLvXlzq4M7ISk2sxIQbU2yvdt0fRvroeLUR__WPbu_3NZFFm9JAHsQRGY6X5YNc4mG1kAHPgQeWyB28qjbvhH1lu-3vJdgiWpELzyN3jsK3D17507dYa6OaBdBntWHWpiSqbQ4dIKRHH4yfvkE_LHD54btENAuratlHE0awxaLGRnS2KukLxGBGbvKdoRKOlY3C-fpfUpSSk5qoDQGDZkGIpx2aFiSC-zVdxBMHqxVQjw5n39jzCZUAuxpNoGZIZI228B9Ns"/>
+<div class="absolute inset-0 bg-black/10 group-hover:bg-primary/20 transition-colors duration-500"></div>
+<div class="absolute bottom-8 left-8">
+<h3 class="font-headline text-3xl text-white font-bold mb-2">Bags &amp; Accessories</h3>
+<div class="w-12 h-1 bg-primary group-hover:w-full transition-all duration-500"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- New Arrivals -->
+<section class="py-24 bg-surface-container-lowest">
+<div class="max-w-screen-2xl mx-auto px-8">
+<div class="flex justify-between items-end mb-12">
+<div>
+<span class="text-primary font-bold tracking-widest text-xs uppercase">Curated Collection</span>
+<h2 class="font-headline text-5xl font-bold mt-2">New Arrivals</h2>
+</div>
+<a class="text-on-surface-variant font-medium underline underline-offset-4 hover:text-primary transition-colors" href="#">View All Collection</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+<!-- Product Card 1 -->
+<div class="group">
+<div class="relative aspect-[4/5] bg-surface-container overflow-hidden rounded-md mb-4">
+<img alt="Silk Slip Dress" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Elegant champagne silk slip dress on a mannequin in a minimalist showroom, soft atmospheric lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD5uw-EcjyELejFHeTJ-DD4v5VS1-NXY359QVggXw7TBB5Z19y0hn8CrhDFlO64FzGUT3rH1WcyZmWOfa84zNDuOiXaW6egeILtgslvKewTASQQaHhY4IVk6QZqiHCCo04N8rbuiW7RuZm7Z3d0h5nx0GZ-dbiGbMPnf8CFpGugA02qFRa7GteRKFW2w4gLZRrNzLXwi4UZS9Yyde41pmqmO0VSJ58z8t6SxmFaEO4M7KWgTuIbqNQT01zTKQ-YNe5c9SCCYDvM-qQ"/>
+<button class="absolute bottom-4 left-4 right-4 bg-primary text-white py-3 translate-y-12 group-hover:translate-y-0 transition-transform duration-300 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">add_shopping_cart</span>
+<span class="text-xs font-bold uppercase tracking-wider">Add to Cart</span>
+</button>
+</div>
+<h4 class="font-headline text-lg font-bold group-hover:text-primary transition-colors">Champagne Silk Slip</h4>
+<p class="text-on-surface-variant text-sm mb-1">Women's Premium</p>
+<p class="text-primary font-bold">GH₵ 450.00</p>
+</div>
+<!-- Product Card 2 -->
+<div class="group">
+<div class="relative aspect-[4/5] bg-surface-container overflow-hidden rounded-md mb-4">
+<img alt="Tailored Linen Shirt" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Crisp white linen men's tailored shirt folded neatly on a textured surface with soft shadows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCO8_j4tUGr0KIjJ-lnZ2Xc8GHHkkob1ewxqu2GL_MOROvSN4cUI0nEN9Z0LkdJZ07jTGj6BFwJkzLc16-zhR8MS8ens8ienYW9NVOZHPmI9_64jpt_SkWNhBWfZ1F7IW6R0kudkWl6UldLGlJ2DK8SwUThacekwpwkSA5AJxVQX1jG4r9jSgTjlNK_AdCsvf3rlUsxDH54zWmHomhc80qB8lwGFMFMmTEBuKGHki-IxblJM9ZJ-5tPKMEgBhFbKbuovyac8n7K9js"/>
+<button class="absolute bottom-4 left-4 right-4 bg-primary text-white py-3 translate-y-12 group-hover:translate-y-0 transition-transform duration-300 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">add_shopping_cart</span>
+<span class="text-xs font-bold uppercase tracking-wider">Add to Cart</span>
+</button>
+</div>
+<h4 class="font-headline text-lg font-bold group-hover:text-primary transition-colors">Linen Tailored Shirt</h4>
+<p class="text-on-surface-variant text-sm mb-1">Men's Essentials</p>
+<p class="text-primary font-bold">GH₵ 320.00</p>
+</div>
+<!-- Product Card 3 -->
+<div class="group">
+<div class="relative aspect-[4/5] bg-surface-container overflow-hidden rounded-md mb-4">
+<img alt="Leather Crossbody Bag" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Petite black pebbled leather crossbody bag with gold hardware detail, minimalist aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCl-hCdN7jOByn89zinmeeGvgQuG4qkZ84yPd3Vo9iC7IdFXCoTqB1hONyjmkLmou2cSuGSq5akSLaoZPwwVmZKghprJz40lKa4F3G7e7PF4fKPUQZZmABY_g_TorfNKLjFUW-hqJ679LrKxh-i6B3KtFoTH_BGzkJuoE39C7QqJP6x9KkMG7nOjrjuu32p85tBOKO4xh4XGelVIhzzPCNYbzQvl0xUPTxGsqL8Id3Vaqpm2sPx9ySs-KNUcD2gWriyuI7sCEiK22w"/>
+<button class="absolute bottom-4 left-4 right-4 bg-primary text-white py-3 translate-y-12 group-hover:translate-y-0 transition-transform duration-300 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">add_shopping_cart</span>
+<span class="text-xs font-bold uppercase tracking-wider">Add to Cart</span>
+</button>
+</div>
+<h4 class="font-headline text-lg font-bold group-hover:text-primary transition-colors">Petite Crossbody Bag</h4>
+<p class="text-on-surface-variant text-sm mb-1">Accessories</p>
+<p class="text-primary font-bold">GH₵ 580.00</p>
+</div>
+<!-- Product Card 4 -->
+<div class="group">
+<div class="relative aspect-[4/5] bg-surface-container overflow-hidden rounded-md mb-4">
+<img alt="Patterned Maxi Dress" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Bold African print inspired maxi dress with modern silhouette, studio lighting on pale grey background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD68EweOv7fPJ6aEpfL9-RQxWJq2YwztZtP5nXXeaFfrWMbNBbLKvN7S6sQOZIFsJ07rpBUXzXrQ-EUXiaE-r325KUkXqjknSkiW7UNbSA4Ac3hcrgu3aecnsBbwNULXwvQV8rFcuS2Lci5P_mfJUN_SIAsIKPqlOymhEvS6shzmrf2SPjLQpT4XzgFu5cAqeqdxj58UE27wkMbNSIT5Eq6mXEbv96jBrpMn-3sI7QwB_4lOzImIBjq80NNjIDcIadOVxPERLXJ6r0"/>
+<button class="absolute bottom-4 left-4 right-4 bg-primary text-white py-3 translate-y-12 group-hover:translate-y-0 transition-transform duration-300 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">add_shopping_cart</span>
+<span class="text-xs font-bold uppercase tracking-wider">Add to Cart</span>
+</button>
+</div>
+<h4 class="font-headline text-lg font-bold group-hover:text-primary transition-colors">Heritage Maxi Dress</h4>
+<p class="text-on-surface-variant text-sm mb-1">Women's Collection</p>
+<p class="text-primary font-bold">GH₵ 750.00</p>
+</div>
+</div>
+</div>
+</section>
+<!-- About The Brand -->
+<section class="py-32 bg-surface">
+<div class="max-w-screen-xl mx-auto px-8">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+<div class="relative">
+<div class="absolute -top-10 -left-10 w-64 h-64 bg-primary-fixed/30 rounded-full blur-3xl"></div>
+<img alt="Luxury Showroom" class="relative z-10 rounded-xl shadow-2xl w-full grayscale hover:grayscale-0 transition-all duration-1000" data-alt="Interior of a high-end fashion boutique in Accra, featuring minimalist white walls, marble floors and gold accents" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBEpLhqUZzVZo7P9fGAgmXdUNjlST_StPhgD8GA_wSTggUVM-SQjKIhFwS2gAMIuNLc7IqhqLAXXkTX-ia8kUSOML4NL1bpHEN5L9v13ffnixOfizMRKJMz6TWblOtZa6A-z-ISdP5tJqRmYhEiRJFDgxo5xNGN1gH2OmSSy7bNSCsoHPnpV-ZGOL-I6mWsF1NfpFYy5GU7k2aoRW28Ull-M5vxvN5lfMkpvI8-G_IBUoYKNeiZFKabJzh0d3eTfUpOR3oSAcHj6Lk"/>
+</div>
+<div>
+<h2 class="font-headline text-5xl font-bold mb-8 leading-tight">Elevating Ghanaian Fashion to New Heights</h2>
+<div class="space-y-6 font-body text-on-surface-variant leading-relaxed text-lg">
+<p>
+                                At E&amp;S Closet, we believe that luxury shouldn't be an unreachable dream. Born in the heart of Ghana, our mission is to redefine the digital atelier experience for the modern African consumer.
+                            </p>
+<p>
+                                We meticulously curate high-end, contemporary pieces that blend global trends with local sophistication. Every garment in our closet is a testament to quality craftsmanship and timeless style, brought to you at prices that respect your lifestyle.
+                            </p>
+<div class="pt-6 flex items-center gap-4 text-primary font-bold">
+<span class="w-12 h-[2px] bg-primary"></span>
+<span class="uppercase tracking-widest text-sm">Established 2024</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-low dark:bg-zinc-900 w-full mt-20 tonal-shift-top">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-12 px-12 py-16 w-full">
+<div class="col-span-1">
+<div class="font-notoSerif text-lg font-bold text-[#D81B60] mb-6">E&amp;S Closet</div>
+<p class="font-manrope text-xs font-light opacity-70 leading-relaxed max-w-xs">
+                    Your destination for high-end fashion essentials in Ghana. Modern style meets traditional excellence.
+                </p>
+</div>
+<div>
+<h5 class="font-manrope text-xs font-bold uppercase tracking-widest mb-6 text-[#D81B60]">Quick Links</h5>
+<ul class="space-y-4">
+<li><a class="font-manrope text-xs font-light opacity-70 hover:opacity-100 hover:text-[#D81B60] transition-opacity duration-300" href="#">Store Locations Ghana</a></li>
+<li><a class="font-manrope text-xs font-light opacity-70 hover:opacity-100 hover:text-[#D81B60] transition-opacity duration-300" href="#">WhatsApp Support</a></li>
+<li><a class="font-manrope text-xs font-light opacity-70 hover:opacity-100 hover:text-[#D81B60] transition-opacity duration-300" href="#">Email Us</a></li>
+</ul>
+</div>
+<div>
+<h5 class="font-manrope text-xs font-bold uppercase tracking-widest mb-6 text-[#D81B60]">Policy</h5>
+<ul class="space-y-4">
+<li><a class="font-manrope text-xs font-light opacity-70 hover:opacity-100 hover:text-[#D81B60] transition-opacity duration-300" href="#">Shipping Policy</a></li>
+<li><a class="font-manrope text-xs font-light opacity-70 hover:opacity-100 hover:text-[#D81B60] transition-opacity duration-300 underline font-medium" href="#">Returns</a></li>
+</ul>
+</div>
+<div>
+<h5 class="font-manrope text-xs font-bold uppercase tracking-widest mb-6 text-[#D81B60]">Newsletter</h5>
+<p class="font-manrope text-xs font-light opacity-70 mb-4">Join our inner circle for exclusive drops.</p>
+<div class="flex">
+<input class="bg-surface p-2 text-xs border-none focus:ring-1 focus:ring-[#D81B60] w-full" placeholder="Email Address" type="email"/>
+<button class="bg-[#D81B60] text-white px-4 text-xs font-bold">JOIN</button>
+</div>
+</div>
+</div>
+<div class="border-t border-outline-variant/10 px-12 py-8 flex flex-col md:flex-row justify-between items-center gap-4">
+<p class="font-manrope text-xs font-light opacity-70">© 2024 E&amp;S Closet. All rights reserved.</p>
+<div class="flex gap-6">
+<span class="material-symbols-outlined text-on-surface-variant">social_leaderboard</span>
+<span class="material-symbols-outlined text-on-surface-variant">photo_camera</span>
+<span class="material-symbols-outlined text-on-surface-variant">share</span>
+</div>
+</div>
+</footer>
+<!-- Floating Bag for Mobile -->
+<button class="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-surface/80 backdrop-blur-xl rounded-full shadow-xl flex items-center justify-center text-primary z-50">
+<span class="material-symbols-outlined">shopping_bag</span>
+</button>
+</body></html>

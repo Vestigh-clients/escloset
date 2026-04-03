@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useStorefrontConfig } from "@/contexts/StorefrontConfigContext";
 import { useThemeConfig } from "@/contexts/ThemeContext";
@@ -1501,8 +1501,25 @@ const AdminProductEditorPage = () => {
         meta_description: metaDescription.trim() || null,
       } as const;
 
-      if (!payload.name || !payload.slug || !payload.price || !categoryId) {
-        setSaveMessage("Fill all required fields: name, category, and price.");
+      const missingRequiredFields: Array<{ label: string; section: string; fieldId: string }> = [];
+      if (!payload.name) {
+        missingRequiredFields.push({ label: "Product name", section: "Basic Information", fieldId: "field-name" });
+      }
+      if (!categoryId) {
+        missingRequiredFields.push({ label: "Category", section: "Basic Information", fieldId: "field-category" });
+      }
+      if (!payload.price) {
+        missingRequiredFields.push({ label: "Selling price", section: "Pricing & Inventory", fieldId: "field-price" });
+      }
+
+      if (missingRequiredFields.length > 0) {
+        const message = missingRequiredFields.map((field) => `${field.label} (${field.section})`).join(", ");
+        setSaveMessage(`Missing required fields: ${message}.`);
+
+        const firstMissingField = document.getElementById(missingRequiredFields[0].fieldId);
+        firstMissingField?.scrollIntoView({ behavior: "smooth", block: "center" });
+        const focusTarget = firstMissingField?.querySelector<HTMLElement>("input, select, textarea, button");
+        focusTarget?.focus();
         return;
       }
 
@@ -1670,11 +1687,11 @@ const AdminProductEditorPage = () => {
         </div>
       </div>
 
-      <div className="product-form-layout flex flex-col gap-10 lg:grid lg:grid-cols-[58%_42%] lg:gap-[60px]">
-        <div className="product-form-left">
+      <div className="product-form-layout flex flex-col gap-10 lg:grid lg:grid-cols-[58fr_42fr] lg:gap-[60px]">
+        <div className="product-form-left min-w-0">
           <p className={sectionLabelClass}>Basic Information</p>
 
-          <div>
+          <div id="field-name">
             <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-muted-soft)]">Product Name *</label>
             <input
               value={name}
@@ -1702,6 +1719,22 @@ const AdminProductEditorPage = () => {
             ) : null}
           </div>
 
+          <div id="field-category" className="mt-6 rounded-[var(--border-radius)]">
+            <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-muted-soft)]">Category *</label>
+            <select
+              value={categoryId}
+              onChange={(event) => setCategoryId(event.target.value)}
+              className="mt-2 w-full border-0 border-b border-[var(--color-border)] bg-transparent pb-2 font-body text-[13px] text-[var(--color-primary)] outline-none focus:border-[var(--color-primary)]"
+            >
+              <option value="">Select category</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div id="field-shortDescription" className="mt-6 rounded-[var(--border-radius)]">
             <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-muted-soft)]">Short Description *</label>
             <textarea
@@ -1724,7 +1757,7 @@ const AdminProductEditorPage = () => {
           <p className={`${sectionLabelClass} mt-10`}>Pricing & Inventory</p>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <div>
+            <div id="field-price">
               <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-muted-soft)]">Selling Price *</label>
               <div className="mt-2 flex items-center border-b border-[var(--color-border)] pb-2">
                 <span className="mr-2 font-body text-[14px] text-[var(--color-muted-soft)]">GH&#8373;</span>
@@ -1826,138 +1859,6 @@ const AdminProductEditorPage = () => {
               className="mt-2 w-full border-0 border-b border-[var(--color-border)] bg-transparent pb-2 font-body text-[14px] text-[var(--color-primary)] outline-none focus:border-[var(--color-primary)]"
             />
             <p className="mt-1 font-body text-[10px] text-[var(--color-muted-soft)]">Used for shipping calculations</p>
-          </div>
-
-          <p className={`${sectionLabelClass} mt-10`}>Organisation</p>
-
-          <div>
-            <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-muted-soft)]">Category *</label>
-            <select
-              value={categoryId}
-              onChange={(event) => setCategoryId(event.target.value)}
-              className="mt-2 w-full border-0 border-b border-[var(--color-border)] bg-transparent pb-2 font-body text-[13px] text-[var(--color-primary)] outline-none focus:border-[var(--color-primary)]"
-            >
-              <option value="">Select category</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div id="field-tags" className="mt-4 rounded-[var(--border-radius)]">
-            <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-muted-soft)]">Tags</label>
-            <input
-              value={tagInput}
-              onChange={(event) => setTagInput(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  onAddTag();
-                }
-              }}
-              className="mt-2 w-full border-0 border-b border-[var(--color-border)] bg-transparent pb-2 font-body text-[13px] text-[var(--color-primary)] outline-none focus:border-[var(--color-primary)]"
-              placeholder="Type and press Enter"
-            />
-            {tags.length > 0 ? (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="inline-flex items-center gap-1 rounded-[var(--border-radius)] border border-[var(--color-border)] bg-[rgba(var(--color-primary-rgb),0.06)] px-2.5 py-1 font-body text-[11px] text-[var(--color-primary)]"
-                  >
-                    {tag}
-                    <button type="button" onClick={() => setTags((current) => current.filter((entry) => entry !== tag))}>
-                      &times;
-                    </button>
-                  </span>
-                ))}
-              </div>
-            ) : null}
-          </div>
-
-          <div id="field-metaTitle" className="mt-4 rounded-[var(--border-radius)]">
-            <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-muted-soft)]">Meta Title</label>
-            <input
-              value={metaTitle}
-              onChange={(event) => setMetaTitle(event.target.value.slice(0, 255))}
-              className="mt-2 w-full border-0 border-b border-[var(--color-border)] bg-transparent pb-2 font-body text-[13px] text-[var(--color-primary)] outline-none focus:border-[var(--color-primary)]"
-            />
-            <p className="mt-1 font-body text-[10px] text-[var(--color-muted-soft)]">Defaults to product name if empty</p>
-          </div>
-
-          <div id="field-metaDescription" className="mt-4 rounded-[var(--border-radius)]">
-            <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-muted-soft)]">Meta Description</label>
-            <textarea
-              value={metaDescription}
-              onChange={(event) => setMetaDescription(event.target.value.slice(0, 500))}
-              className="mt-2 min-h-20 w-full resize-y border-0 border-b border-[var(--color-border)] bg-transparent pb-2 font-body text-[13px] text-[var(--color-primary)] outline-none focus:border-[var(--color-primary)]"
-            />
-            <p className="mt-1 text-right font-body text-[10px] text-[var(--color-muted-soft)]">{metaDescription.length}/500</p>
-          </div>
-
-          <p className={`${sectionLabelClass} mt-10`}>Product Benefits</p>
-
-          <button
-            type="button"
-            onClick={onAddBenefit}
-            disabled={benefits.length >= 6}
-            className="rounded-[var(--border-radius)] border border-[var(--color-border)] px-5 py-2 font-body text-[10px] uppercase tracking-[0.1em] text-[var(--color-primary)] transition-colors hover:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Add Benefit
-          </button>
-
-          <div id="field-benefits" className="mt-4 rounded-[var(--border-radius)]">
-            {benefits.map((benefit, index) => (
-              <div key={benefit.id} className="grid gap-2 border-b border-[var(--color-border)] py-3 md:grid-cols-[120px_1fr_1.4fr_auto]">
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => onMoveBenefit(benefit.id, "up")}
-                    disabled={index === 0}
-                    className="text-[var(--color-border)] disabled:opacity-40"
-                  >
-                    &#8593;
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onMoveBenefit(benefit.id, "down")}
-                    disabled={index === benefits.length - 1}
-                    className="text-[var(--color-border)] disabled:opacity-40"
-                  >
-                    &#8595;
-                  </button>
-                  <select
-                    value={benefit.icon}
-                    onChange={(event) => onUpdateBenefit(benefit.id, "icon", event.target.value)}
-                    className="w-full border-0 border-b border-[var(--color-border)] bg-transparent pb-1 font-body text-[11px] text-[var(--color-primary)] outline-none"
-                  >
-                    {iconOptions.map((icon) => (
-                      <option key={icon} value={icon}>
-                        {icon}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <input
-                  value={benefit.label}
-                  onChange={(event) => onUpdateBenefit(benefit.id, "label", event.target.value)}
-                  placeholder="Label"
-                  className="border-0 border-b border-[var(--color-border)] bg-transparent pb-1 font-body text-[13px] text-[var(--color-primary)] outline-none"
-                />
-                <input
-                  value={benefit.description}
-                  onChange={(event) => onUpdateBenefit(benefit.id, "description", event.target.value)}
-                  placeholder="Brief description..."
-                  className="border-0 border-b border-[var(--color-border)] bg-transparent pb-1 font-body text-[12px] text-[var(--color-muted)] outline-none"
-                />
-                <button type="button" onClick={() => onRemoveBenefit(benefit.id)} className="text-[var(--color-muted-soft)] hover:text-[var(--color-danger)]">
-                  &times;
-                </button>
-              </div>
-            ))}
           </div>
 
           {hasVariants ? (
@@ -2376,9 +2277,125 @@ const AdminProductEditorPage = () => {
               </div>
             </div>
           ) : null}
+          <p className={`${sectionLabelClass} mt-10`}>Organisation</p>
+
+          <div id="field-tags" className="mt-4 rounded-[var(--border-radius)]">
+            <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-muted-soft)]">Tags</label>
+            <input
+              value={tagInput}
+              onChange={(event) => setTagInput(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  onAddTag();
+                }
+              }}
+              className="mt-2 w-full border-0 border-b border-[var(--color-border)] bg-transparent pb-2 font-body text-[13px] text-[var(--color-primary)] outline-none focus:border-[var(--color-primary)]"
+              placeholder="Type and press Enter"
+            />
+            {tags.length > 0 ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center gap-1 rounded-[var(--border-radius)] border border-[var(--color-border)] bg-[rgba(var(--color-primary-rgb),0.06)] px-2.5 py-1 font-body text-[11px] text-[var(--color-primary)]"
+                  >
+                    {tag}
+                    <button type="button" onClick={() => setTags((current) => current.filter((entry) => entry !== tag))}>
+                      &times;
+                    </button>
+                  </span>
+                ))}
+              </div>
+            ) : null}
+          </div>
+
+          <div id="field-metaTitle" className="mt-4 rounded-[var(--border-radius)]">
+            <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-muted-soft)]">Meta Title</label>
+            <input
+              value={metaTitle}
+              onChange={(event) => setMetaTitle(event.target.value.slice(0, 255))}
+              className="mt-2 w-full border-0 border-b border-[var(--color-border)] bg-transparent pb-2 font-body text-[13px] text-[var(--color-primary)] outline-none focus:border-[var(--color-primary)]"
+            />
+            <p className="mt-1 font-body text-[10px] text-[var(--color-muted-soft)]">Defaults to product name if empty</p>
+          </div>
+
+          <div id="field-metaDescription" className="mt-4 rounded-[var(--border-radius)]">
+            <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-muted-soft)]">Meta Description</label>
+            <textarea
+              value={metaDescription}
+              onChange={(event) => setMetaDescription(event.target.value.slice(0, 500))}
+              className="mt-2 min-h-20 w-full resize-y border-0 border-b border-[var(--color-border)] bg-transparent pb-2 font-body text-[13px] text-[var(--color-primary)] outline-none focus:border-[var(--color-primary)]"
+            />
+            <p className="mt-1 text-right font-body text-[10px] text-[var(--color-muted-soft)]">{metaDescription.length}/500</p>
+          </div>
+
+          <p className={`${sectionLabelClass} mt-10`}>Product Benefits</p>
+
+          <button
+            type="button"
+            onClick={onAddBenefit}
+            disabled={benefits.length >= 6}
+            className="rounded-[var(--border-radius)] border border-[var(--color-border)] px-5 py-2 font-body text-[10px] uppercase tracking-[0.1em] text-[var(--color-primary)] transition-colors hover:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Add Benefit
+          </button>
+
+          <div id="field-benefits" className="mt-4 rounded-[var(--border-radius)]">
+            {benefits.map((benefit, index) => (
+              <div key={benefit.id} className="grid gap-2 border-b border-[var(--color-border)] py-3 md:grid-cols-[120px_1fr_1.4fr_auto]">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onMoveBenefit(benefit.id, "up")}
+                    disabled={index === 0}
+                    className="text-[var(--color-border)] disabled:opacity-40"
+                  >
+                    &#8593;
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onMoveBenefit(benefit.id, "down")}
+                    disabled={index === benefits.length - 1}
+                    className="text-[var(--color-border)] disabled:opacity-40"
+                  >
+                    &#8595;
+                  </button>
+                  <select
+                    value={benefit.icon}
+                    onChange={(event) => onUpdateBenefit(benefit.id, "icon", event.target.value)}
+                    className="w-full border-0 border-b border-[var(--color-border)] bg-transparent pb-1 font-body text-[11px] text-[var(--color-primary)] outline-none"
+                  >
+                    {iconOptions.map((icon) => (
+                      <option key={icon} value={icon}>
+                        {icon}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <input
+                  value={benefit.label}
+                  onChange={(event) => onUpdateBenefit(benefit.id, "label", event.target.value)}
+                  placeholder="Label"
+                  className="border-0 border-b border-[var(--color-border)] bg-transparent pb-1 font-body text-[13px] text-[var(--color-primary)] outline-none"
+                />
+                <input
+                  value={benefit.description}
+                  onChange={(event) => onUpdateBenefit(benefit.id, "description", event.target.value)}
+                  placeholder="Brief description..."
+                  className="border-0 border-b border-[var(--color-border)] bg-transparent pb-1 font-body text-[12px] text-[var(--color-muted)] outline-none"
+                />
+                <button type="button" onClick={() => onRemoveBenefit(benefit.id)} className="text-[var(--color-muted-soft)] hover:text-[var(--color-danger)]">
+                  &times;
+                </button>
+              </div>
+            ))}
+          </div>
+
         </div>
 
-        <div className="product-form-right">
+        <div className="product-form-right min-w-0">
           <p className="mb-4 font-body text-[10px] uppercase tracking-[0.2em] text-[var(--color-accent)]">Product Images</p>
           <p className="mb-4 font-body text-[10px] text-[var(--color-muted-soft)]">
             First image is primary. Max 6 images, 2MB each.
@@ -2460,27 +2477,51 @@ const AdminProductEditorPage = () => {
 
           <p className={`${sectionLabelClass} mt-10`}>Publishing</p>
 
-          <label className="mb-2 flex items-center justify-between gap-4">
-            <div>
+          <label className="mb-2 flex items-start justify-between gap-4">
+            <div className="min-w-0 flex-1 pr-2">
               <p className="font-body text-[12px] text-[var(--color-primary)]">This product has variants</p>
               <p className="font-body text-[10px] leading-[1.7] text-[var(--color-muted-soft)]">
                 Enable if this product comes in multiple option combinations. Stock and pricing will be managed per
                 variant.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={onToggleHasVariants}
-              className={`relative h-6 w-11 shrink-0 cursor-pointer overflow-hidden rounded-full border-0 p-0 transition-colors ${
-                hasVariants ? "bg-[var(--color-primary)]" : "bg-[var(--color-border)]"
-              }`}
-            >
-              <span
-                className={`pointer-events-none absolute top-[2px] h-5 w-5 rounded-full bg-white transition-[left] duration-200 ease-in ${
-                  hasVariants ? "left-[22px]" : "left-[2px]"
-                }`}
-              />
-            </button>
+            <div className="flex min-w-[96px] shrink-0 items-center justify-end gap-3">
+              <span className="font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-primary)]">
+                {hasVariants ? "On" : "Off"}
+              </span>
+              <button
+                type="button"
+                onClick={onToggleHasVariants}
+                aria-label="Toggle product variants"
+                aria-pressed={hasVariants}
+                className="relative shrink-0 cursor-pointer p-0"
+                style={{
+                  width: "52px",
+                  height: "30px",
+                  minWidth: "52px",
+                  borderRadius: "9999px",
+                  border: "2px solid var(--color-primary)",
+                  background: hasVariants ? "var(--color-primary)" : "var(--color-surface-strong)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  overflow: "hidden",
+                }}
+              >
+                <span
+                  className="pointer-events-none absolute"
+                  style={{
+                    top: "2px",
+                    left: hasVariants ? "24px" : "2px",
+                    width: "22px",
+                    height: "22px",
+                    borderRadius: "9999px",
+                    background: hasVariants ? "var(--color-secondary)" : "var(--color-primary)",
+                    boxShadow: "0 2px 5px rgba(0,0,0,0.35)",
+                    transition: "left 180ms ease-in-out",
+                  }}
+                />
+              </button>
+            </div>
           </label>
 
           {!hasVariants && variantToggleWarning ? (
@@ -2491,44 +2532,92 @@ const AdminProductEditorPage = () => {
             </div>
           ) : null}
 
-          <label className="mb-4 mt-4 flex items-center justify-between gap-4">
-            <div>
+          <label className="mb-4 mt-4 flex items-start justify-between gap-4">
+            <div className="min-w-0 flex-1 pr-2">
               <p className="font-body text-[12px] text-[var(--color-primary)]">Available for purchase</p>
               <p className="font-body text-[11px] text-[var(--color-muted)]">Make this product available to customers</p>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsAvailable((value) => !value)}
-              className={`relative h-6 w-11 shrink-0 cursor-pointer overflow-hidden rounded-full border-0 p-0 transition-colors ${
-                isAvailable ? "bg-[var(--color-primary)]" : "bg-[var(--color-border)]"
-              }`}
-            >
-              <span
-                className={`pointer-events-none absolute top-[2px] h-5 w-5 rounded-full bg-white transition-[left] duration-200 ease-in ${
-                  isAvailable ? "left-[22px]" : "left-[2px]"
-                }`}
-              />
-            </button>
+            <div className="flex min-w-[96px] shrink-0 items-center justify-end gap-3">
+              <span className="font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-primary)]">
+                {isAvailable ? "On" : "Off"}
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsAvailable((value) => !value)}
+                aria-label="Toggle availability"
+                aria-pressed={isAvailable}
+                className="relative shrink-0 cursor-pointer p-0"
+                style={{
+                  width: "52px",
+                  height: "30px",
+                  minWidth: "52px",
+                  borderRadius: "9999px",
+                  border: "2px solid var(--color-primary)",
+                  background: isAvailable ? "var(--color-primary)" : "var(--color-surface-strong)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  overflow: "hidden",
+                }}
+              >
+                <span
+                  className="pointer-events-none absolute"
+                  style={{
+                    top: "2px",
+                    left: isAvailable ? "24px" : "2px",
+                    width: "22px",
+                    height: "22px",
+                    borderRadius: "9999px",
+                    background: isAvailable ? "var(--color-secondary)" : "var(--color-primary)",
+                    boxShadow: "0 2px 5px rgba(0,0,0,0.35)",
+                    transition: "left 180ms ease-in-out",
+                  }}
+                />
+              </button>
+            </div>
           </label>
 
-          <label className="mb-6 flex items-center justify-between gap-4">
-            <div>
+          <label className="mb-6 flex items-start justify-between gap-4">
+            <div className="min-w-0 flex-1 pr-2">
               <p className="font-body text-[12px] text-[var(--color-primary)]">Featured product</p>
               <p className="font-body text-[11px] text-[var(--color-muted)]">Show in featured sections on homepage</p>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsFeatured((value) => !value)}
-              className={`relative h-6 w-11 shrink-0 cursor-pointer overflow-hidden rounded-full border-0 p-0 transition-colors ${
-                isFeatured ? "bg-[var(--color-primary)]" : "bg-[var(--color-border)]"
-              }`}
-            >
-              <span
-                className={`pointer-events-none absolute top-[2px] h-5 w-5 rounded-full bg-white transition-[left] duration-200 ease-in ${
-                  isFeatured ? "left-[22px]" : "left-[2px]"
-                }`}
-              />
-            </button>
+            <div className="flex min-w-[96px] shrink-0 items-center justify-end gap-3">
+              <span className="font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-primary)]">
+                {isFeatured ? "On" : "Off"}
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsFeatured((value) => !value)}
+                aria-label="Toggle featured product"
+                aria-pressed={isFeatured}
+                className="relative shrink-0 cursor-pointer p-0"
+                style={{
+                  width: "52px",
+                  height: "30px",
+                  minWidth: "52px",
+                  borderRadius: "9999px",
+                  border: "2px solid var(--color-primary)",
+                  background: isFeatured ? "var(--color-primary)" : "var(--color-surface-strong)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  overflow: "hidden",
+                }}
+              >
+                <span
+                  className="pointer-events-none absolute"
+                  style={{
+                    top: "2px",
+                    left: isFeatured ? "24px" : "2px",
+                    width: "22px",
+                    height: "22px",
+                    borderRadius: "9999px",
+                    background: isFeatured ? "var(--color-secondary)" : "var(--color-primary)",
+                    boxShadow: "0 2px 5px rgba(0,0,0,0.35)",
+                    transition: "left 180ms ease-in-out",
+                  }}
+                />
+              </button>
+            </div>
           </label>
 
           <button

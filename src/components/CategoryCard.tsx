@@ -12,7 +12,7 @@ const CategoryCard = ({ name, slug, imageUrl, ctaLabel }: CategoryCardProps) => 
   const hasImage = normalizedImageUrl.length > 0;
 
   return (
-    <Link to={`/category/${encodeURIComponent(slug)}`} className="group block">
+    <Link to="/shop" className="group block">
       <div className="overflow-hidden rounded-[var(--border-radius)]">
         {hasImage ? (
           <img

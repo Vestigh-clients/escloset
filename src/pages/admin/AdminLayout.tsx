@@ -389,27 +389,27 @@ const AdminLayout = () => {
         }`}
         aria-hidden={!drawerOpen}
       >
-        <div className="flex items-center justify-between border-b border-[var(--color-primary)] px-5 pb-5 pt-6">
+        <div className="flex items-center justify-between border-b border-[rgba(var(--color-secondary-rgb),0.14)] px-5 pb-5 pt-6">
           <StoreLogo className="h-8 w-auto max-w-[170px]" textClassName="text-[20px] text-[var(--color-secondary)]" />
           <button
             type="button"
             onClick={closeDrawer}
             aria-label="Close menu"
-            className="text-[20px] text-[var(--color-muted-soft)] transition-colors hover:text-[var(--color-secondary)]"
+            className="text-[20px] text-[rgba(var(--color-secondary-rgb),0.84)] transition-colors hover:text-[var(--color-secondary)]"
           >
             &times;
           </button>
         </div>
 
-        <div className="border-b border-[var(--color-primary)] px-5 py-4">
-          <p className="font-body text-[12px] text-[var(--color-muted-soft)]">{adminName}</p>
-          <p className="mt-1 font-body text-[9px] uppercase tracking-[0.1em] text-[var(--color-accent)]">{roleLabel}</p>
+        <div className="border-b border-[rgba(var(--color-secondary-rgb),0.14)] px-5 py-4">
+          <p className="font-body text-[12px] text-[rgba(var(--color-secondary-rgb),0.9)]">{adminName}</p>
+          <p className="mt-1 font-body text-[9px] uppercase tracking-[0.1em] text-[rgba(var(--color-secondary-rgb),0.72)]">{roleLabel}</p>
         </div>
 
         <nav className="flex-1 py-2">
           {visibleNavGroups.map((group) => (
             <div key={`mobile-drawer-${group.label}`}>
-              <p className="px-5 pb-2 pt-5 font-body text-[9px] uppercase tracking-[0.2em] text-[var(--color-muted)]">{group.label}</p>
+              <p className="px-5 pb-2 pt-5 font-body text-[9px] uppercase tracking-[0.2em] text-[rgba(var(--color-secondary-rgb),0.62)]">{group.label}</p>
               {group.links.map((link) => (
                 <NavLink
                   key={`mobile-drawer-link-${link.to}`}
@@ -419,8 +419,8 @@ const AdminLayout = () => {
                   className={({ isActive }) =>
                     `block border-l-2 px-5 py-[14px] font-body text-[11px] uppercase tracking-[0.1em] transition-all duration-200 ${
                       isActive
-                        ? "border-l-[var(--color-accent)] bg-[rgba(var(--color-secondary-rgb),0.03)] text-[var(--color-secondary)]"
-                        : "border-l-transparent text-[var(--color-muted-soft)] hover:text-[var(--color-secondary)]"
+                        ? "border-l-[var(--color-secondary)] bg-[rgba(var(--color-secondary-rgb),0.12)] text-[var(--color-secondary)]"
+                        : "border-l-transparent text-[rgba(var(--color-secondary-rgb),0.82)] hover:text-[var(--color-secondary)]"
                     }`
                   }
                 >
@@ -431,12 +431,12 @@ const AdminLayout = () => {
           ))}
         </nav>
 
-        <div className="mt-auto border-t border-[var(--color-primary)] p-5">
+        <div className="mt-auto border-t border-[rgba(var(--color-secondary-rgb),0.14)] p-5">
           <a
             href="/"
             target="_blank"
             rel="noreferrer"
-            className="mb-3 block font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-muted)] transition-colors hover:text-[var(--color-muted-soft)]"
+            className="mb-3 block font-body text-[10px] uppercase tracking-[0.12em] text-[rgba(var(--color-secondary-rgb),0.72)] transition-colors hover:text-[rgba(var(--color-secondary-rgb),0.92)]"
           >
             View Store &rarr;
           </a>
@@ -446,7 +446,7 @@ const AdminLayout = () => {
               closeDrawer();
               void onSignOut();
             }}
-            className="font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-muted)] transition-colors hover:text-[var(--color-danger)]"
+            className="font-body text-[10px] uppercase tracking-[0.12em] text-[rgba(var(--color-secondary-rgb),0.72)] transition-colors hover:text-[var(--color-secondary)]"
           >
             Sign Out
           </button>
@@ -454,17 +454,17 @@ const AdminLayout = () => {
       </aside>
 
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-[240px] flex-col bg-[var(--color-primary)] lg:flex">
-        <div className="border-b border-[var(--color-primary)] px-6 pb-4">
+        <div className="border-b border-[rgba(var(--color-secondary-rgb),0.14)] px-6 pb-4">
           <Link to="/" className="block pt-8">
             <StoreLogo className="h-9 w-auto max-w-[180px]" textClassName="text-[22px] text-[var(--color-secondary)]" />
           </Link>
-          <p className="mt-4 font-body text-[10px] uppercase tracking-[0.15em] text-[var(--color-muted)]">Admin Panel</p>
+          <p className="mt-4 font-body text-[10px] uppercase tracking-[0.15em] text-[rgba(var(--color-secondary-rgb),0.62)]">Admin Panel</p>
         </div>
 
         <nav className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {visibleNavGroups.map((group) => (
             <div key={group.label}>
-              <p className="px-6 pt-6 pb-2 font-body text-[9px] uppercase tracking-[0.2em] text-[var(--color-muted)]">{group.label}</p>
+              <p className="px-6 pt-6 pb-2 font-body text-[9px] uppercase tracking-[0.2em] text-[rgba(var(--color-secondary-rgb),0.62)]">{group.label}</p>
               {group.links.map((link) => (
                 <NavLink
                   key={link.to}
@@ -473,8 +473,8 @@ const AdminLayout = () => {
                   className={({ isActive }) =>
                     `block border-l-2 px-6 py-3 font-body text-[11px] uppercase tracking-[0.1em] transition-all duration-200 ${
                       isActive
-                        ? "border-[var(--color-accent)] bg-[rgba(var(--color-secondary-rgb),0.03)] text-[var(--color-secondary)]"
-                        : "border-transparent text-[var(--color-muted-soft)] hover:text-[var(--color-secondary)]"
+                        ? "border-[var(--color-secondary)] bg-[rgba(var(--color-secondary-rgb),0.12)] text-[var(--color-secondary)]"
+                        : "border-transparent text-[rgba(var(--color-secondary-rgb),0.82)] hover:text-[var(--color-secondary)]"
                     }`
                   }
                 >
@@ -485,21 +485,21 @@ const AdminLayout = () => {
           ))}
         </nav>
 
-        <div className="border-t border-[var(--color-primary)] p-6">
-          <p className="font-body text-[12px] text-[var(--color-muted-soft)]">{adminName}</p>
-          <p className="mt-1 font-body text-[9px] uppercase tracking-[0.1em] text-[var(--color-accent)]">{roleLabel}</p>
+        <div className="border-t border-[rgba(var(--color-secondary-rgb),0.14)] p-6">
+          <p className="font-body text-[12px] text-[rgba(var(--color-secondary-rgb),0.9)]">{adminName}</p>
+          <p className="mt-1 font-body text-[9px] uppercase tracking-[0.1em] text-[rgba(var(--color-secondary-rgb),0.72)]">{roleLabel}</p>
           <a
             href="/"
             target="_blank"
             rel="noreferrer"
-            className="mt-5 block font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-muted)] transition-colors hover:text-[var(--color-muted-soft)]"
+            className="mt-5 block font-body text-[10px] uppercase tracking-[0.12em] text-[rgba(var(--color-secondary-rgb),0.72)] transition-colors hover:text-[rgba(var(--color-secondary-rgb),0.92)]"
           >
             View Store &rarr;
           </a>
           <button
             type="button"
             onClick={onSignOut}
-            className="mt-4 font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-muted)] transition-colors hover:text-[var(--color-danger)]"
+            className="mt-4 font-body text-[10px] uppercase tracking-[0.12em] text-[rgba(var(--color-secondary-rgb),0.72)] transition-colors hover:text-[var(--color-secondary)]"
           >
             Sign Out
           </button>
@@ -623,7 +623,9 @@ const AdminLayout = () => {
             className="w-[320px] max-w-[calc(100vw-3rem)] border-l-[3px] border-[var(--color-accent)] bg-[var(--color-primary)] px-5 py-[14px] text-[var(--color-secondary)] shadow-[0_8px_24px_rgba(var(--color-primary-rgb),0.18)]"
           >
             <p className="font-body text-[12px]">{toastItem.title}</p>
-            {toastItem.description ? <p className="mt-1 font-body text-[11px] text-[var(--color-border)]">{toastItem.description}</p> : null}
+            {toastItem.description ? (
+              <p className="mt-1 font-body text-[11px] text-[rgba(var(--color-secondary-rgb),0.84)]">{toastItem.description}</p>
+            ) : null}
           </div>
         ))}
       </div>
