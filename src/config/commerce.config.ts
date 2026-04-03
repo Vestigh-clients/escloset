@@ -6,7 +6,7 @@ export const commerceConfig: CommerceConfig = {
     guestCheckout: true,
     discountCodes: true,
     orderTracking: true,
-    reviews: false,
+    reviews: true,
     wishlist: false,
   },
   payments: {

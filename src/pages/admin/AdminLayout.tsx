@@ -39,6 +39,7 @@ const navGroups: AdminNavGroup[] = [
       { label: "Dashboard", to: "/admin" },
       { label: "Orders", to: "/admin/orders" },
       { label: "Products", to: "/admin/products" },
+      { label: "Reviews", to: "/admin/reviews" },
       { label: "Categories", to: "/admin/categories" },
     ],
   },

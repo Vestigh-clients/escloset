@@ -41,6 +41,7 @@ import AdminCategoriesPage from "./pages/admin/AdminCategoriesPage";
 import AdminCustomersPage from "./pages/admin/AdminCustomersPage";
 import AdminCustomerDetailPage from "./pages/admin/AdminCustomerDetailPage";
 import AdminDiscountCodesPage from "./pages/admin/AdminDiscountCodesPage";
+import AdminProductReviewsPage from "./pages/admin/AdminProductReviewsPage";
 import AdminShippingRatesPage from "./pages/admin/AdminShippingRatesPage";
 import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
@@ -141,6 +142,7 @@ const AppShell = () => {
             <Route path="customers" element={<AdminCustomersPage />} />
             <Route path="customers/:id" element={<AdminCustomerDetailPage />} />
             <Route path="discounts" element={<AdminDiscountCodesPage />} />
+            <Route path="reviews" element={<AdminProductReviewsPage />} />
             <Route path="shipping" element={<AdminShippingRatesPage />} />
             <Route path="payments" element={<AdminPaymentsPage />} />
             <Route

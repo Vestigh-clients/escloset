@@ -9,11 +9,27 @@ import { themePresetOptions, themePresets } from "@/themes/registry";
 
 type SectionKey = "general" | "orders" | "notifications";
 
-const generalKeys = ["site_name", "site_tagline", "support_email", "support_phone", "whatsapp_number", "site_theme_preset"] as const;
+const generalKeys = [
+  "site_name",
+  "site_tagline",
+  "support_email",
+  "support_phone",
+  "whatsapp_number",
+  "site_theme_preset",
+  "review_moderation_required",
+] as const;
 const orderKeys = ["free_shipping_threshold", "order_number_prefix", "default_currency"] as const;
 const notificationKeys = ["new_order_email", "low_stock_email", "weekly_summary_email"] as const;
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const TRUE_LIKE_VALUES = new Set(["true", "1", "yes", "on"]);
+
+const readBooleanSetting = (value: string | undefined, fallback: boolean) => {
+  if (typeof value !== "string") return fallback;
+  const normalized = value.trim().toLowerCase();
+  if (!normalized) return fallback;
+  return TRUE_LIKE_VALUES.has(normalized);
+};
 
 const validateEmail = (value: string) => {
   if (!value.trim()) return undefined;
@@ -71,6 +87,10 @@ const AdminSettingsPage = () => {
         acc[setting.key] = setting;
         return acc;
       }, {});
+
+      if (values.review_moderation_required === undefined) {
+        values.review_moderation_required = "false";
+      }
 
       setSettingsMap(values);
       setMetaMap(metadata);
@@ -268,6 +288,7 @@ const AdminSettingsPage = () => {
   const activeThemePresetOption =
     themePresetOptions.find((option) => option.key === settingsMap.site_theme_preset) ?? themePresetOptions[0] ?? null;
   const activeThemePreset = activeThemePresetOption ? themePresets[activeThemePresetOption.key] : null;
+  const isReviewModerationRequired = readBooleanSetting(settingsMap.review_moderation_required, false);
 
   if (role !== "super_admin") {
     return <Navigate to="/admin" replace />;
@@ -322,6 +343,23 @@ const AdminSettingsPage = () => {
             onBlur={(value) => validateField("whatsapp_number", value)}
             onChange={(value) => setSetting("whatsapp_number", value)}
           />
+          <div>
+            <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-muted-soft)]">Review Moderation</label>
+            <p className="mt-1 font-body text-[10px] text-[var(--color-muted-soft)]">
+              When on, new product reviews are queued for approval. Keep off for instant publishing.
+            </p>
+            <button
+              type="button"
+              onClick={() => setSetting("review_moderation_required", isReviewModerationRequired ? "false" : "true")}
+              className={`mt-3 rounded-[var(--border-radius)] border px-4 py-2 font-body text-[10px] uppercase tracking-[0.1em] transition-colors ${
+                isReviewModerationRequired
+                  ? "border-[var(--color-accent)] bg-[rgba(var(--color-accent-rgb),0.14)] text-[var(--color-accent)]"
+                  : "border-[var(--color-border)] bg-transparent text-[var(--color-muted)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+              }`}
+            >
+              {isReviewModerationRequired ? "Moderation On" : "Moderation Off"}
+            </button>
+          </div>
           <div>
             <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-muted-soft)]">Theme Preset</label>
             <select

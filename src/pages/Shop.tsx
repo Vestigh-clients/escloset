@@ -76,6 +76,9 @@ const normalizeColorHex = (colorHex: string | null) => {
   return null;
 };
 
+const normalizeVariationTypeKey = (name: string) => name.trim().toLowerCase();
+const normalizeVariationOptionKey = (label: string) => label.trim().toLowerCase();
+
 const getAvailableVariantOptionIdsByType = (product: Product) => {
   const result = new Map<string, Set<string>>();
   const variants = product.product_variants ?? [];
@@ -108,11 +111,17 @@ const getProductOptionIdsByType = (product: Product) => {
   const result = new Map<string, Set<string>>();
 
   for (const optionType of optionTypes) {
-    const ids = new Set<string>();
+    const typeKey = normalizeVariationTypeKey(optionType.name);
+    if (!typeKey) {
+      continue;
+    }
+
+    const ids = result.get(typeKey) ?? new Set<string>();
     const allowedIds = availableByType.get(optionType.id);
 
     for (const optionValue of optionType.product_option_values) {
-      if (!optionValue.value.trim()) {
+      const optionLabel = optionValue.value.trim();
+      if (!optionLabel) {
         continue;
       }
 
@@ -122,11 +131,16 @@ const getProductOptionIdsByType = (product: Product) => {
         }
       }
 
-      ids.add(optionValue.id);
+      const optionKey = normalizeVariationOptionKey(optionLabel);
+      if (!optionKey) {
+        continue;
+      }
+
+      ids.add(optionKey);
     }
 
     if (ids.size > 0) {
-      result.set(optionType.id, ids);
+      result.set(typeKey, ids);
     }
   }
 
@@ -147,53 +161,69 @@ const collectVariationFilterTypes = (products: Product[]): VariationFilterType[]
   for (const product of products) {
     const optionIdsByType = getProductOptionIdsByType(product);
     const optionTypes = product.product_option_types ?? [];
+    const seenOptionKeysByType = new Map<string, Set<string>>();
 
     for (const optionType of optionTypes) {
-      const availableOptionIds = optionIdsByType.get(optionType.id);
+      const typeKey = normalizeVariationTypeKey(optionType.name);
+      if (!typeKey) {
+        continue;
+      }
+
+      const availableOptionIds = optionIdsByType.get(typeKey);
       if (!availableOptionIds || availableOptionIds.size === 0) {
         continue;
       }
 
-      if (!typeMap.has(optionType.id)) {
-        typeMap.set(optionType.id, {
-          id: optionType.id,
+      if (!typeMap.has(typeKey)) {
+        typeMap.set(typeKey, {
+          id: typeKey,
           name: optionType.name.trim() || "Variation",
           displayOrder: optionType.display_order,
           options: new Map<string, VariationFilterOption>(),
         });
       }
 
-      const typeEntry = typeMap.get(optionType.id);
+      const typeEntry = typeMap.get(typeKey);
       if (!typeEntry) {
         continue;
       }
 
-      const seenInProduct = new Set<string>();
-      for (const optionValue of optionType.product_option_values) {
-        if (!availableOptionIds.has(optionValue.id)) {
-          continue;
-        }
+      typeEntry.displayOrder = Math.min(typeEntry.displayOrder, optionType.display_order);
+      const seenInProduct = seenOptionKeysByType.get(typeKey) ?? new Set<string>();
+      seenOptionKeysByType.set(typeKey, seenInProduct);
 
+      for (const optionValue of optionType.product_option_values) {
         const optionLabel = optionValue.value.trim();
         if (!optionLabel) {
           continue;
         }
 
-        const existing = typeEntry.options.get(optionValue.id);
-        if (!existing) {
-          typeEntry.options.set(optionValue.id, {
-            id: optionValue.id,
-            label: optionLabel,
-            colorHex: normalizeColorHex(optionValue.color_hex),
-            displayOrder: optionValue.display_order,
-            count: 1,
-          });
-        } else if (!seenInProduct.has(optionValue.id)) {
-          existing.count += 1;
-          existing.displayOrder = Math.min(existing.displayOrder, optionValue.display_order);
+        const optionKey = normalizeVariationOptionKey(optionLabel);
+        if (!optionKey || !availableOptionIds.has(optionKey)) {
+          continue;
         }
 
-        seenInProduct.add(optionValue.id);
+        const existing = typeEntry.options.get(optionKey);
+        const normalizedColor = normalizeColorHex(optionValue.color_hex);
+        if (!existing) {
+          typeEntry.options.set(optionKey, {
+            id: optionKey,
+            label: optionLabel,
+            colorHex: normalizedColor,
+            displayOrder: optionValue.display_order,
+            count: seenInProduct.has(optionKey) ? 0 : 1,
+          });
+        } else {
+          if (!seenInProduct.has(optionKey)) {
+            existing.count += 1;
+          }
+          existing.displayOrder = Math.min(existing.displayOrder, optionValue.display_order);
+          if (!existing.colorHex && normalizedColor) {
+            existing.colorHex = normalizedColor;
+          }
+        }
+
+        seenInProduct.add(optionKey);
       }
     }
   }

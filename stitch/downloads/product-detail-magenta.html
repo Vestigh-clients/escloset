@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400;1,700&amp;family=Manrope:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-highest": "#e2e2e2",
+                    "on-primary": "#ffffff",
+                    "tertiary-container": "#1b8700",
+                    "surface-container-high": "#e8e8e8",
+                    "on-primary-fixed": "#3e001f",
+                    "outline": "#8f6e78",
+                    "on-tertiary-fixed-variant": "#0d5300",
+                    "surface-dim": "#dadada",
+                    "surface-container": "#eeeeee",
+                    "on-error": "#ffffff",
+                    "on-tertiary-container": "#f8ffef",
+                    "background": "#f9f9f9",
+                    "on-error-container": "#93000a",
+                    "secondary-fixed-dim": "#c6c6c6",
+                    "secondary": "#5e5e5e",
+                    "outline-variant": "#e3bdc7",
+                    "on-secondary": "#ffffff",
+                    "surface-variant": "#e2e2e2",
+                    "surface": "#f9f9f9",
+                    "inverse-on-surface": "#f1f1f1",
+                    "on-primary-container": "#fffbff",
+                    "tertiary": "#136b00",
+                    "primary": "#D81B60",
+                    "on-secondary-fixed-variant": "#474747",
+                    "on-secondary-container": "#646464",
+                    "primary-container": "#D81B60",
+                    "on-primary-fixed-variant": "#8d004e",
+                    "primary-fixed-dim": "#ffb0ca",
+                    "surface-container-lowest": "#ffffff",
+                    "inverse-primary": "#ffb0ca",
+                    "secondary-container": "#e2e2e2",
+                    "on-secondary-fixed": "#1b1b1b",
+                    "secondary-fixed": "#e2e2e2",
+                    "on-tertiary-fixed": "#022100",
+                    "on-background": "#1a1c1c",
+                    "on-surface": "#1a1c1c",
+                    "surface-container-low": "#f3f3f3",
+                    "error-container": "#ffdad6",
+                    "tertiary-fixed": "#86fd66",
+                    "error": "#ba1a1a",
+                    "on-tertiary": "#ffffff",
+                    "primary-fixed": "#ffd9e3",
+                    "inverse-surface": "#2f3131",
+                    "tertiary-fixed-dim": "#6ae04d",
+                    "surface-bright": "#f9f9f9",
+                    "on-surface-variant": "#5b3f48",
+                    "surface-tint": "#D81B60"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "fontFamily": {
+                    "headline": ["Noto Serif"],
+                    "body": ["Manrope"],
+                    "label": ["Manrope"],
+                    "notoSerif": ["Noto Serif"],
+                    "manrope": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .primary-gradient {
+            background: linear-gradient(45deg, #D81B60 0%, #F06292 100%);
+        }
+        .glass-nav {
+            background-color: rgba(249, 249, 249, 0.8);
+            backdrop-filter: blur(24px);
+        }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface">
+<!-- TopNavBar -->
+<nav class="bg-surface/80 dark:bg-zinc-950/80 backdrop-blur-xl font-notoSerif text-sm tracking-wide uppercase docked full-width top-0 sticky z-50 shadow-sm dark:shadow-none">
+<div class="flex justify-between items-center w-full px-8 py-4 max-w-screen-2xl mx-auto">
+<div class="flex items-center gap-8">
+<a class="font-notoSerif text-2xl italic font-bold text-on-background dark:text-white" href="#">E&amp;S Closet</a>
+<div class="hidden lg:flex gap-6">
+<a class="text-on-surface-variant hover:text-[#D81B60] transition-colors" href="#">Men</a>
+<a class="text-[#D81B60] border-b-2 border-[#D81B60] pb-1" href="#">Women</a>
+<a class="text-on-surface-variant hover:text-[#D81B60] transition-colors" href="#">Bags</a>
+<a class="text-on-surface-variant hover:text-[#D81B60] transition-colors" href="#">Accessories</a>
+<a class="text-on-surface-variant hover:text-[#D81B60] transition-colors" href="#">About</a>
+<a class="text-on-surface-variant hover:text-[#D81B60] transition-colors" href="#">Contact</a>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative hidden md:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
+<input class="bg-surface-variant/50 border-none rounded-full py-2 pl-10 pr-4 text-xs focus:ring-1 focus:ring-primary w-64" placeholder="Search curated pieces..." type="text"/>
+</div>
+<div class="flex gap-4">
+<button class="hover:opacity-80 transition-all duration-300 active:scale-95 duration-200">
+<span class="material-symbols-outlined text-on-surface">person</span>
+</button>
+<button class="hover:opacity-80 transition-all duration-300 active:scale-95 duration-200 relative">
+<span class="material-symbols-outlined text-on-surface">shopping_bag</span>
+<span class="absolute -top-1 -right-1 bg-primary text-on-primary text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-bold">2</span>
+</button>
+</div>
+</div>
+</div>
+</nav>
+<main class="max-w-screen-2xl mx-auto px-8 pt-12">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+<!-- Left: Product Media Gallery -->
+<div class="lg:col-span-7 flex flex-col gap-6">
+<div class="aspect-[4/5] bg-surface-container-lowest overflow-hidden rounded-lg group">
+<img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="Stunning woman wearing an elegant avenue floral silk dress with delicate patterns in a sunlit classical interior garden setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3YXPYqHzg9xu-fPEcfVbEo9Jb9fUegSVYt6KoDREqEVF06T4ECmeFK5yKRDAFbSVUhK1x-14r3VBbEA7T5mj7soBREBHl23hrw1nftuaLUx7dSpNiQ71FOqJ9fn3EkdYodlULQExa0NGmVZccTqyW_Tn5OwTezbVw6nznayFj1FfwB0-j-roboPQf-0yh8aBnRoFFMiyUBI7wKbLy5IzBZY7eKZAKBtY0oMmzVFYZ5I3ci-05h9fP26DtqRALs1rQUmRh9ZjPJAo"/>
+</div>
+<!-- Thumbnail Grid -->
+<div class="grid grid-cols-4 gap-4">
+<div class="aspect-square bg-surface-container-lowest rounded-md overflow-hidden cursor-pointer ring-2 ring-primary ring-offset-2">
+<img class="w-full h-full object-cover" data-alt="Close up of a floral silk dress fabric texture showing detailed embroidery and soft pink hues" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3z7eaIBVynS1rIjFqLCYytRJOPe6EhtpUqur2r-e1sV3n4JdhEL-pGViW0uCjqwRBnppdpwFFy4tN8LR-Yv5z8kpxu9EFkybHxw0Tt8fPJmrQrhfMWtcQalvaqR6WA3spqEgDy_f2loiXTaQSYLmOydvHxtJAxohcgmBvO0cgI1cf9ORhW3WxwCbl5K5VLRcpyG8VasFaiQ5Pw1Fc4AH3VBkoJuDeSwhh7LiFvvMgJw2BV0WhPnJWr0O6tu4Fvz5-AviBlGDk3k0"/>
+</div>
+<div class="aspect-square bg-surface-container-lowest rounded-md overflow-hidden cursor-pointer hover:opacity-80 transition-opacity">
+<img class="w-full h-full object-cover" data-alt="Full length view of a feminine silk dress hanging in an elegant boutique with soft lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCkgWd60CPNjhAhFOhwGlA3AiWHQ5f3Pomfp9hjGe-2sP1f65exNq2ZgdSbCkLJ4Wka04qgnjhIR78ATIoTBKgqnlZziGhL6_qVVpr4c0niJHBEFSzSKphmgNkkBYDFeSlZguhpN1IdB5jHQMR5-MiQrjeFbXUwOJ3xRzZUcdkwSniwGtvG1fmWkGRe6442r65AzwXNWWrGXAXkqqXyYpWTNF_ecCvfE5VSRf3HKzj81N3SRZ7qa3XgEHoGiRMcm7ZIWJPlsbQMiXk"/>
+</div>
+<div class="aspect-square bg-surface-container-lowest rounded-md overflow-hidden cursor-pointer hover:opacity-80 transition-opacity">
+<img class="w-full h-full object-cover" data-alt="Detail shot of a floral dress sleeve with delicate lace trimming and sheer silk material" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0NWBP2ekjSB-58MC3atCk5Mh5sw9YhmFD5iGkS4qg7yXy9_ThrXdMq_r0ldRjOq-TuLeqwqVF9itZ6NU6ocohiOgIjB4zbOSuYzL5WKnVgIFWSRYNaAtRHVxrz-RUIWrO2PwrtpnhqZ54P_7LWrhPh2SlN5oHu_Md5yhvwOugxF5glIfXq26egyZ-rhX4njfkWQ5FyKWU7nVIcOl70k0v1pMZh7M2NCwEI4EbcjZRz20n3KBZnS7SLWtZe11Bj3biJGv76JMyqaY"/>
+</div>
+<div class="aspect-square bg-surface-container-lowest rounded-md overflow-hidden cursor-pointer hover:opacity-80 transition-opacity">
+<img class="w-full h-full object-cover" data-alt="Woman walking in a floral dress through a blooming garden during golden hour" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDa1-R7hlu5av-sXKnpcIXHBk1jTyv3OCeVQ1ylu0ypQ_MJc5nBfNTArh9qzxWBG3gmH14tPnChv9kPiu3vok2eaeSvyjbFDsr--Og9HYY9tFem2oMmLoI3jtSVBase8YR0z5atRkzotZ9D6LBsZD__UpUt0lGpZyeEYeZ2JYbAze1wa8ghPKXlH8sCFe-HOTxhJ_eXOObqF2zTdx5IBYtqHpMsqv_7EEZehf4jdJ6ZjFjSJCRnDokwP4LgbLeAMxuRlL6kbBJlmA4"/>
+</div>
+</div>
+</div>
+<!-- Right: Product Information -->
+<div class="lg:col-span-5 flex flex-col gap-10 lg:sticky lg:top-32">
+<header class="flex flex-col gap-2">
+<div class="flex items-center gap-2 text-tertiary text-xs font-semibold uppercase tracking-widest">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        In Stock
+                    </div>
+<h1 class="font-headline text-5xl font-bold text-on-background leading-tight">Avenue Floral Silk Dress</h1>
+<div class="flex items-baseline gap-4 mt-2">
+<p class="text-3xl font-light text-primary">₵ 1,450.00</p>
+<span class="text-on-surface-variant line-through text-lg opacity-60">₵ 1,800.00</span>
+</div>
+</header>
+<div class="flex flex-col gap-8">
+<!-- Description -->
+<div class="space-y-4">
+<h3 class="font-bold text-sm uppercase tracking-widest text-on-surface/70">The Design</h3>
+<p class="font-body text-on-surface-variant leading-relaxed text-lg">
+                            Crafted from the finest 100% mulberry silk, the Avenue Floral Dress embodies effortless Ghanian sophistication. Featuring a hand-painted floral motif inspired by Accra's botanical gardens, it offers a fluid silhouette that moves gracefully with you.
+                        </p>
+</div>
+<!-- Options -->
+<div class="space-y-6">
+<div class="space-y-3">
+<div class="flex justify-between items-center">
+<label class="font-bold text-xs uppercase tracking-widest text-on-surface/70">Select Size</label>
+<button class="text-xs underline text-on-surface-variant hover:text-primary transition-colors">Size Guide</button>
+</div>
+<div class="flex flex-wrap gap-3">
+<button class="w-14 h-14 rounded-md border border-outline-variant/30 flex items-center justify-center font-medium hover:border-primary hover:text-primary transition-all">S</button>
+<button class="w-14 h-14 rounded-md border-2 border-primary text-primary flex items-center justify-center font-bold">M</button>
+<button class="w-14 h-14 rounded-md border border-outline-variant/30 flex items-center justify-center font-medium hover:border-primary hover:text-primary transition-all">L</button>
+<button class="w-14 h-14 rounded-md border border-outline-variant/30 flex items-center justify-center font-medium hover:border-primary hover:text-primary transition-all">XL</button>
+</div>
+</div>
+<div class="space-y-3">
+<label class="font-bold text-xs uppercase tracking-widest text-on-surface/70">Color Palette</label>
+<div class="flex gap-4">
+<button class="w-10 h-10 rounded-full bg-[#fce4ec] ring-2 ring-primary ring-offset-2 transition-all"></button>
+<button class="w-10 h-10 rounded-full bg-[#e8f5e9] border border-outline-variant/20 hover:scale-110 transition-all"></button>
+<button class="w-10 h-10 rounded-full bg-[#fff8e1] border border-outline-variant/20 hover:scale-110 transition-all"></button>
+</div>
+</div>
+</div>
+<!-- Actions -->
+<div class="flex flex-col gap-4">
+<button class="primary-gradient text-on-primary font-bold uppercase tracking-widest py-5 rounded-md shadow-lg shadow-primary/20 flex items-center justify-center gap-3 active:scale-95 transition-all">
+<span class="material-symbols-outlined">shopping_cart</span>
+                            Add to Cart
+                        </button>
+<button class="bg-surface-container-highest/50 text-on-surface font-bold uppercase tracking-widest py-5 rounded-md flex items-center justify-center gap-3 border border-outline-variant/20 hover:bg-surface-container-high transition-all active:scale-95">
+<span class="material-symbols-outlined">photo_camera</span>
+                            Virtual Try-On
+                        </button>
+</div>
+<!-- Meta Info -->
+<div class="pt-6 border-t border-outline-variant/20 flex flex-col gap-3">
+<div class="flex items-center gap-2 text-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">local_shipping</span>
+                            Free delivery in Accra &amp; Tema within 24 hours.
+                        </div>
+<div class="flex items-center gap-2 text-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">verified</span>
+                            Authentic Silk Guarantee.
+                        </div>
+</div>
+</div>
+</div>
+</div>
+<!-- You May Also Like -->
+<section class="mt-32">
+<div class="flex justify-between items-end mb-12">
+<div>
+<span class="text-primary font-bold text-xs uppercase tracking-widest block mb-2">Curated for You</span>
+<h2 class="font-headline text-4xl font-bold text-on-surface">You May Also Like</h2>
+</div>
+<a class="text-on-surface font-semibold flex items-center gap-2 hover:text-primary transition-colors" href="#">
+                    Explore All Pieces
+                    <span class="material-symbols-outlined">arrow_forward</span>
+</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+<!-- Related Item 1 -->
+<div class="group cursor-pointer">
+<div class="aspect-[4/5] bg-surface-container-lowest rounded-lg overflow-hidden mb-4 relative">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="Elegant sheer silk blouse in a soft blush color hanging against a neutral background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAzKdECLmgzCJlcr_YCM7wxYtK35lGKGZfBroBe7zMkbFM8od8HpvxNL6MC3ALagqlqxsrBCA8kCznrL_KdAj15qO20X4hBUgZv8PydMvCE5rn8C-XuwwvbgnsEntQpS_5gwEsAWEGeBcJVRyr5x4AiehGwwbPxj9f6IFhaqCg2PKE9ahw7p-jynkzDdlDmarizk__D4cPWtBDgu4LCrOTkLhWipZbedKkB7pKAiGmKdeIFlIzcYusPBNzfNy0envXTbwhQPF3miXk"/>
+<button class="absolute top-4 right-4 bg-white/80 backdrop-blur text-primary p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-xl">favorite</span>
+</button>
+</div>
+<div class="space-y-1 group-hover:translate-x-1 transition-transform">
+<h4 class="font-headline text-lg font-bold">Silk Ruffle Blouse</h4>
+<p class="text-primary font-medium">₵ 850.00</p>
+</div>
+</div>
+<!-- Related Item 2 -->
+<div class="group cursor-pointer">
+<div class="aspect-[4/5] bg-surface-container-lowest rounded-lg overflow-hidden mb-4 relative">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="High fashion accessory shot of a luxury leather handbag with gold accents and a silk scarf tied to the handle" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSUZUQBl8pjhAapuaXCO5TSvycTsTXPC1tBzzPvQntBFqg-WMW_beYDvjs2O7RwL503lbbhkGpHpOEjGwgw40saFxGdtc-80fVDJIP97vts7BhGFO0cZR8mmbWOol9K7Q7mlnZfxVEt9SE2FtGnvukJ-CVq7VEzgc0bCIjlBkZHJGnEvWOA4k9u7MMRQvdPw-7Jx91MlSbfpHzNybpkVG8YQn0Mr38G9f1iKRDEo6sQPczaPVCUQDugb4u6EK8W-UT5df3w_Z-BHY"/>
+<button class="absolute top-4 right-4 bg-white/80 backdrop-blur text-primary p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-xl">favorite</span>
+</button>
+</div>
+<div class="space-y-1 group-hover:translate-x-1 transition-transform">
+<h4 class="font-headline text-lg font-bold">Midnight Clutch</h4>
+<p class="text-primary font-medium">₵ 1,200.00</p>
+</div>
+</div>
+<!-- Related Item 3 -->
+<div class="group cursor-pointer">
+<div class="aspect-[4/5] bg-surface-container-lowest rounded-lg overflow-hidden mb-4 relative">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="Chic lightweight linen trousers in a cream color styled with minimalist sandals" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjpcO9YSfqlTPCmn0J5go3RGQGfnu5y1pFCIeQskFw_dKICEHz60wmzJSb6droDeyXCL15CGY4f7zWc1_lpPEDcmdFs8zA7DonNpcPDWp3p2dE62we1SVc3fREkiASVYBt9bFUs9TLI7FYdPjyjH5fmvWEi0a4bC_ST10CNWdKvLYCLeBnBKenPAqYrIKth3pEAkMV3ZwZ_CpWH0h3PTmUJFOw_YxzTWpV9hR_wUgt74jmJ7jUhUiWKA11v-lSBKiY8NJhlANBwtA"/>
+<button class="absolute top-4 right-4 bg-white/80 backdrop-blur text-primary p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-xl">favorite</span>
+</button>
+</div>
+<div class="space-y-1 group-hover:translate-x-1 transition-transform">
+<h4 class="font-headline text-lg font-bold">Savannah Linen Trousers</h4>
+<p class="text-primary font-medium">₵ 950.00</p>
+</div>
+</div>
+<!-- Related Item 4 -->
+<div class="group cursor-pointer">
+<div class="aspect-[4/5] bg-surface-container-lowest rounded-lg overflow-hidden mb-4 relative">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="Beautiful gold statement earrings with pearl drops resting on a silk velvet cushion" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3-mnzO6t-VD_yBRlUmRerdYzL4P_JOQhC98_cgL0UL48SXm7xQ9SifUtx7buOuqr-6_fDSqTnpQCfToQuQsYvleTEnCFDfONwLOWXkqw2NknCtGVA_ZQOrt5CfcqjetNt7xa4AbGun5ql5YUcOvO9yXub5y12QFhXTBR8D4p8KOY6nFh_luqzwZEbY6n7YDiAS0-cVozeFrQsrVbrZ7SB80_NXqN57E0DVanIOyB51K4hjd2YS8MeOo3Q1MZ6dmOf1DRJ09A0v9U"/>
+<button class="absolute top-4 right-4 bg-white/80 backdrop-blur text-primary p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-xl">favorite</span>
+</button>
+</div>
+<div class="space-y-1 group-hover:translate-x-1 transition-transform">
+<h4 class="font-headline text-lg font-bold">Gold Cascade Earrings</h4>
+<p class="text-primary font-medium">₵ 450.00</p>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-low dark:bg-zinc-900 w-full mt-20 tonal-shift-top">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-12 px-12 py-16 w-full max-w-screen-2xl mx-auto">
+<div class="flex flex-col gap-6">
+<a class="font-notoSerif text-lg font-bold text-[#D81B60]" href="#">E&amp;S Closet</a>
+<p class="font-manrope text-xs font-light leading-relaxed opacity-70">Redefining elegance through the lens of Ghanaian heritage. Join our journey into conscious, high-fashion storytelling.</p>
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-primary cursor-pointer hover:scale-110 transition-transform">public</span>
+<span class="material-symbols-outlined text-primary cursor-pointer hover:scale-110 transition-transform">share</span>
+<span class="material-symbols-outlined text-primary cursor-pointer hover:scale-110 transition-transform">chat_bubble</span>
+</div>
+</div>
+<div class="flex flex-col gap-4">
+<h5 class="font-bold text-xs uppercase tracking-widest text-on-surface">Explore</h5>
+<nav class="flex flex-col gap-3 font-manrope text-xs font-light">
+<a class="opacity-70 hover:opacity-100 hover:text-[#D81B60] transition-opacity duration-300" href="#">New Arrivals</a>
+<a class="opacity-70 hover:opacity-100 hover:text-[#D81B60] transition-opacity duration-300" href="#">Bestsellers</a>
+<a class="opacity-70 hover:opacity-100 hover:text-[#D81B60] transition-opacity duration-300" href="#">Ghanaian Heritage Line</a>
+<a class="opacity-70 hover:opacity-100 hover:text-[#D81B60] transition-opacity duration-300" href="#">Accessories</a>
+</nav>
+</div>
+<div class="flex flex-col gap-4">
+<h5 class="font-bold text-xs uppercase tracking-widest text-on-surface">Concierge</h5>
+<nav class="flex flex-col gap-3 font-manrope text-xs font-light">
+<a class="opacity-70 hover:opacity-100 hover:text-[#D81B60] transition-opacity duration-300" href="#">Store Locations Ghana</a>
+<a class="opacity-70 hover:opacity-100 hover:text-[#D81B60] transition-opacity duration-300" href="#">WhatsApp Support</a>
+<a class="opacity-70 hover:opacity-100 hover:text-[#D81B60] transition-opacity duration-300" href="#">Email Us</a>
+<a class="opacity-70 hover:opacity-100 hover:text-[#D81B60] transition-opacity duration-300" href="#">Shipping Policy</a>
+<a class="opacity-70 hover:opacity-100 hover:text-[#D81B60] transition-opacity duration-300" href="#">Returns</a>
+</nav>
+</div>
+<div class="flex flex-col gap-6">
+<h5 class="font-bold text-xs uppercase tracking-widest text-on-surface">The Newsletter</h5>
+<p class="font-manrope text-xs font-light opacity-70">Be the first to receive exclusive drops and styling invitations.</p>
+<div class="flex gap-0 border-b border-outline-variant focus-within:border-primary transition-all">
+<input class="bg-transparent border-none focus:ring-0 text-xs py-2 w-full" placeholder="Your email address" type="email"/>
+<button class="text-primary px-2 font-bold text-xs uppercase">Join</button>
+</div>
+</div>
+</div>
+<div class="px-12 py-8 border-t border-outline-variant/10 flex justify-between items-center max-w-screen-2xl mx-auto">
+<span class="font-manrope text-xs font-light opacity-70">© 2024 E&amp;S Closet. All rights reserved.</span>
+<div class="flex gap-6 font-manrope text-xs font-light opacity-70">
+<a class="hover:text-primary" href="#">Privacy</a>
+<a class="hover:text-primary" href="#">Terms</a>
+</div>
+</div>
+</footer>
+</body></html>
