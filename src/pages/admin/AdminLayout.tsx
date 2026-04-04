@@ -41,6 +41,7 @@ const navGroups: AdminNavGroup[] = [
       { label: "Products", to: "/admin/products" },
       { label: "Reviews", to: "/admin/reviews" },
       { label: "Categories", to: "/admin/categories" },
+      { label: "Inventory & Pricing", to: "/admin/inventory-pricing" },
     ],
   },
   {

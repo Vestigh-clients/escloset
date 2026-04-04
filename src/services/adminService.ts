@@ -184,6 +184,43 @@ export interface AdminProductListResult {
   totalCount: number;
 }
 
+export type AdminInventoryPricingRowType = "base" | "variant";
+
+export interface AdminInventoryPricingRow {
+  row_id: string;
+  row_type: AdminInventoryPricingRowType;
+  product_id: string;
+  variant_id: string | null;
+  product_image_url: string | null;
+  product_name: string;
+  variant_label: string | null;
+  item_label: string;
+  product_sku: string | null;
+  variant_sku: string | null;
+  sku: string | null;
+  stock_quantity: number;
+  product_base_price: number;
+  variant_price: number | null;
+  effective_price: number;
+  uses_base_price: boolean;
+}
+
+export interface AdminInventoryPricingBulkChange {
+  row_id: string;
+  row_type: AdminInventoryPricingRowType;
+  product_id: string;
+  variant_id?: string | null;
+  stock_quantity: number;
+  price: number | null;
+}
+
+export interface AdminInventoryPricingBulkResult {
+  updatedCount: number;
+  failedCount: number;
+  rowErrors: Record<string, string>;
+  updatedRowIds: string[];
+}
+
 export interface ProductImageObject {
   url: string;
   alt_text: string;
@@ -1253,6 +1290,312 @@ export const fetchAdminProducts = async (filters: AdminProductListFilters): Prom
   return {
     rows,
     totalCount: count ?? 0,
+  };
+};
+
+export const fetchAdminInventoryPricingRows = async (): Promise<AdminInventoryPricingRow[]> => {
+  const [productsResult, optionTypesResult, variantsResult] = await Promise.all([
+    supabase
+      .from("products")
+      .select("id, name, sku, images, price, stock_quantity, has_variants")
+      .order("name", { ascending: true }),
+    (supabase as any).from("product_option_types").select(
+      `
+      id,
+      product_id,
+      display_order,
+      product_option_values (
+        id,
+        option_type_id,
+        value,
+        display_order
+      )
+    `,
+    ),
+    (supabase as any)
+      .from("product_variants")
+      .select(
+        `
+        id,
+        product_id,
+        label,
+        price,
+        stock_quantity,
+        sku,
+        display_order,
+        product_variant_options (
+          option_type_id,
+          option_value_id
+        )
+      `,
+      )
+      .order("product_id", { ascending: true })
+      .order("display_order", { ascending: true }),
+  ]);
+
+  if (productsResult.error) {
+    throw productsResult.error;
+  }
+
+  if (optionTypesResult.error) {
+    throw optionTypesResult.error;
+  }
+
+  if (variantsResult.error) {
+    throw variantsResult.error;
+  }
+
+  const optionTypeOrderById = new Map<string, number>();
+  const optionValueMetaById = new Map<
+    string,
+    { value: string; optionTypeOrder: number; optionValueOrder: number }
+  >();
+
+  const optionTypeRows = Array.isArray(optionTypesResult.data)
+    ? (optionTypesResult.data as Array<Record<string, unknown>>)
+    : [];
+
+  for (const optionTypeRow of optionTypeRows) {
+    const optionTypeId = typeof optionTypeRow.id === "string" ? optionTypeRow.id : "";
+    if (!optionTypeId) {
+      continue;
+    }
+
+    const optionTypeOrder = Math.max(0, Math.trunc(safeNumber(optionTypeRow.display_order)));
+    optionTypeOrderById.set(optionTypeId, optionTypeOrder);
+
+    const optionValues = Array.isArray(optionTypeRow.product_option_values)
+      ? (optionTypeRow.product_option_values as Array<Record<string, unknown>>)
+      : [];
+
+    for (const optionValueRow of optionValues) {
+      const optionValueId = typeof optionValueRow.id === "string" ? optionValueRow.id : "";
+      if (!optionValueId) {
+        continue;
+      }
+
+      optionValueMetaById.set(optionValueId, {
+        value: typeof optionValueRow.value === "string" ? optionValueRow.value.trim() : "",
+        optionTypeOrder,
+        optionValueOrder: Math.max(0, Math.trunc(safeNumber(optionValueRow.display_order))),
+      });
+    }
+  }
+
+  const variantsByProductId = new Map<string, Array<Record<string, unknown>>>();
+  const variantRows = Array.isArray(variantsResult.data) ? (variantsResult.data as Array<Record<string, unknown>>) : [];
+
+  for (const variantRow of variantRows) {
+    const productId = typeof variantRow.product_id === "string" ? variantRow.product_id : "";
+    if (!productId) {
+      continue;
+    }
+
+    if (!variantsByProductId.has(productId)) {
+      variantsByProductId.set(productId, []);
+    }
+
+    variantsByProductId.get(productId)?.push(variantRow);
+  }
+
+  const products = productsResult.data ?? [];
+  const rows: AdminInventoryPricingRow[] = [];
+
+  for (const product of products) {
+    const productId = product.id;
+    const productName = product.name;
+    const productSku = typeof product.sku === "string" && product.sku.trim().length > 0 ? product.sku.trim() : null;
+    const productImageUrl = extractPrimaryImageUrl(product.images);
+    const productBasePrice = safeNumber(product.price);
+    const productStockQuantity = Math.max(0, Math.trunc(safeNumber(product.stock_quantity)));
+    const hasVariants = product.has_variants === true;
+    const productVariants = variantsByProductId.get(productId) ?? [];
+
+    if (hasVariants && productVariants.length > 0) {
+      for (const variantRow of productVariants) {
+        const variantId = typeof variantRow.id === "string" ? variantRow.id : "";
+        if (!variantId) {
+          continue;
+        }
+
+        const variantLinks = Array.isArray(variantRow.product_variant_options)
+          ? (variantRow.product_variant_options as Array<Record<string, unknown>>)
+          : [];
+        const derivedLabel = variantLinks
+          .map((link) => {
+            const optionTypeId = typeof link.option_type_id === "string" ? link.option_type_id : "";
+            const optionValueId = typeof link.option_value_id === "string" ? link.option_value_id : "";
+            const optionMeta = optionValueMetaById.get(optionValueId);
+            return {
+              optionTypeOrder: optionTypeOrderById.get(optionTypeId) ?? optionMeta?.optionTypeOrder ?? 0,
+              optionValueOrder: optionMeta?.optionValueOrder ?? 0,
+              value: optionMeta?.value ?? "",
+            };
+          })
+          .filter((entry) => entry.value.length > 0)
+          .sort((left, right) => {
+            if (left.optionTypeOrder !== right.optionTypeOrder) {
+              return left.optionTypeOrder - right.optionTypeOrder;
+            }
+            return left.optionValueOrder - right.optionValueOrder;
+          })
+          .map((entry) => entry.value)
+          .join(" / ");
+
+        const explicitLabel =
+          typeof variantRow.label === "string" && variantRow.label.trim().length > 0 ? variantRow.label.trim() : "";
+        const variantLabel = explicitLabel || derivedLabel || null;
+        const variantPrice =
+          variantRow.price === null || variantRow.price === undefined ? null : safeNumber(variantRow.price);
+        const usesBasePrice = variantPrice === null;
+        const effectivePrice = usesBasePrice ? productBasePrice : variantPrice;
+        const variantSku =
+          typeof variantRow.sku === "string" && variantRow.sku.trim().length > 0 ? variantRow.sku.trim() : null;
+
+        rows.push({
+          row_id: `variant:${variantId}`,
+          row_type: "variant",
+          product_id: productId,
+          variant_id: variantId,
+          product_image_url: productImageUrl,
+          product_name: productName,
+          variant_label: variantLabel,
+          item_label: variantLabel ? `${productName} - ${variantLabel}` : productName,
+          product_sku: productSku,
+          variant_sku: variantSku,
+          sku: variantSku || productSku,
+          stock_quantity: Math.max(0, Math.trunc(safeNumber(variantRow.stock_quantity))),
+          product_base_price: productBasePrice,
+          variant_price: variantPrice,
+          effective_price: effectivePrice,
+          uses_base_price: usesBasePrice,
+        });
+      }
+      continue;
+    }
+
+    rows.push({
+      row_id: `base:${productId}`,
+      row_type: "base",
+      product_id: productId,
+      variant_id: null,
+      product_image_url: productImageUrl,
+      product_name: productName,
+      variant_label: null,
+      item_label: productName,
+      product_sku: productSku,
+      variant_sku: null,
+      sku: productSku,
+      stock_quantity: productStockQuantity,
+      product_base_price: productBasePrice,
+      variant_price: null,
+      effective_price: productBasePrice,
+      uses_base_price: true,
+    });
+  }
+
+  return rows;
+};
+
+export const bulkUpdateAdminInventoryPricingRows = async (
+  changes: AdminInventoryPricingBulkChange[],
+): Promise<AdminInventoryPricingBulkResult> => {
+  if (changes.length === 0) {
+    return {
+      updatedCount: 0,
+      failedCount: 0,
+      rowErrors: {},
+      updatedRowIds: [],
+    };
+  }
+
+  const settled = await Promise.allSettled(
+    changes.map(async (change) => {
+      const normalizedStock = Math.max(0, Math.trunc(safeNumber(change.stock_quantity)));
+
+      if (change.row_type === "variant") {
+        if (!change.variant_id) {
+          throw new Error("Missing variant id.");
+        }
+
+        let variantPrice: number | null = null;
+        if (change.price !== null && change.price !== undefined) {
+          const normalizedVariantPrice = Number(change.price);
+          if (!Number.isFinite(normalizedVariantPrice) || normalizedVariantPrice < 0) {
+            throw new Error("Invalid variant price.");
+          }
+          variantPrice = normalizedVariantPrice;
+        }
+
+        const { error } = await (supabase as any)
+          .from("product_variants")
+          .update({
+            stock_quantity: normalizedStock,
+            price: variantPrice,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", change.variant_id)
+          .eq("product_id", change.product_id);
+
+        if (error) {
+          throw error;
+        }
+
+        return change.row_id;
+      }
+
+      if (change.price === null || change.price === undefined) {
+        throw new Error("Base price is required.");
+      }
+
+      const normalizedBasePrice = Number(change.price);
+      if (!Number.isFinite(normalizedBasePrice) || normalizedBasePrice < 0) {
+        throw new Error("Base price is required.");
+      }
+
+      const { error } = await supabase
+        .from("products")
+        .update({
+          stock_quantity: normalizedStock,
+          price: normalizedBasePrice,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", change.product_id);
+
+      if (error) {
+        throw error;
+      }
+
+      return change.row_id;
+    }),
+  );
+
+  const rowErrors: Record<string, string> = {};
+  const updatedRowIds: string[] = [];
+
+  settled.forEach((result, index) => {
+    const targetRowId = changes[index]?.row_id;
+    if (!targetRowId) {
+      return;
+    }
+
+    if (result.status === "fulfilled") {
+      updatedRowIds.push(result.value);
+      return;
+    }
+
+    const reason = result.reason as { message?: string };
+    rowErrors[targetRowId] =
+      typeof reason?.message === "string" && reason.message.trim().length > 0
+        ? reason.message
+        : "Unable to update this row.";
+  });
+
+  return {
+    updatedCount: updatedRowIds.length,
+    failedCount: changes.length - updatedRowIds.length,
+    rowErrors,
+    updatedRowIds,
   };
 };
 
