@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Drawer,
@@ -10,6 +10,7 @@ import StorefrontProductCard from "@/components/products/StorefrontProductCard";
 import ProductFetchErrorState from "@/components/products/ProductFetchErrorState";
 import { useCart } from "@/contexts/CartContext";
 import { useStorefrontConfig } from "@/contexts/StorefrontConfigContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { formatPrice } from "@/lib/price";
 import { getAllProducts } from "@/services/productService";
 import {
@@ -59,7 +60,8 @@ interface FilterPanelProps {
 }
 
 const DEFAULT_PRICE_CEILING = 1000;
-const SHOP_PAGE_SIZE = 6;
+const SHOP_PAGE_SIZE_DESKTOP = 6;
+const SHOP_PAGE_SIZE_MOBILE = 8;
 
 const normalizeColorHex = (colorHex: string | null) => {
   if (!colorHex) {
@@ -436,6 +438,7 @@ const FilterPanel = ({
 };
 
 const Shop = () => {
+  const isMobile = useIsMobile();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { addToCart } = useCart();
@@ -448,6 +451,8 @@ const Shop = () => {
   const [priceLimit, setPriceLimit] = useState(DEFAULT_PRICE_CEILING);
   const [selectedVariationOptionIdsByType, setSelectedVariationOptionIdsByType] = useState<Record<string, string[]>>({});
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(SHOP_PAGE_SIZE_DESKTOP);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -613,7 +618,41 @@ const Shop = () => {
     return next;
   }, [priceLimit, productsByCategoryAndSearch, selectedVariationOptionIdsByType, sortBy]);
 
-  const pagedProducts = useMemo(() => filteredProducts.slice(0, SHOP_PAGE_SIZE), [filteredProducts]);
+  const shopPageSize = isMobile ? SHOP_PAGE_SIZE_MOBILE : SHOP_PAGE_SIZE_DESKTOP;
+  const visibleProducts = useMemo(() => filteredProducts.slice(0, visibleCount), [filteredProducts, visibleCount]);
+  const hasMoreProducts = visibleCount < filteredProducts.length;
+
+  useEffect(() => {
+    setVisibleCount(shopPageSize);
+  }, [filteredProducts, shopPageSize]);
+
+  useEffect(() => {
+    const loadMoreNode = loadMoreRef.current;
+    if (!loadMoreNode || loading || !hasMoreProducts) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (!entry?.isIntersecting) {
+          return;
+        }
+
+        setVisibleCount((current) => Math.min(current + shopPageSize, filteredProducts.length));
+      },
+      {
+        root: null,
+        rootMargin: "320px 0px",
+        threshold: 0,
+      },
+    );
+
+    observer.observe(loadMoreNode);
+    return () => {
+      observer.disconnect();
+    };
+  }, [filteredProducts.length, hasMoreProducts, isMobile, loading, shopPageSize, visibleProducts.length]);
 
   const toggleVariationFilterOption = (typeId: string, optionId: string) => {
     setSelectedVariationOptionIdsByType((current) => {
@@ -727,7 +766,7 @@ const Shop = () => {
 
       <main className="mx-auto grid max-w-screen-2xl grid-cols-1 gap-10 px-4 pb-16 md:grid-cols-12 md:gap-12 md:px-8">
         <aside className="hidden md:col-span-3 md:block md:pr-2">
-          <div className="lg:sticky lg:top-24">
+          <div className="md:sticky md:top-24 md:max-h-[calc(100dvh-7.5rem)] md:overflow-y-auto md:overscroll-contain lux-hide-scrollbar">
             <FilterPanel
               activeFilter={activeFilter}
               activeFilterCount={activeFilterCount}
@@ -748,7 +787,7 @@ const Shop = () => {
         <div className="md:col-span-9">
           <div className="mb-8 flex flex-col items-start justify-between gap-4 border-b border-outline-variant/30 pb-4 sm:flex-row sm:items-center">
             <p className="text-sm text-on-surface-variant">
-              Showing {loading ? 0 : pagedProducts.length} results of {loading ? 0 : filteredProducts.length} items
+              Showing {loading ? 0 : visibleProducts.length} results of {loading ? 0 : filteredProducts.length} items
             </p>
             <div className="flex w-full items-center justify-between gap-4 sm:w-auto sm:justify-end">
               <button
@@ -776,8 +815,8 @@ const Shop = () => {
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-1 gap-x-7 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
-              {Array.from({ length: SHOP_PAGE_SIZE }).map((_, index) => (
+            <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-2 sm:gap-x-7 sm:gap-y-14 lg:grid-cols-3">
+              {Array.from({ length: shopPageSize }).map((_, index) => (
                 <div key={`shop-skeleton-${index}`} className="animate-pulse">
                   <div className="mb-6 aspect-[4/5] rounded-lg bg-surface-container-lowest" />
                   <div className="h-5 w-2/3 rounded bg-surface-container-high" />
@@ -785,9 +824,9 @@ const Shop = () => {
                 </div>
               ))}
             </div>
-          ) : pagedProducts.length > 0 ? (
-            <div className="grid grid-cols-1 gap-x-7 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
-              {pagedProducts.map((product) => (
+          ) : visibleProducts.length > 0 ? (
+            <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-2 sm:gap-x-7 sm:gap-y-14 lg:grid-cols-3">
+              {visibleProducts.map((product) => (
                 <StorefrontProductCard
                   key={product.id}
                   product={product}
@@ -802,25 +841,14 @@ const Shop = () => {
             </div>
           )}
 
-          <div className="mt-16 flex items-center justify-center gap-4">
-            <button
-              type="button"
-              className="flex h-10 w-10 items-center justify-center rounded border border-outline-variant transition-colors hover:border-primary"
-              aria-label="Previous page"
-            >
-              <span className="material-symbols-outlined text-sm">chevron_left</span>
-            </button>
-            <span className="font-notoSerif text-sm font-bold text-primary underline">1</span>
-            <span className="cursor-pointer font-notoSerif text-sm font-medium transition-colors hover:text-primary">2</span>
-            <span className="cursor-pointer font-notoSerif text-sm font-medium transition-colors hover:text-primary">3</span>
-            <button
-              type="button"
-              className="flex h-10 w-10 items-center justify-center rounded border border-outline-variant transition-colors hover:border-primary"
-              aria-label="Next page"
-            >
-              <span className="material-symbols-outlined text-sm">chevron_right</span>
-            </button>
-          </div>
+          {!loading && visibleProducts.length > 0 ? (
+            <div className="mt-10">
+              <div ref={loadMoreRef} className="h-1 w-full" aria-hidden />
+              <p className="mt-4 text-center font-manrope text-xs uppercase tracking-[0.12em] text-on-surface-variant">
+                {hasMoreProducts ? "Loading more products as you scroll" : "You have reached the end"}
+              </p>
+            </div>
+          ) : null}
         </div>
       </main>
 

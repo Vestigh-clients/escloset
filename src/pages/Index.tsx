@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import StorefrontProductCard from "@/components/products/StorefrontProductCard";
 import { useStorefrontConfig } from "@/contexts/StorefrontConfigContext";
-import { getAllProducts, getFeaturedProducts } from "@/services/productService";
+import { getAllProducts, getTopSellingProductIds } from "@/services/productService";
 import { type Product } from "@/types/product";
 
 const FUNDAMENTALS = [
@@ -33,22 +33,27 @@ const Index = () => {
     let isMounted = true;
 
     const loadHomepageProducts = async () => {
-      const [allProductsResult, featuredProductsResult] = await Promise.allSettled([
+      const [allProductsResult, topSellingIdsResult] = await Promise.allSettled([
         getAllProducts(),
-        getFeaturedProducts(),
+        getTopSellingProductIds(4),
       ]);
 
       if (!isMounted) return;
 
       const allProducts =
         allProductsResult.status === "fulfilled" && Array.isArray(allProductsResult.value) ? allProductsResult.value : [];
-      const featuredProducts =
-        featuredProductsResult.status === "fulfilled" && Array.isArray(featuredProductsResult.value)
-          ? featuredProductsResult.value
+      const topSellingIds =
+        topSellingIdsResult.status === "fulfilled" && Array.isArray(topSellingIdsResult.value)
+          ? topSellingIdsResult.value
           : [];
 
+      const productById = new Map(allProducts.map((product) => [product.id, product]));
+      const rankedBestSellers = topSellingIds
+        .map((productId) => productById.get(productId))
+        .filter((product): product is Product => Boolean(product));
+
       setNewArrivals(allProducts.slice(0, 4));
-      setBestSellers((featuredProducts.length > 0 ? featuredProducts : allProducts).slice(0, 4));
+      setBestSellers((rankedBestSellers.length > 0 ? rankedBestSellers : allProducts).slice(0, 4));
     };
 
     void loadHomepageProducts();
@@ -93,10 +98,10 @@ const Index = () => {
                 <span className="italic text-[#D81B60]">Our Closet</span>
               </h1>
 
-              <p className="mt-6 max-w-[640px] text-[1.15rem] leading-relaxed text-[#5E5E5E]">
+              {/* <p className="mt-6 max-w-[640px] text-[1.15rem] leading-relaxed text-[#5E5E5E]">
                 Curated high-end Ghanaian fashion, redefined for the contemporary aesthetic. Luxury accessible to your
                 everyday.
-              </p>
+              </p> */}
 
               <Link
                 to="/shop"
@@ -207,7 +212,7 @@ const Index = () => {
             </div>
 
             {newArrivals.length > 0 ? (
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-4 lg:gap-6">
                 {newArrivals.map((product) => (
                   <StorefrontProductCard key={product.id} product={product} />
                 ))}
@@ -238,7 +243,7 @@ const Index = () => {
             </div>
 
             {bestSellers.length > 0 ? (
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-4 lg:gap-6">
                 {bestSellers.map((product) => (
                   <StorefrontProductCard key={product.id} product={product} actionLabel="View Product" />
                 ))}

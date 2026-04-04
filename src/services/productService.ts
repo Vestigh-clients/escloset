@@ -414,6 +414,31 @@ export const getFeaturedProducts = async () => {
   return mapProducts(data);
 };
 
+// Fetch top-selling product ids ordered by sold units (paid + stock committed orders only)
+export const getTopSellingProductIds = async (limit = 4): Promise<string[]> => {
+  const normalizedLimit = Math.max(0, Math.trunc(limit));
+  if (normalizedLimit === 0) {
+    return [];
+  }
+
+  const { data, error } = await (supabase as any).rpc("get_top_selling_products", {
+    p_limit: normalizedLimit,
+  });
+
+  if (error) {
+    console.error("Failed to fetch top selling products", error);
+    return [];
+  }
+
+  if (!Array.isArray(data)) {
+    return [];
+  }
+
+  return data
+    .map((entry) => (entry && typeof entry === "object" ? (entry as Record<string, unknown>).product_id : null))
+    .filter((productId): productId is string => typeof productId === "string" && productId.length > 0);
+};
+
 // Fetch related products
 // (same category, exclude current product)
 export const getRelatedProducts = async (categoryId: string, excludeProductId: string, limit = 3) => {

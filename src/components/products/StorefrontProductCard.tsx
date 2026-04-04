@@ -126,7 +126,7 @@ const StorefrontProductCard = ({
             type="button"
             onClick={handleActionClick}
             disabled={outOfStock}
-            className="absolute bottom-4 left-4 right-4 flex translate-y-12 items-center justify-center gap-2 bg-[#D81B60] py-3 font-manrope text-xs font-semibold uppercase tracking-[0.14em] text-white transition-all duration-300 group-hover:translate-y-0 group-hover:-translate-y-1 group-hover:bg-[#B0004A] disabled:cursor-not-allowed disabled:translate-y-0 disabled:bg-[#8f6e78]"
+            className="absolute bottom-4 left-4 right-4 flex translate-y-0 items-center justify-center gap-2 bg-[#D81B60] py-3 font-manrope text-xs font-semibold uppercase tracking-[0.14em] text-white transition-all duration-300 md:translate-y-12 md:group-hover:translate-y-0 md:group-hover:-translate-y-1 md:group-hover:bg-[#B0004A] disabled:cursor-not-allowed disabled:translate-y-0 disabled:bg-[#8f6e78]"
           >
             <span className="material-symbols-outlined text-sm">
               {outOfStock ? "block" : "add_shopping_cart"}
@@ -137,7 +137,7 @@ const StorefrontProductCard = ({
           <button
             type="button"
             onClick={handleActionClick}
-            className="absolute bottom-4 left-4 right-4 flex translate-y-12 items-center justify-center gap-2 bg-[#D81B60] py-3 font-manrope text-xs font-semibold uppercase tracking-[0.14em] text-white transition-all duration-300 group-hover:translate-y-0 group-hover:-translate-y-1 group-hover:bg-[#B0004A]"
+            className="absolute bottom-4 left-4 right-4 flex translate-y-0 items-center justify-center gap-2 bg-[#D81B60] py-3 font-manrope text-xs font-semibold uppercase tracking-[0.14em] text-white transition-all duration-300 md:translate-y-12 md:group-hover:translate-y-0 md:group-hover:-translate-y-1 md:group-hover:bg-[#B0004A]"
           >
             <span className="material-symbols-outlined text-sm">add_shopping_cart</span>
             {actionLabel}
