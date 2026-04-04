@@ -120,6 +120,17 @@ const getAddressLines = (snapshot: Record<string, unknown> | null): string[] => 
   return [recipient, line1, line2, cityState, country].filter(Boolean);
 };
 
+const resolveCustomerEmail = (
+  shippingSnapshot: Record<string, unknown> | null,
+  fallbackCustomerEmail: string | null,
+): string | null => {
+  const snapshotEmail = safeString(
+    shippingSnapshot?.email ?? shippingSnapshot?.contact_email ?? shippingSnapshot?.recipient_email,
+  );
+  const customerEmail = safeString(fallbackCustomerEmail);
+  return snapshotEmail ?? customerEmail;
+};
+
 const getSettingValue = async (
   adminClient: ReturnType<typeof createClient>,
   key: string,
@@ -494,14 +505,14 @@ Deno.serve(async (request: Request) => {
     }
 
     const customer = mapMaybeEmbeddedRecord(order.customers);
+    const shippingSnapshot = asRecord(order.shipping_address_snapshot);
     const firstName = safeString(customer?.first_name) || "Customer";
     const lastName = safeString(customer?.last_name) || "";
     const customerName = `${firstName} ${lastName}`.trim();
-    const customerEmail = safeString(customer?.email) || "No email";
+    const customerEmail = resolveCustomerEmail(shippingSnapshot, safeString(customer?.email)) || "No email";
     const customerPhone = safeString(customer?.phone) || "No phone";
     const paymentMethodLabel = toTitleCase(safeString(order.payment_method) || "Not specified");
     const orderItems = Array.isArray(order.order_items) ? order.order_items : [];
-    const shippingSnapshot = asRecord(order.shipping_address_snapshot);
     const addressLines = getAddressLines(shippingSnapshot);
     const deliveryInstructions = safeString(shippingSnapshot?.delivery_instructions);
     const snapshot = await loadEmailBranding(adminClient, { fallbackSiteUrl: SITE_URL });
@@ -600,6 +611,9 @@ Deno.serve(async (request: Request) => {
       ].join("\n");
 
       try {
+        const senderEmailAddress =
+          safeString(Deno.env.get("ADMIN_NOTIFICATION_FROM_EMAIL_ADDRESS")) || snapshot.identity.supportEmail;
+
         const resendResponse = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: {
@@ -610,7 +624,7 @@ Deno.serve(async (request: Request) => {
             to: [adminNotificationEmail],
             from: formatFromEmail(
               `${snapshot.identity.storeName} Orders`,
-              Deno.env.get("ADMIN_NOTIFICATION_FROM_EMAIL_ADDRESS") ?? "orders@store.com",
+              senderEmailAddress,
             ),
             subject: `New Order ${order.order_number} - ${formatAmount(safeNumber(order.total))}`,
             html: emailHtml,

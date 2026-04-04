@@ -1,10 +1,11 @@
-﻿import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import AuthInputField from "@/components/auth/AuthInputField";
 import AuthPageLayout from "@/components/auth/AuthPageLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { getConfirmPasswordError, getPasswordError } from "@/lib/authValidation";
+import { buildAuthModalSearch, buildPathWithSearch } from "@/lib/authModal";
 import { AuthServiceError } from "@/services/authService";
 
 type ResetPasswordField = "newPassword" | "confirmPassword";
@@ -26,6 +27,7 @@ const extractRecoveryToken = (): string | null => {
 };
 
 const ResetPassword = () => {
+  const location = useLocation();
   const navigate = useNavigate();
   const { changePassword, isAuthenticated, isLoading } = useAuth();
 
@@ -72,8 +74,17 @@ const ResetPassword = () => {
       return;
     }
 
-    navigate("/auth/login", { replace: true });
-  }, [countdown, isSuccess, navigate]);
+    navigate(
+      buildPathWithSearch(
+        location.pathname,
+        buildAuthModalSearch(location.search, {
+          mode: "login",
+        }),
+        location.hash,
+      ),
+      { replace: true },
+    );
+  }, [countdown, isSuccess, location.hash, location.pathname, location.search, navigate]);
 
   const canResetPassword = hasRecoveryToken || isAuthenticated;
 
@@ -138,7 +149,13 @@ const ResetPassword = () => {
           This link is invalid or has expired. Request a new password reset email.
         </p>
         <Link
-          to="/auth/forgot-password"
+          to={buildPathWithSearch(
+            location.pathname,
+            buildAuthModalSearch(location.search, {
+              mode: "forgot-password",
+            }),
+            location.hash,
+          )}
           className="mt-8 inline-flex font-body text-[11px] uppercase tracking-[0.15em] text-[var(--color-primary)] transition-colors hover:text-[var(--color-accent)]"
         >
           Request New Link
@@ -207,7 +224,7 @@ const ResetPassword = () => {
           <button
             type="submit"
             disabled={isSubmitting || isLoading}
-            className="mt-8 w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-[18px] font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-65"
+            className="mt-8 w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-[18px] font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)] disabled:cursor-not-allowed disabled:opacity-65"
           >
             {isSubmitting ? "Please wait..." : "Update Password"}
           </button>

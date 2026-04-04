@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { storeKeyPrefix } from "@/config/store.config";
 import { buildOrdersCsv, fetchAdminOrders, fetchAdminOrdersForExport, type AdminOrderListItem } from "@/services/adminService";
@@ -31,7 +31,7 @@ const statusBadgeClass: Record<string, string> = {
   pending: "border border-[var(--color-border)] text-[var(--color-muted)]",
   confirmed: "border border-[var(--color-primary)] text-[var(--color-primary)]",
   processing: "border border-[var(--color-accent)] text-[var(--color-accent)]",
-  shipped: "bg-[var(--color-accent)] text-[var(--color-primary)]",
+  shipped: "bg-[var(--color-accent)] text-[var(--color-secondary)]",
   delivered: "bg-[var(--color-primary)] text-[var(--color-secondary)]",
   cancelled: "border border-[var(--color-danger)] text-[var(--color-danger)]",
 };
@@ -314,7 +314,7 @@ const AdminOrdersPage = () => {
                 <tr
                   key={row.id}
                   onClick={() => navigate(`/admin/orders/${row.order_number}`)}
-                  className="cursor-pointer border-b border-[var(--color-surface-strong)] transition-colors hover:bg-[rgba(var(--color-accent-rgb),0.04)]"
+                  className="cursor-pointer border-b border-[var(--color-surface-strong)] transition-colors hover:bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.04)]"
                 >
                   <td className="px-2 py-4 pl-0 font-body text-[11px] uppercase tracking-[0.08em] text-[var(--color-accent)]">
                     {row.order_number}

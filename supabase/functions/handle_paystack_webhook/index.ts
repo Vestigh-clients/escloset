@@ -20,6 +20,28 @@ const readNumber = (value: unknown): number | null => {
   return Number.isFinite(numeric) ? numeric : null;
 };
 
+const joinErrorText = (value: unknown): string => {
+  const candidate = asRecord(value);
+  if (!candidate) {
+    return "";
+  }
+
+  return [
+    readString(candidate.code),
+    readString(candidate.message),
+    readString(candidate.details),
+    readString(candidate.hint),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+};
+
+const appendNote = (existing: unknown, note: string): string => {
+  const existingText = readString(existing).trim();
+  return existingText ? `${existingText}\n${note}` : note;
+};
+
 Deno.serve(async (request: Request) => {
   if (request.method === "OPTIONS") {
     return new Response("ok", { status: 200 });
@@ -75,84 +97,127 @@ Deno.serve(async (request: Request) => {
       const rawAmount = readNumber(data.amount);
       const amountPaid = rawAmount === null ? null : rawAmount / 100;
 
-      const { data: order, error: orderError } = await adminClient
-        .from("orders")
-        .select("id, order_number, total, status, payment_status, notes")
-        .eq("order_number", reference)
-        .maybeSingle();
+      let shouldSendEmails = false;
 
-      if (orderError) {
-        throw orderError;
-      }
+      const { data: confirmData, error: confirmError } = await adminClient.rpc("confirm_paid_order_and_commit_stock", {
+        p_order_number: reference,
+        p_payment_reference: reference,
+        p_amount_paid: amountPaid,
+        p_changed_by: "paystack_webhook",
+      });
 
-      if (!order?.id || amountPaid === null) {
-        return jsonResponse(200, { ok: true });
-      }
+      if (!confirmError) {
+        const confirmPayload = asRecord(confirmData);
+        const wasConfirmed = confirmPayload?.ok === true;
+        const wasAlreadyPaid = confirmPayload?.already_paid === true;
 
-      if (order.payment_status === "paid") {
-        return jsonResponse(200, { ok: true, skipped: true });
-      }
+        if (!wasConfirmed) {
+          return jsonResponse(200, {
+            ok: true,
+            skipped: true,
+            reason: readString(confirmPayload?.reason),
+          });
+        }
 
-      if (Math.abs(Number(order.total ?? 0) - amountPaid) > 1) {
-        const existingNotes = typeof order.notes === "string" ? order.notes.trim() : "";
-        const mismatchNote = `Amount mismatch: expected ${order.total}, received ${amountPaid}`;
+        if (wasAlreadyPaid) {
+          return jsonResponse(200, { ok: true, skipped: true, already_paid: true });
+        }
 
-        const { error: reviewUpdateError } = await adminClient
+        shouldSendEmails = true;
+      } else {
+        const fallbackText = joinErrorText(confirmError);
+        const fallbackAllowed =
+          fallbackText.includes("confirm_paid_order_and_commit_stock") ||
+          fallbackText.includes("could not find the function") ||
+          fallbackText.includes("schema cache") ||
+          fallbackText.includes("forbidden");
+
+        if (!fallbackAllowed) {
+          throw confirmError;
+        }
+
+        const { data: order, error: orderError } = await adminClient
+          .from("orders")
+          .select("id, order_number, total, status, payment_status, notes")
+          .eq("order_number", reference)
+          .maybeSingle();
+
+        if (orderError) {
+          throw orderError;
+        }
+
+        if (!order?.id || amountPaid === null) {
+          return jsonResponse(200, { ok: true, skipped: true });
+        }
+
+        if (order.payment_status === "paid") {
+          return jsonResponse(200, { ok: true, skipped: true, already_paid: true });
+        }
+
+        if (Math.abs(Number(order.total ?? 0) - amountPaid) > 1) {
+          const mismatchNote = `Amount mismatch: expected ${order.total}, received ${amountPaid}`;
+
+          const { error: reviewUpdateError } = await adminClient
+            .from("orders")
+            .update({
+              payment_status: "review",
+              notes: appendNote(order.notes, mismatchNote),
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", order.id);
+
+          if (reviewUpdateError) {
+            throw reviewUpdateError;
+          }
+
+          return jsonResponse(200, { ok: true, skipped: true, reason: "amount_mismatch" });
+        }
+
+        const paidAt = new Date().toISOString();
+        const { error: fallbackConfirmError } = await adminClient
           .from("orders")
           .update({
-            payment_status: "review",
-            notes: existingNotes ? `${existingNotes}\n${mismatchNote}` : mismatchNote,
-            updated_at: new Date().toISOString(),
+            status: "confirmed",
+            payment_status: "paid",
+            paystack_reference: reference,
+            payment_reference: reference,
+            paid_at: paidAt,
+            updated_at: paidAt,
           })
           .eq("id", order.id);
 
-        if (reviewUpdateError) {
-          throw reviewUpdateError;
+        if (fallbackConfirmError) {
+          throw fallbackConfirmError;
         }
 
-        return jsonResponse(200, { ok: true });
-      }
+        if (order.status !== "confirmed") {
+          const { error: historyError } = await adminClient.from("order_status_history").insert({
+            order_id: order.id,
+            previous_status: order.status,
+            new_status: "confirmed",
+            changed_by: "paystack_webhook",
+            note: "Payment confirmed via Paystack",
+            notified_customer: false,
+          });
 
-      const paidAt = new Date().toISOString();
-      const { error: confirmError } = await adminClient
-        .from("orders")
-        .update({
-          status: "confirmed",
-          payment_status: "paid",
-          paystack_reference: reference,
-          payment_reference: reference,
-          paid_at: paidAt,
-          updated_at: paidAt,
-        })
-        .eq("id", order.id);
-
-      if (confirmError) {
-        throw confirmError;
-      }
-
-      if (order.status !== "confirmed") {
-        const { error: historyError } = await adminClient.from("order_status_history").insert({
-          order_id: order.id,
-          previous_status: order.status,
-          new_status: "confirmed",
-          changed_by: "paystack_webhook",
-          note: "Payment confirmed via Paystack",
-          notified_customer: false,
-        });
-
-        if (historyError) {
-          throw historyError;
+          if (historyError) {
+            throw historyError;
+          }
         }
+
+        shouldSendEmails = true;
       }
 
-      await Promise.allSettled([
-        adminClient.functions.invoke("send_order_confirmation_email", {
-          body: { order_number: order.order_number },
-        }),
-        adminClient.functions.invoke("send_new_order_admin_notification", {
-          body: { order_number: order.order_number },
-        }),
-      ]);
+      if (shouldSendEmails) {
+        await Promise.allSettled([
+          adminClient.functions.invoke("send_order_confirmation_email", {
+            body: { order_number: reference },
+          }),
+          adminClient.functions.invoke("send_new_order_admin_notification", {
+            body: { order_number: reference },
+          }),
+        ]);
+      }
     }
 
     if (eventType === "charge.failed") {
@@ -162,7 +227,8 @@ Deno.serve(async (request: Request) => {
           payment_status: "failed",
           updated_at: new Date().toISOString(),
         })
-        .eq("order_number", reference);
+        .eq("order_number", reference)
+        .neq("payment_status", "paid");
 
       if (failedError) {
         throw failedError;

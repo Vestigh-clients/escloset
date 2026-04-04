@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   createAdminShippingRate,
   deleteAdminShippingRate,
@@ -238,14 +238,14 @@ const AdminShippingRatesPage = () => {
           <button
             type="button"
             onClick={openCreateForm}
-            className="rounded-[var(--border-radius)] bg-[var(--color-primary)] px-7 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)]"
+            className="rounded-[var(--border-radius)] bg-[var(--color-primary)] px-7 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)]"
           >
             Add Rate
           </button>
         </div>
       </div>
 
-      <div className="mb-8 rounded-[var(--border-radius)] border border-[var(--color-border)] bg-[rgba(var(--color-accent-rgb),0.08)] px-5 py-4">
+      <div className="mb-8 rounded-[var(--border-radius)] border border-[var(--color-border)] bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.08)] px-5 py-4">
         <p className="font-body text-[12px] leading-[1.8] text-[var(--color-muted)]">
           Rates are matched by state. If no state-specific rate is found for a customer&apos;s delivery address, the default nationwide
           rate is used. You must always have one active default rate with no states selected.
@@ -293,7 +293,7 @@ const AdminShippingRatesPage = () => {
                 const statesText =
                   row.states.length <= 2 ? row.states.join(", ") : `${row.states.slice(0, 2).join(", ")} [${row.states.length - 2}] more`;
                 return (
-                  <tr key={row.id} className="border-b border-[var(--color-surface-strong)] hover:bg-[rgba(var(--color-accent-rgb),0.04)]">
+                  <tr key={row.id} className="border-b border-[var(--color-surface-strong)] hover:bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.04)]">
                     <td className="px-2 py-4 pl-0 font-body text-[13px] text-[var(--color-primary)]">{row.name}</td>
                     <td className="px-2 py-4">
                       {isDefault ? (
@@ -454,7 +454,7 @@ const AdminShippingRatesPage = () => {
                       key={state}
                       type="button"
                       onClick={() => addState(state)}
-                      className="block w-full border-b border-[var(--color-surface-strong)] px-4 py-2 text-left font-body text-[12px] text-[var(--color-primary)] hover:bg-[rgba(var(--color-accent-rgb),0.05)]"
+                      className="block w-full border-b border-[var(--color-surface-strong)] px-4 py-2 text-left font-body text-[12px] text-[var(--color-primary)] hover:bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.05)]"
                     >
                       {state}
                     </button>
@@ -466,11 +466,11 @@ const AdminShippingRatesPage = () => {
                 {form.states.map((state) => (
                   <span
                     key={state}
-                    className="inline-flex items-center gap-2 rounded-[var(--border-radius)] border border-[var(--color-border)] bg-[rgba(var(--color-primary-rgb),0.06)] px-[10px] py-1 font-body text-[11px] text-[var(--color-primary)]"
+                    className="inline-flex items-center gap-2 rounded-[var(--border-radius)] border border-[var(--color-border)] bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.06)] px-[10px] py-1 font-body text-[11px] text-[var(--color-primary)]"
                   >
                     {state}
                     <button type="button" onClick={() => removeState(state)} className="text-[var(--color-muted)] hover:text-[var(--color-danger)]">
-                      ×
+                      �
                     </button>
                   </span>
                 ))}
@@ -499,7 +499,7 @@ const AdminShippingRatesPage = () => {
 
             <div className="grid gap-5 md:grid-cols-3">
               <div>
-                <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-muted-soft)]">Base Rate GH₵ *</label>
+                <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-muted-soft)]">Base Rate GH? *</label>
                 <input
                   inputMode="decimal"
                   value={form.baseRate}
@@ -548,7 +548,7 @@ const AdminShippingRatesPage = () => {
                 type="button"
                 onClick={() => void saveForm()}
                 disabled={isSaving}
-                className="w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-4 font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:opacity-65"
+                className="w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-4 font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)] disabled:opacity-65"
               >
                 {isSaving ? "Saving..." : form.id ? "Update Rate" : "Save Rate"}
               </button>

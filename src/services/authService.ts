@@ -56,7 +56,7 @@ interface RpcErrorLike {
   hint?: string;
 }
 
-const SIGN_IN_REDIRECT_PATH = "/auth/login";
+const SIGN_IN_REDIRECT_PATH = "/?auth=login";
 
 const parseError = (error: unknown): RpcErrorLike => {
   if (!error || typeof error !== "object") {

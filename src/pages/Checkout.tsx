@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import PaystackPop from "@paystack/inline-js";
 import { Banknote, Check, ChevronDown, CreditCard, X } from "lucide-react";
@@ -25,12 +25,14 @@ import {
   OrderSubmissionError,
   resolveShippingRateForState,
   submitOrderRpc,
+  triggerOrderConfirmationEmail,
   triggerNewOrderAdminNotification,
 } from "@/services/orderService";
 import { getPaystackConfig, getTransactionCharge, isPaymentConfigured } from "@/services/paystackService";
 import { getPaymentSettings, type PaymentSettings } from "@/services/paymentSettingsService";
 import { storeConfig, storeKeyPrefix } from "@/config/store.config";
 import { REDIRECT_AFTER_LOGIN_KEY } from "@/services/authService";
+import { buildAuthModalSearch, buildPathWithSearch } from "@/lib/authModal";
 
 type CheckoutStep = "contact" | "delivery" | "payment" | "review";
 
@@ -137,6 +139,11 @@ interface CheckoutSessionSnapshot {
   selectedSavedAddressId: string | null;
   discountInput: string;
   appliedDiscount: AppliedDiscount | null;
+}
+
+interface PendingOnlineOrder {
+  orderNumber: string;
+  signature: string;
 }
 
 interface FloatingInputProps {
@@ -281,6 +288,22 @@ const FALLBACK_DISCOUNT_CODES: Record<
 };
 
 const ERROR_SUMMARY_TEXT = "Please fix the errors above before continuing";
+const SHIPPING_RATES_NOT_CONFIGURED_ERROR =
+  "Shipping is unavailable because shipping rates are not configured in admin settings.";
+const SHIPPING_RATES_LOADING_ERROR = "Shipping rates are still loading. Please wait a moment and try again.";
+const SHIPPING_RATES_FETCH_ERROR = "Unable to load shipping rates right now. Please refresh and try again.";
+const PAYSTACK_BUYER_FEE_PERCENT = 1.95;
+
+const getNoShippingRateForStateError = (state: string) =>
+  `No shipping rate is configured for ${state}. Please contact support before placing your order.`;
+
+const calculatePaystackBuyerFee = (amount: number): number => {
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return 0;
+  }
+
+  return Math.round(amount * (PAYSTACK_BUYER_FEE_PERCENT / 100) * 100) / 100;
+};
 
 const isPlainRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
@@ -383,49 +406,84 @@ const getStepFromPath = (pathname: string): CheckoutStep | null => {
 };
 
 const parseStateListFromJson = (value: Json | null): string[] => {
-  if (!Array.isArray(value)) {
-    return [];
+  if (Array.isArray(value)) {
+    return value
+      .filter((entry): entry is string => typeof entry === "string")
+      .map((entry) => normalizeStateName(entry));
   }
 
-  return value
-    .filter((entry): entry is string => typeof entry === "string")
-    .map((entry) => normalizeStateName(entry));
+  if (typeof value === "string" && value.trim()) {
+    try {
+      const parsed = JSON.parse(value) as unknown;
+      if (Array.isArray(parsed)) {
+        return parsed
+          .filter((entry): entry is string => typeof entry === "string")
+          .map((entry) => normalizeStateName(entry));
+      }
+    } catch {
+      return [];
+    }
+  }
+
+  return [];
 };
 
-const getFallbackShippingQuote = (state: string): ShippingQuote => {
-  const normalized = normalizeStateName(state);
+const buildOnlineOrderSignature = (params: {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  state: string;
+  country: string;
+  deliveryInstructions: string;
+  orderNotes: string;
+  subtotal: number;
+  shippingFee: number;
+  discountAmount: number;
+  total: number;
+  items: CartItem[];
+}) => {
+  const normalizedItems = [...params.items]
+    .map((item) => ({
+      product_id: item.product_id,
+      variant_id: item.variant_id ?? null,
+      quantity: item.quantity,
+      unit_price: item.price,
+    }))
+    .sort((a, b) => {
+      const leftKey = `${a.product_id}:${a.variant_id ?? "base"}`;
+      const rightKey = `${b.product_id}:${b.variant_id ?? "base"}`;
+      return leftKey.localeCompare(rightKey);
+    });
 
-  if (normalized === "greater accra") {
-    return {
-      state,
-      fee: 1800,
-      minDays: 1,
-      maxDays: 2,
-    };
-  }
-
-  if (normalized === "ashanti") {
-    return {
-      state,
-      fee: 2400,
-      minDays: 1,
-      maxDays: 3,
-    };
-  }
-
-  return {
-    state,
-    fee: 3200,
-    minDays: 2,
-    maxDays: 5,
-  };
+  return JSON.stringify({
+    firstName: params.firstName,
+    lastName: params.lastName,
+    email: params.email,
+    phone: params.phone,
+    addressLine1: params.addressLine1,
+    addressLine2: params.addressLine2,
+    city: params.city,
+    state: params.state,
+    country: params.country,
+    deliveryInstructions: params.deliveryInstructions,
+    orderNotes: params.orderNotes,
+    subtotal: params.subtotal,
+    shippingFee: params.shippingFee,
+    discountAmount: params.discountAmount,
+    total: params.total,
+    items: normalizedItems,
+  });
 };
 
-const resolveShippingQuote = (state: string, rates: ShippingRateRow[]): ShippingQuote => {
+const resolveShippingQuote = (state: string, rates: ShippingRateRow[]): ShippingQuote | null => {
   const normalizedState = normalizeStateName(state);
 
   if (!normalizedState) {
-    return getFallbackShippingQuote(state);
+    return null;
   }
 
   let fallbackRate: ShippingRateRow | null = null;
@@ -456,7 +514,7 @@ const resolveShippingQuote = (state: string, rates: ShippingRateRow[]): Shipping
     };
   }
 
-  return getFallbackShippingQuote(state);
+  return null;
 };
 
 const getSavedAddressStorageKey = (userId: string): string => `${SAVED_ADDRESS_STORAGE_KEY_PREFIX}:${userId}`;
@@ -931,6 +989,14 @@ const SearchableStateField = ({
 const Checkout = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const signInModalPath = buildPathWithSearch(
+    location.pathname,
+    buildAuthModalSearch(location.search, {
+      mode: "login",
+      redirect: STEP_PATH.contact,
+    }),
+    location.hash,
+  );
   const isGuestCheckoutEnabled = storeConfig.features.guestCheckout;
   const isDiscountCodesEnabled = storeConfig.features.discountCodes;
 
@@ -953,6 +1019,8 @@ const Checkout = () => {
   const [completedSteps, setCompletedSteps] = useState<CheckoutStep[]>([]);
 
   const [shippingRates, setShippingRates] = useState<ShippingRateRow[]>([]);
+  const [isShippingRatesLoading, setIsShippingRatesLoading] = useState(true);
+  const [shippingRatesLoadError, setShippingRatesLoadError] = useState<string | null>(null);
 
   const [discountInput, setDiscountInput] = useState("");
   const [discountError, setDiscountError] = useState<string | null>(null);
@@ -978,11 +1046,13 @@ const Checkout = () => {
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [checkoutValidationErrors, setCheckoutValidationErrors] = useState<string[]>([]);
   const [submissionPhase, setSubmissionPhase] = useState<"idle" | "verifying" | "submitting">("idle");
+  const [pendingOnlineOrder, setPendingOnlineOrder] = useState<PendingOnlineOrder | null>(null);
 
   const pathStep = useMemo(() => getStepFromPath(location.pathname), [location.pathname]);
   const currentStep: CheckoutStep = pathStep ?? "contact";
   const currentStepIndex = CHECKOUT_STEPS.indexOf(currentStep);
   const paystackConfig = useMemo(() => getPaystackConfig(), []);
+  const isFreeTierStore = paystackConfig.isSubaccountMode;
   const onlinePaymentAvailable = useMemo(() => {
     if (!paymentSettings?.online_payment_enabled) {
       return false;
@@ -1007,12 +1077,12 @@ const Checkout = () => {
       methods.push("online");
     }
 
-    if (cashOnDeliveryAvailable) {
+    if (!isFreeTierStore && cashOnDeliveryAvailable) {
       methods.push("cash_on_delivery");
     }
 
     return methods;
-  }, [cashOnDeliveryAvailable, onlinePaymentAvailable]);
+  }, [cashOnDeliveryAvailable, isFreeTierStore, onlinePaymentAvailable]);
   const shouldRenderPaymentMethodChoice = availablePaymentMethods.length > 1;
   const hasNoAvailablePaymentMethods = paymentSettings !== null && availablePaymentMethods.length === 0;
 
@@ -1023,22 +1093,49 @@ const Checkout = () => {
 
     return resolveShippingQuote(deliveryValues.state, shippingRates);
   }, [deliveryValues.state, shippingRates]);
+  const hasConfiguredShippingRates = shippingRates.length > 0;
+  const shippingConfigurationError = useMemo(() => {
+    if (isShippingRatesLoading) {
+      return SHIPPING_RATES_LOADING_ERROR;
+    }
+
+    if (shippingRatesLoadError) {
+      return shippingRatesLoadError;
+    }
+
+    if (!hasConfiguredShippingRates) {
+      return SHIPPING_RATES_NOT_CONFIGURED_ERROR;
+    }
+
+    if (deliveryValues.state && !shippingQuote) {
+      return getNoShippingRateForStateError(deliveryValues.state);
+    }
+
+    return null;
+  }, [deliveryValues.state, hasConfiguredShippingRates, isShippingRatesLoading, shippingQuote, shippingRatesLoadError]);
 
   const shippingFee = shippingQuote?.fee ?? 0;
   const discountAmount = isDiscountCodesEnabled ? appliedDiscount?.amount ?? 0 : 0;
-  const orderTotal = Math.max(0, subtotal + shippingFee - discountAmount);
+  const orderTotalBeforePaystackFee = Math.max(0, subtotal + shippingFee - discountAmount);
+  const isPaystackBuyerFeeApplicable = isFreeTierStore && onlinePaymentAvailable && paymentValues.method === "online";
+  const paystackBuyerFee = isPaystackBuyerFeeApplicable
+    ? calculatePaystackBuyerFee(orderTotalBeforePaystackFee)
+    : 0;
+  const orderTotal = Math.max(0, orderTotalBeforePaystackFee + paystackBuyerFee);
 
   const shippingSidebarValue =
     currentStep === "contact"
       ? "Calculated in next step"
-      : shippingQuote
-        ? formatPrice(shippingQuote.fee)
+      : deliveryValues.state
+        ? shippingQuote
+          ? formatPrice(shippingQuote.fee)
+          : "Unavailable"
         : "Select region";
 
   const orderItemCountLabel = `${totalItems} ${totalItems === 1 ? "item" : "items"}`;
   const selectedPaymentLabel =
     paymentValues.method === "online"
-      ? "Pay Online"
+      ? "Pay Online (Paystack)"
       : paymentValues.method === "cash_on_delivery"
         ? "Cash on Delivery"
         : "Not selected";
@@ -1138,6 +1235,16 @@ const Checkout = () => {
 
     try {
       const parsed = JSON.parse(raw) as Partial<CheckoutSessionSnapshot>;
+
+      if (isPlainRecord(parsed.contact)) {
+        setContactValues({
+          firstName: sanitizeText(readString(parsed.contact.firstName)),
+          lastName: sanitizeText(readString(parsed.contact.lastName)),
+          email: sanitizeText(readString(parsed.contact.email)).toLowerCase(),
+          phone: sanitizeText(readString(parsed.contact.phone)),
+          marketingOptIn: readBoolean(parsed.contact.marketingOptIn),
+        });
+      }
 
       if (isPlainRecord(parsed.delivery)) {
         const restoredState = sanitizeText(readString(parsed.delivery.state));
@@ -1243,14 +1350,51 @@ const Checkout = () => {
     selectedSavedAddressId,
   ]);
 
+  const persistCheckoutSessionSnapshot = useCallback(
+    (nextCompletedSteps: CheckoutStep[]) => {
+      if (!isHydrated || typeof window === "undefined") {
+        return;
+      }
+
+      const snapshot: CheckoutSessionSnapshot = {
+        contact: contactValues,
+        delivery: deliveryValues,
+        payment: paymentValues,
+        review: reviewValues,
+        completed: nextCompletedSteps,
+        selectedSavedAddressId,
+        discountInput: isDiscountCodesEnabled ? discountInput : "",
+        appliedDiscount: isDiscountCodesEnabled ? appliedDiscount : null,
+      };
+
+      window.sessionStorage.setItem(CHECKOUT_SESSION_STORAGE_KEY, JSON.stringify(snapshot));
+    },
+    [
+      appliedDiscount,
+      contactValues,
+      deliveryValues,
+      discountInput,
+      isDiscountCodesEnabled,
+      isHydrated,
+      paymentValues,
+      reviewValues,
+      selectedSavedAddressId,
+    ],
+  );
+
   useEffect(() => {
     let cancelled = false;
 
     const loadShippingRates = async () => {
+      setIsShippingRatesLoading(true);
+      setShippingRatesLoadError(null);
       try {
         const data = await fetchActiveShippingRates();
         if (!cancelled) {
           setShippingRates(data);
+          if (data.length === 0) {
+            setShippingRatesLoadError(SHIPPING_RATES_NOT_CONFIGURED_ERROR);
+          }
         }
       } catch (error) {
         if (import.meta.env.DEV) {
@@ -1261,7 +1405,12 @@ const Checkout = () => {
           return;
         }
 
-        return;
+        setShippingRates([]);
+        setShippingRatesLoadError(SHIPPING_RATES_FETCH_ERROR);
+      } finally {
+        if (!cancelled) {
+          setIsShippingRatesLoading(false);
+        }
       }
     };
 
@@ -1270,7 +1419,7 @@ const Checkout = () => {
     return () => {
       cancelled = true;
     };
-  }, [isDiscountCodesEnabled]);
+  }, []);
 
   useEffect(() => {
     if (!isSessionChecked || isLoggedIn || isGuestCheckoutEnabled) {
@@ -1282,8 +1431,8 @@ const Checkout = () => {
       window.sessionStorage.setItem(REDIRECT_AFTER_LOGIN_KEY, STEP_PATH.contact);
     }
 
-    navigate("/auth/login?redirect=/checkout/contact", { replace: true });
-  }, [isGuestCheckoutEnabled, isLoggedIn, isSessionChecked, navigate]);
+    navigate(signInModalPath, { replace: true });
+  }, [isGuestCheckoutEnabled, isLoggedIn, isSessionChecked, navigate, signInModalPath]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1414,6 +1563,10 @@ const Checkout = () => {
   }, [completedSteps, currentStep, isHydrated, navigate]);
 
   useEffect(() => {
+    if (!isHydrated) {
+      return;
+    }
+
     if (!completedSteps.includes("contact")) {
       return;
     }
@@ -1423,9 +1576,13 @@ const Checkout = () => {
         previous.filter((step) => step !== "contact" && step !== "delivery" && step !== "payment"),
       );
     }
-  }, [completedSteps, contactValues]);
+  }, [completedSteps, contactValues, isHydrated]);
 
   useEffect(() => {
+    if (!isHydrated) {
+      return;
+    }
+
     if (!completedSteps.includes("delivery")) {
       return;
     }
@@ -1433,17 +1590,29 @@ const Checkout = () => {
     if (!isDeliveryComplete(deliveryValues)) {
       setCompletedSteps((previous) => previous.filter((step) => step !== "delivery" && step !== "payment"));
     }
-  }, [completedSteps, deliveryValues]);
+  }, [completedSteps, deliveryValues, isHydrated]);
 
   useEffect(() => {
+    if (!isHydrated) {
+      return;
+    }
+
+    if (paymentSettings === null) {
+      return;
+    }
+
     if (!completedSteps.includes("payment")) {
+      return;
+    }
+
+    if (availablePaymentMethods.length === 0) {
       return;
     }
 
     if (!isPaymentComplete(paymentValues, availablePaymentMethods)) {
       setCompletedSteps((previous) => previous.filter((step) => step !== "payment"));
     }
-  }, [availablePaymentMethods, completedSteps, paymentValues]);
+  }, [availablePaymentMethods, completedSteps, isHydrated, paymentSettings, paymentValues]);
 
   useEffect(() => {
     setStepAdvanceError(null);
@@ -1595,7 +1764,9 @@ const Checkout = () => {
         return;
       }
 
-      setCompletedSteps((previous) => uniqueCheckoutSteps([...previous, "contact"]));
+      const nextCompletedSteps = uniqueCheckoutSteps([...completedSteps, "contact"]);
+      setCompletedSteps(nextCompletedSteps);
+      persistCheckoutSessionSnapshot(nextCompletedSteps);
       navigate(STEP_PATH.delivery);
       return;
     }
@@ -1607,7 +1778,14 @@ const Checkout = () => {
         return;
       }
 
-      setCompletedSteps((previous) => uniqueCheckoutSteps([...previous, "contact", "delivery"]));
+      if (shippingConfigurationError) {
+        setStepAdvanceError(shippingConfigurationError);
+        return;
+      }
+
+      const nextCompletedSteps = uniqueCheckoutSteps([...completedSteps, "contact", "delivery"]);
+      setCompletedSteps(nextCompletedSteps);
+      persistCheckoutSessionSnapshot(nextCompletedSteps);
       navigate(STEP_PATH.payment);
       return;
     }
@@ -1623,10 +1801,22 @@ const Checkout = () => {
         return;
       }
 
-      setCompletedSteps((previous) => uniqueCheckoutSteps([...previous, "contact", "delivery", "payment"]));
+      const nextCompletedSteps = uniqueCheckoutSteps([...completedSteps, "contact", "delivery", "payment"]);
+      setCompletedSteps(nextCompletedSteps);
+      persistCheckoutSessionSnapshot(nextCompletedSteps);
       navigate(STEP_PATH.review);
     }
-  }, [currentStep, hasNoAvailablePaymentMethods, navigate, validateContactStep, validateDeliveryStep, validatePaymentStep]);
+  }, [
+    completedSteps,
+    currentStep,
+    hasNoAvailablePaymentMethods,
+    navigate,
+    persistCheckoutSessionSnapshot,
+    shippingConfigurationError,
+    validateContactStep,
+    validateDeliveryStep,
+    validatePaymentStep,
+  ]);
 
   const handleBack = useCallback(() => {
     if (currentStep === "review") {
@@ -1993,6 +2183,13 @@ const Checkout = () => {
       return;
     }
 
+    if (shippingConfigurationError) {
+      setSubmissionError(shippingConfigurationError);
+      setStepAdvanceError(shippingConfigurationError);
+      navigate(STEP_PATH.delivery);
+      return;
+    }
+
     setSubmissionPhase("verifying");
 
     try {
@@ -2056,15 +2253,31 @@ const Checkout = () => {
 
       const customerId = currentUserId ?? null;
 
-      const shippingRate = await resolveShippingRateForState(cleanAddress.state);
+      let shippingRate: ShippingRateRow;
+      try {
+        shippingRate = await resolveShippingRateForState(cleanAddress.state);
+      } catch {
+        const shippingErrorMessage =
+          cleanAddress.state && shippingRates.length > 0
+            ? getNoShippingRateForStateError(cleanAddress.state)
+            : SHIPPING_RATES_NOT_CONFIGURED_ERROR;
+        setSubmissionError(shippingErrorMessage);
+        setStepAdvanceError(shippingErrorMessage);
+        setSubmissionPhase("idle");
+        navigate(STEP_PATH.delivery);
+        return;
+      }
       const validatedShippingFee = Number(shippingRate.base_rate ?? 0);
-      const validatedTotal = Math.max(0, validatedSubtotal + validatedShippingFee - discountAmount);
       const isOnlinePayment = selectedPaymentMethod === "online";
+      const validatedBaseTotal = Math.max(0, validatedSubtotal + validatedShippingFee - discountAmount);
+      const validatedPaystackBuyerFee = isFreeTierStore && isOnlinePayment
+        ? calculatePaystackBuyerFee(validatedBaseTotal)
+        : 0;
+      const validatedTotal = Math.max(0, validatedBaseTotal + validatedPaystackBuyerFee);
 
       setSubmissionPhase("submitting");
 
-      const orderResponse = await submitOrderRpc({
-        customerId,
+      const checkoutSignature = buildOnlineOrderSignature({
         firstName: sanitizedContact.firstName,
         lastName: sanitizedContact.lastName,
         email: sanitizedContact.email,
@@ -2075,20 +2288,59 @@ const Checkout = () => {
         state: cleanAddress.state,
         country: cleanAddress.country,
         deliveryInstructions: cleanAddress.deliveryInstructions,
-        saveAddress: isLoggedIn && deliveryValues.saveForFuture,
-        items: validatedItems,
+        orderNotes: sanitizedReview.orderNotes,
         subtotal: validatedSubtotal,
         shippingFee: validatedShippingFee,
         discountAmount,
         total: validatedTotal,
-        notes: sanitizedReview.orderNotes,
-        paymentMethod: selectedPaymentMethod,
-        mobileMoneyNumber: null,
-        orderStatus: isOnlinePayment ? "pending_payment" : "confirmed",
-        paymentStatus: "pending",
-        marketingOptIn: sanitizedContact.marketingOptIn,
-        ipAddress: "",
+        items: validatedItems,
       });
+
+      let orderNumberForCheckout = "";
+      let createdNewOrder = false;
+
+      if (isOnlinePayment && pendingOnlineOrder && pendingOnlineOrder.signature === checkoutSignature) {
+        orderNumberForCheckout = pendingOnlineOrder.orderNumber;
+      } else {
+        const orderResponse = await submitOrderRpc({
+          customerId,
+          firstName: sanitizedContact.firstName,
+          lastName: sanitizedContact.lastName,
+          email: sanitizedContact.email,
+          phone: sanitizedContact.phone,
+          addressLine1: cleanAddress.addressLine1,
+          addressLine2: cleanAddress.addressLine2,
+          city: cleanAddress.city,
+          state: cleanAddress.state,
+          country: cleanAddress.country,
+          deliveryInstructions: cleanAddress.deliveryInstructions,
+          saveAddress: isLoggedIn && deliveryValues.saveForFuture,
+          items: validatedItems,
+          subtotal: validatedSubtotal,
+          shippingFee: validatedShippingFee,
+          discountAmount,
+          total: validatedTotal,
+          notes: sanitizedReview.orderNotes,
+          paymentMethod: selectedPaymentMethod,
+          mobileMoneyNumber: null,
+          orderStatus: isOnlinePayment ? "pending_payment" : "confirmed",
+          paymentStatus: "pending",
+          marketingOptIn: sanitizedContact.marketingOptIn,
+          ipAddress: "",
+        });
+
+        orderNumberForCheckout = orderResponse.order_number;
+        createdNewOrder = true;
+
+        if (isOnlinePayment) {
+          setPendingOnlineOrder({
+            orderNumber: orderResponse.order_number,
+            signature: checkoutSignature,
+          });
+        } else {
+          setPendingOnlineOrder(null);
+        }
+      }
 
       const finalizeCheckoutSession = (orderNumber: string) => {
         clearCart();
@@ -2100,7 +2352,7 @@ const Checkout = () => {
         }
       };
 
-      if (isLoggedIn && deliveryValues.saveForFuture) {
+      if (createdNewOrder && isLoggedIn && deliveryValues.saveForFuture) {
         const savedAddress: SavedAddressCard = {
           id: `local-${Date.now()}`,
           label: "Saved Address",
@@ -2117,15 +2369,25 @@ const Checkout = () => {
       }
 
       if (!isOnlinePayment) {
-        void triggerNewOrderAdminNotification(orderResponse.order_number).catch((notificationError) => {
+        void triggerNewOrderAdminNotification(orderNumberForCheckout).catch((notificationError) => {
           if (import.meta.env.DEV) {
             console.warn("New-order admin notification trigger failed", notificationError);
           }
         });
 
-        finalizeCheckoutSession(orderResponse.order_number);
+        void triggerOrderConfirmationEmail(orderNumberForCheckout).catch((emailError) => {
+          if (import.meta.env.DEV) {
+            console.warn("Order confirmation email trigger failed", emailError);
+          }
+        });
+
+        finalizeCheckoutSession(orderNumberForCheckout);
         navigate("/checkout/confirmation", { replace: true });
         return;
+      }
+
+      if (!orderNumberForCheckout) {
+        throw new Error("Missing online order reference.");
       }
 
       const totalAmountInPesewas = Math.round(validatedTotal * 100);
@@ -2138,7 +2400,7 @@ const Checkout = () => {
         email: sanitizedContact.email,
         amount: totalAmountInPesewas,
         currency: "GHS",
-        ref: orderResponse.order_number,
+        ref: orderNumberForCheckout,
         ...(paystackConfig.isSubaccountMode && paystackConfig.subaccountCode
           ? {
               subaccount: paystackConfig.subaccountCode,
@@ -2147,15 +2409,22 @@ const Checkout = () => {
             }
           : {}),
         onSuccess: () => {
-          finalizeCheckoutSession(orderResponse.order_number);
+          setPendingOnlineOrder(null);
+          finalizeCheckoutSession(orderNumberForCheckout);
           setSubmissionPhase("idle");
-          navigate(`/orders/${encodeURIComponent(orderResponse.order_number)}`);
+          navigate(`/orders/${encodeURIComponent(orderNumberForCheckout)}`);
         },
         onCancel: () => {
           setSubmissionPhase("idle");
           const message = "Payment was cancelled. You can try again or choose a different method.";
           setStepAdvanceError(message);
           setSubmissionError(message);
+          setPendingOnlineOrder((previous) =>
+            previous ?? {
+              orderNumber: orderNumberForCheckout,
+              signature: checkoutSignature,
+            },
+          );
         },
       });
 
@@ -2205,9 +2474,12 @@ const Checkout = () => {
     deliveryValues,
     discountAmount,
     hasNoAvailablePaymentMethods,
+    shippingConfigurationError,
+    isFreeTierStore,
     isLoggedIn,
     items,
     navigate,
+    pendingOnlineOrder,
     paystackConfig.bearer,
     paystackConfig.isSubaccountMode,
     paystackConfig.publicKey,
@@ -2216,6 +2488,7 @@ const Checkout = () => {
     replaceItems,
     reviewValues.orderNotes,
     saveAddressForFutureOrders,
+    shippingRates.length,
     validateCart,
     validateCartBeforeSubmit,
     validateContactStep,
@@ -2275,6 +2548,13 @@ const Checkout = () => {
           <div className="flex items-center justify-between text-[var(--color-accent)]">
             <span>Discount</span>
             <span>- {formatPrice(discountAmount)}</span>
+          </div>
+        ) : null}
+
+        {isPaystackBuyerFeeApplicable ? (
+          <div className="flex items-center justify-between text-[var(--color-muted)]">
+            <span>Paystack Fee ({PAYSTACK_BUYER_FEE_PERCENT}%)</span>
+            <span>{formatPrice(paystackBuyerFee)}</span>
           </div>
         ) : null}
       </div>
@@ -2375,7 +2655,7 @@ const Checkout = () => {
                             isActive
                               ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-[var(--color-secondary)]"
                               : isCompleted
-                                ? "border-[var(--color-accent)] bg-[var(--color-accent)] text-[var(--color-primary)]"
+                                ? "border-[var(--color-accent)] bg-[var(--color-accent)] text-[var(--color-secondary)]"
                                 : "border-[var(--color-border)] bg-transparent text-[var(--color-muted-soft)]"
                           }`}
                         >
@@ -2420,7 +2700,7 @@ const Checkout = () => {
                   <p className="mt-2 font-body text-[11px] text-[var(--color-muted-soft)]">
                     Checking out as guest &#183;{" "}
                     <Link
-                      to="/auth/login?redirect=/checkout/contact"
+                      to={signInModalPath}
                       onClick={handleSignInInstead}
                       className="text-[var(--color-accent)] transition-colors hover:text-[var(--color-primary)]"
                     >
@@ -2430,7 +2710,7 @@ const Checkout = () => {
                 ) : null}
 
                 {shouldShowSavedDetailsPrompt ? (
-                  <div className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-[var(--border-radius)] border border-[var(--color-border)] bg-[rgba(var(--color-accent-rgb),0.08)] px-5 py-4">
+                  <div className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-[var(--border-radius)] border border-[var(--color-border)] bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.08)] px-5 py-4">
                     <div className="flex items-center">
                       <svg
                         viewBox="0 0 24 24"
@@ -2453,7 +2733,7 @@ const Checkout = () => {
                       <button
                         type="button"
                         onClick={handleUseSavedDetails}
-                        className="rounded-[var(--border-radius)] bg-[var(--color-primary)] px-5 py-2 font-body text-[10px] uppercase tracking-[0.15em] text-[var(--color-secondary)] transition-all duration-200 ease-in-out hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)]"
+                        className="rounded-[var(--border-radius)] bg-[var(--color-primary)] px-5 py-2 font-body text-[10px] uppercase tracking-[0.15em] text-[var(--color-secondary)] transition-all duration-200 ease-in-out hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)]"
                       >
                         Use Saved Details
                       </button>
@@ -2598,7 +2878,7 @@ const Checkout = () => {
                     <button
                       type="button"
                       onClick={handleNextStep}
-                      className="w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-12 py-4 font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] md:w-auto"
+                      className="w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-12 py-4 font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)] md:w-auto"
                     >
                       Next Step
                     </button>
@@ -2722,6 +3002,12 @@ const Checkout = () => {
                       </p>
                     ) : null}
 
+                    {deliveryValues.state && !shippingQuote && !isShippingRatesLoading ? (
+                      <p className="mt-2 font-body text-[11px] text-[var(--color-danger)]">
+                        {shippingConfigurationError || getNoShippingRateForStateError(deliveryValues.state)}
+                      </p>
+                    ) : null}
+
                     <FloatingSelect
                       id="checkout-country"
                       label="Country"
@@ -2800,7 +3086,7 @@ const Checkout = () => {
                     <button
                       type="button"
                       onClick={handleNextStep}
-                      className="w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-12 py-4 font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] md:w-auto"
+                      className="w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-12 py-4 font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)] md:w-auto"
                     >
                       Next Step
                     </button>
@@ -2819,6 +3105,33 @@ const Checkout = () => {
                   <p className="font-body text-[12px] text-[var(--color-danger)]">
                     No payment methods are currently available. Please contact the store.
                   </p>
+                ) : isFreeTierStore && onlinePaymentAvailable ? (
+                  <div className="mt-6">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPaymentValues({
+                          method: "online",
+                        });
+                      }}
+                      className={`w-full rounded-[var(--border-radius)] border px-6 py-7 text-left transition-colors duration-200 ${
+                        paymentValues.method === "online" ? "border-[var(--color-primary)]" : "border-[var(--color-border)]"
+                      }`}
+                      style={{
+                        backgroundColor:
+                          paymentValues.method === "online" ? "rgba(var(--color-navbar-solid-foreground-rgb),0.08)" : "transparent",
+                      }}
+                    >
+                      <CreditCard size={28} strokeWidth={1.25} className="mb-4 text-[var(--color-accent)]" />
+                      <p className="font-display text-[18px] italic text-[var(--color-primary)]">Pay Online</p>
+                      <p className="mt-1 font-body text-[11px] font-light text-[var(--color-muted)]">
+                        Pay securely with card or mobile money
+                      </p>
+                      <p className="mt-3 font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-accent)]">
+                        Powered by Paystack
+                      </p>
+                    </button>
+                  </div>
                 ) : shouldRenderPaymentMethodChoice ? (
                   <div className="mt-6 grid gap-4 md:grid-cols-2">
                     {onlinePaymentAvailable ? (
@@ -2834,7 +3147,7 @@ const Checkout = () => {
                         }`}
                         style={{
                           backgroundColor:
-                            paymentValues.method === "online" ? "rgba(var(--color-primary-rgb),0.08)" : "transparent",
+                            paymentValues.method === "online" ? "rgba(var(--color-navbar-solid-foreground-rgb),0.08)" : "transparent",
                         }}
                       >
                         <CreditCard size={28} strokeWidth={1.25} className="mb-4 text-[var(--color-accent)]" />
@@ -2860,7 +3173,7 @@ const Checkout = () => {
                         }`}
                         style={{
                           backgroundColor:
-                            paymentValues.method === "cash_on_delivery" ? "rgba(var(--color-primary-rgb),0.08)" : "transparent",
+                            paymentValues.method === "cash_on_delivery" ? "rgba(var(--color-navbar-solid-foreground-rgb),0.08)" : "transparent",
                         }}
                       >
                         <Banknote size={28} strokeWidth={1.25} className="mb-4 text-[var(--color-accent)]" />
@@ -2890,7 +3203,7 @@ const Checkout = () => {
                     <button
                       type="button"
                       onClick={handleNextStep}
-                      className="w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-12 py-4 font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] md:w-auto"
+                      className="w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-12 py-4 font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)] md:w-auto"
                     >
                       Next Step
                     </button>
@@ -2939,7 +3252,7 @@ const Checkout = () => {
 
                   <div className="flex items-center justify-between font-body text-[12px] text-[var(--color-muted)]">
                     <span>Shipping</span>
-                    <span>{shippingQuote ? formatPrice(shippingQuote.fee) : "Select region"}</span>
+                    <span>{shippingQuote ? formatPrice(shippingQuote.fee) : deliveryValues.state ? "Unavailable" : "Select region"}</span>
                   </div>
 
                   {isDiscountCodesEnabled && appliedDiscount ? (
@@ -2949,11 +3262,24 @@ const Checkout = () => {
                     </div>
                   ) : null}
 
+                  {isPaystackBuyerFeeApplicable ? (
+                    <div className="flex items-center justify-between font-body text-[12px] text-[var(--color-muted)]">
+                      <span>Paystack Fee ({PAYSTACK_BUYER_FEE_PERCENT}%)</span>
+                      <span>{formatPrice(paystackBuyerFee)}</span>
+                    </div>
+                  ) : null}
+
                   <div className="flex items-center justify-between font-body text-[14px] font-medium text-[var(--color-primary)]">
                     <span>Total</span>
                     <span>{formatPrice(orderTotal)}</span>
                   </div>
                 </div>
+
+                {!shippingQuote && (deliveryValues.state || shippingRatesLoadError || !hasConfiguredShippingRates) ? (
+                  <p className="mt-3 font-body text-[12px] text-[var(--color-danger)]">
+                    {shippingConfigurationError || SHIPPING_RATES_NOT_CONFIGURED_ERROR}
+                  </p>
+                ) : null}
 
                 <div className="mt-6 border-b border-[var(--color-border)] pb-6">
                   <div className="mb-2 flex items-center justify-between">
@@ -3073,7 +3399,7 @@ const Checkout = () => {
                     type="button"
                     onClick={() => void handleConfirmOrder()}
                     disabled={submissionPhase !== "idle"}
-                    className="w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-5 font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-65"
+                    className="w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-5 font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)] disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-65"
                   >
                     {submissionPhase === "verifying"
                       ? "Verifying..."

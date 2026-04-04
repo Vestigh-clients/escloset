@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Bell } from "lucide-react";
 import StoreLogo from "@/components/StoreLogo";
@@ -72,7 +72,7 @@ const readMetadataName = (value: unknown): string => (typeof value === "string" 
 
 const breadcrumbLabel = (segment: string) => {
   if (!segment) return "";
-  if (/^LUX-\d{4}-\d+/i.test(segment)) return segment.toUpperCase();
+  if (/^[A-Z0-9]{1,5}-\d{4}-\d+$/i.test(segment)) return segment.toUpperCase();
   return segment
     .replace(/-/g, " ")
     .replace(/\b\w/g, (char) => char.toUpperCase());
@@ -340,7 +340,7 @@ const AdminLayout = () => {
           </button>
 
           {isDropdownOpen ? (
-            <div className="absolute right-0 mt-3 w-[340px] max-h-[440px] max-w-[calc(100vw-24px)] overflow-y-auto border border-[var(--color-border)] bg-[var(--color-secondary)] shadow-[0_8px_32px_rgba(var(--color-primary-rgb),0.08)]">
+            <div className="absolute right-0 mt-3 w-[340px] max-h-[440px] max-w-[calc(100vw-24px)] overflow-y-auto border border-[var(--color-border)] bg-[var(--color-secondary)] shadow-[0_8px_32px_rgba(var(--color-navbar-solid-foreground-rgb),0.08)]">
               <div className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-4">
                 <p className="font-display text-[18px] italic text-[var(--color-primary)]">Notifications</p>
                 <button
@@ -360,7 +360,7 @@ const AdminLayout = () => {
                     key={notification.id}
                     type="button"
                     onClick={() => void onNotificationClick(notification)}
-                    className={`w-full border-b border-[var(--color-border)] px-5 py-4 text-left transition-colors hover:bg-[rgba(var(--color-accent-rgb),0.05)] ${
+                    className={`w-full border-b border-[var(--color-border)] px-5 py-4 text-left transition-colors hover:bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.05)] ${
                       notification.is_read ? "border-l-2 border-l-transparent" : "border-l-2 border-l-[var(--color-accent)]"
                     }`}
                   >
@@ -378,7 +378,7 @@ const AdminLayout = () => {
       </div>
 
       <div
-        className={`fixed inset-0 z-[200] bg-[rgba(var(--color-primary-rgb),0.5)] transition-opacity duration-300 md:hidden ${
+        className={`fixed inset-0 z-[200] bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.5)] transition-opacity duration-300 md:hidden ${
           drawerOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={closeDrawer}
@@ -535,7 +535,7 @@ const AdminLayout = () => {
               </button>
 
               {isDropdownOpen ? (
-                <div className="absolute right-0 mt-3 w-[340px] max-h-[440px] overflow-y-auto border border-[var(--color-border)] bg-[var(--color-secondary)] shadow-[0_8px_32px_rgba(var(--color-primary-rgb),0.08)]">
+                <div className="absolute right-0 mt-3 w-[340px] max-h-[440px] overflow-y-auto border border-[var(--color-border)] bg-[var(--color-secondary)] shadow-[0_8px_32px_rgba(var(--color-navbar-solid-foreground-rgb),0.08)]">
                   <div className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-4">
                     <p className="font-display text-[18px] italic text-[var(--color-primary)]">Notifications</p>
                     <button
@@ -555,7 +555,7 @@ const AdminLayout = () => {
                         key={notification.id}
                         type="button"
                         onClick={() => void onNotificationClick(notification)}
-                        className={`w-full border-b border-[var(--color-border)] px-5 py-4 text-left transition-colors hover:bg-[rgba(var(--color-accent-rgb),0.05)] ${
+                        className={`w-full border-b border-[var(--color-border)] px-5 py-4 text-left transition-colors hover:bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.05)] ${
                           notification.is_read ? "border-l-2 border-l-transparent" : "border-l-2 border-l-[var(--color-accent)]"
                         }`}
                       >
@@ -621,7 +621,7 @@ const AdminLayout = () => {
         {toasts.map((toastItem) => (
           <div
             key={toastItem.id}
-            className="w-[320px] max-w-[calc(100vw-3rem)] border-l-[3px] border-[var(--color-accent)] bg-[var(--color-primary)] px-5 py-[14px] text-[var(--color-secondary)] shadow-[0_8px_24px_rgba(var(--color-primary-rgb),0.18)]"
+            className="w-[320px] max-w-[calc(100vw-3rem)] border-l-[3px] border-[var(--color-accent)] bg-[var(--color-primary)] px-5 py-[14px] text-[var(--color-secondary)] shadow-[0_8px_24px_rgba(var(--color-navbar-solid-foreground-rgb),0.18)]"
           >
             <p className="font-body text-[12px]">{toastItem.title}</p>
             {toastItem.description ? (

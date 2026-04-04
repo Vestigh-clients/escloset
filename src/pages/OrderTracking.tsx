@@ -1,9 +1,11 @@
-﻿import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import OrderSummaryDetails from "@/components/orders/OrderSummaryDetails";
+import { storeConfig } from "@/config/store.config";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { buildLiveStatusSteps, formatStatusLabel, getDeliveryWindow } from "@/lib/orderPresentation";
+import { formatPrice } from "@/lib/price";
+import { buildLiveStatusSteps, formatStatusLabel, getDeliveryWindow, getPaymentMethodLabel } from "@/lib/orderPresentation";
 import { lookupOrderTrackingDetails, type OrderDetails } from "@/services/orderService";
 
 const ORDER_NOT_FOUND_CODE = "PGRST116";
@@ -17,6 +19,9 @@ const ORDER_TRACKING_SELECT = `
   discount_amount,
   total,
   payment_method,
+  payment_status,
+  paystack_reference,
+  paid_at,
   mobile_money_number,
   shipping_address_snapshot,
   created_at,
@@ -146,6 +151,17 @@ const mapOrderRowToOrderDetails = (value: unknown): OrderDetails | null => {
       typeof value.discount_amount === "number" && Number.isFinite(value.discount_amount) ? value.discount_amount : 0,
     total: readNumber(value.total),
     payment_method: readString(value.payment_method) || null,
+    contact_email: readString(value.contact_email) || null,
+    payment_status:
+      readString(value.payment_status) === "pending" ||
+      readString(value.payment_status) === "paid" ||
+      readString(value.payment_status) === "failed" ||
+      readString(value.payment_status) === "review"
+        ? (readString(value.payment_status) as "pending" | "paid" | "failed" | "review")
+        : undefined,
+    stock_committed: typeof value.stock_committed === "boolean" ? value.stock_committed : undefined,
+    paystack_reference: readString(value.paystack_reference) || null,
+    paid_at: readString(value.paid_at) || null,
     mobile_money_number: readString(value.mobile_money_number) || null,
     shipping_address_snapshot: value.shipping_address_snapshot ?? {},
     created_at: readString(value.created_at),
@@ -371,6 +387,27 @@ const OrderTracking = () => {
     () => (order ? buildLiveStatusSteps(order.status, order.order_status_history) : []),
     [order],
   );
+  const totalItems = useMemo(() => (order ? order.order_items.length : 0), [order]);
+  const totalUnits = useMemo(
+    () => (order ? order.order_items.reduce((sum, item) => sum + item.quantity, 0) : 0),
+    [order],
+  );
+  const paymentMethodLabel = useMemo(() => (order ? getPaymentMethodLabel(order.payment_method) : "Not specified"), [order]);
+  const orderDateLabel = useMemo(() => (order ? formatChangedAt(order.created_at) : null), [order]);
+  const orderUpdatedLabel = useMemo(() => (order ? formatChangedAt(order.updated_at) : null), [order]);
+  const paymentStatusLabel = useMemo(() => (order?.payment_status ? formatStatusLabel(order.payment_status) : "Not available"), [order]);
+  const paidAtLabel = useMemo(() => (order ? formatChangedAt(order.paid_at || null) : null), [order]);
+  const cancellationNote = useMemo(() => {
+    if (!order || order.status.trim().toLowerCase() !== "cancelled") {
+      return null;
+    }
+
+    const cancelledEntry = [...order.order_status_history]
+      .reverse()
+      .find((entry) => entry.status.trim().toLowerCase() === "cancelled");
+
+    return cancelledEntry?.note?.trim() || null;
+  }, [order]);
 
   if (isAuthLoading || isLoading) {
     return <TrackingSkeleton />;
@@ -395,7 +432,7 @@ const OrderTracking = () => {
                 type="text"
                 value={lookupOrderNumber}
                 onChange={(event) => setLookupOrderNumber(event.target.value)}
-                placeholder="LUX-2026-00001"
+                placeholder="ORD-2026-00001"
                 className="w-full border-0 border-b border-[var(--color-border)] bg-transparent pb-[10px] font-body text-[14px] text-[var(--color-primary)] placeholder:text-[var(--color-muted-soft)] outline-none transition-colors focus:border-[var(--color-primary)]"
                 autoComplete="off"
               />
@@ -424,7 +461,7 @@ const OrderTracking = () => {
             <button
               type="submit"
               disabled={isSubmittingLookup}
-              className="mt-7 w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-6 py-4 font-body text-[11px] uppercase tracking-[0.15em] text-[var(--color-secondary)] transition-colors duration-200 hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-7 w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-6 py-4 font-body text-[11px] uppercase tracking-[0.15em] text-[var(--color-secondary)] transition-colors duration-200 hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSubmittingLookup ? "Finding..." : "Find Order"}
             </button>
@@ -471,85 +508,162 @@ const OrderTracking = () => {
   }
 
   return (
-    <div className="bg-[var(--color-secondary)] px-6 py-[80px] sm:px-6">
-      <div className="mx-auto max-w-[640px]">
-        <section>
-          <p className="font-body text-[10px] uppercase tracking-[0.2em] text-[var(--color-accent)]">Order Tracking</p>
-          <h1 className="mt-3 font-display text-[38px] italic font-light text-[var(--color-primary)] sm:text-[48px]">
-            Order {order.order_number}
-          </h1>
-          <p className="mt-3 font-body text-[13px] font-light text-[var(--color-muted)]">
-            Current status: <span className="text-[var(--color-primary)]">{formatStatusLabel(order.status)}</span>
-          </p>
-          <div className="my-12 border-b border-[var(--color-border)]" />
-        </section>
+    <div className="overflow-x-hidden bg-[var(--color-secondary)] px-4 py-[56px] sm:px-6 sm:py-[72px]">
+      <div className="mx-auto w-full max-w-[1120px]">
+        <section className="overflow-hidden rounded-[var(--border-radius)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-5 sm:px-7 sm:py-7">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <p className="font-body text-[10px] uppercase tracking-[0.2em] text-[var(--color-accent)]">Order Tracking</p>
+              <h1 className="mt-3 max-w-full font-display text-[clamp(1.65rem,6vw,2.875rem)] italic font-light leading-[1.12] text-[var(--color-primary)] [overflow-wrap:anywhere]">
+                Order {order.order_number}
+              </h1>
+              <p className="mt-3 font-body text-[13px] font-light text-[var(--color-muted)]">
+                Current status: <span className="text-[var(--color-primary)]">{formatStatusLabel(order.status)}</span>
+              </p>
+            </div>
 
-        <OrderSummaryDetails order={order} deliveryWindow={deliveryWindow} />
-
-        <section>
-          <p className="mb-6 font-body text-[10px] uppercase tracking-[0.2em] text-[var(--color-accent)]">Order Status</p>
-
-          <div>
-            {liveStatusSteps.map((step, index) => {
-              const nextStep = liveStatusSteps[index + 1];
-              const labelColor =
-                step.state === "upcoming"
-                  ? "text-[var(--color-muted-soft)]"
-                  : step.state === "current"
-                    ? "font-medium text-[var(--color-primary)]"
-                    : "text-[var(--color-primary)]";
-
-              return (
-                <div key={step.key}>
-                  <div className="flex items-start gap-4">
-                    <span
-                      className={`mt-[1px] flex h-[20px] w-[20px] items-center justify-center rounded-full border font-body text-[10px] ${getStepCircleClass(step.state)}`}
-                    >
-                      {index + 1}
-                    </span>
-
-                    <div className="pt-[1px]">
-                      <p className={`font-body text-[13px] ${labelColor}`}>{step.label}</p>
-                      <p
-                        className={`mt-1 font-body text-[11px] font-light ${
-                          step.state === "upcoming" ? "text-[var(--color-muted-soft)]" : "text-[var(--color-muted)]"
-                        }`}
-                      >
-                        {step.note || step.description}
-                      </p>
-                      {step.changedAt ? (
-                        <p className="mt-1 font-body text-[10px] uppercase tracking-[0.08em] text-[var(--color-muted-soft)]">
-                          {formatChangedAt(step.changedAt)}
-                        </p>
-                      ) : null}
-                    </div>
-                  </div>
-
-                  {index < liveStatusSteps.length - 1 ? (
-                    <div className={`ml-[9px] h-[24px] border-l ${getConnectorClass(step.state, nextStep?.state ?? null)}`} />
-                  ) : null}
-                </div>
-              );
-            })}
+            <div className="w-full rounded-[var(--border-radius)] border border-[var(--color-border)] px-4 py-3 sm:w-auto sm:min-w-[220px]">
+              <p className="font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-muted-soft)]">Last Updated</p>
+              <p className="mt-1 font-body text-[13px] text-[var(--color-primary)] [overflow-wrap:anywhere]">
+                {orderUpdatedLabel || orderDateLabel || "Not available"}
+              </p>
+            </div>
           </div>
 
-          <div className="my-8 border-b border-[var(--color-border)]" />
+          <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-[var(--border-radius)] border border-[var(--color-border)] px-4 py-3">
+              <p className="font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-muted-soft)]">Total Paid</p>
+              <p className="mt-1 font-body text-[18px] text-[var(--color-primary)]">{formatPrice(order.total)}</p>
+              {paidAtLabel ? (
+                <p className="mt-1 font-body text-[10px] uppercase tracking-[0.08em] text-[var(--color-muted-soft)]">Paid {paidAtLabel}</p>
+              ) : null}
+            </div>
+
+            <div className="rounded-[var(--border-radius)] border border-[var(--color-border)] px-4 py-3">
+              <p className="font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-muted-soft)]">Items</p>
+              <p className="mt-1 font-body text-[18px] text-[var(--color-primary)]">
+                {totalItems} {totalItems === 1 ? "product" : "products"}
+              </p>
+              <p className="mt-1 font-body text-[10px] uppercase tracking-[0.08em] text-[var(--color-muted-soft)]">
+                {totalUnits} {totalUnits === 1 ? "unit" : "units"}
+              </p>
+            </div>
+
+            <div className="rounded-[var(--border-radius)] border border-[var(--color-border)] px-4 py-3">
+              <p className="font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-muted-soft)]">Payment</p>
+              <p className="mt-1 font-body text-[15px] text-[var(--color-primary)]">{paymentMethodLabel}</p>
+              <p className="mt-1 font-body text-[10px] uppercase tracking-[0.08em] text-[var(--color-muted-soft)]">{paymentStatusLabel}</p>
+            </div>
+
+            <div className="rounded-[var(--border-radius)] border border-[var(--color-border)] px-4 py-3">
+              <p className="font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-muted-soft)]">Estimated Delivery</p>
+              <p className="mt-1 font-body text-[15px] text-[var(--color-primary)]">
+                {deliveryWindow.minDays}-{deliveryWindow.maxDays} business days
+              </p>
+              <p className="mt-1 font-body text-[10px] uppercase tracking-[0.08em] text-[var(--color-muted-soft)]">
+                Ordered {orderDateLabel || "Recently"}
+              </p>
+            </div>
+          </div>
         </section>
 
-        <section className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <Link
-            to="/shop"
-            className="font-body text-[11px] uppercase tracking-[0.15em] text-[var(--color-primary)] transition-colors duration-200 hover:text-[var(--color-accent)]"
-          >
-            &larr; Continue Shopping
-          </Link>
-          <Link
-            to="/checkout/confirmation"
-            className="font-body text-[11px] uppercase tracking-[0.15em] text-[var(--color-primary)] transition-colors duration-200 hover:text-[var(--color-accent)]"
-          >
-            Back to Confirmation &rarr;
-          </Link>
-        </section>
+        {order.status.trim().toLowerCase() === "cancelled" ? (
+          <section className="mt-5 rounded-[var(--border-radius)] border border-[var(--color-danger)] bg-[var(--color-surface-alt)] px-4 py-4 sm:px-6">
+            <p className="font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-danger)]">Cancelled Order</p>
+            <p className="mt-2 font-body text-[13px] text-[var(--color-muted)]">
+              {cancellationNote || "This order was cancelled and will no longer be processed."}
+            </p>
+          </section>
+        ) : null}
+
+        <div className="mt-6 grid min-w-0 gap-6 lg:mt-8 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-8">
+          <div className="order-2 min-w-0 space-y-8 lg:order-1">
+            <section className="rounded-[var(--border-radius)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-5 sm:px-7 sm:py-6">
+              <OrderSummaryDetails order={order} deliveryWindow={deliveryWindow} />
+            </section>
+
+            <section className="rounded-[var(--border-radius)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-5 sm:px-7 sm:py-6">
+              <p className="mb-6 font-body text-[10px] uppercase tracking-[0.2em] text-[var(--color-accent)]">Order Status</p>
+
+              <div>
+                {liveStatusSteps.map((step, index) => {
+                  const nextStep = liveStatusSteps[index + 1];
+                  const labelColor =
+                    step.state === "upcoming"
+                      ? "text-[var(--color-muted-soft)]"
+                      : step.state === "current"
+                        ? "font-medium text-[var(--color-primary)]"
+                        : "text-[var(--color-primary)]";
+
+                  return (
+                    <div key={step.key}>
+                      <div className="flex items-start gap-4">
+                        <span
+                          className={`mt-[1px] flex h-[20px] w-[20px] items-center justify-center rounded-full border font-body text-[10px] ${getStepCircleClass(step.state)}`}
+                        >
+                          {index + 1}
+                        </span>
+
+                        <div className="min-w-0 pt-[1px]">
+                          <p className={`font-body text-[13px] ${labelColor}`}>{step.label}</p>
+                          <p
+                            className={`mt-1 font-body text-[11px] font-light ${
+                              step.state === "upcoming" ? "text-[var(--color-muted-soft)]" : "text-[var(--color-muted)]"
+                            }`}
+                          >
+                            {step.note || step.description}
+                          </p>
+                          {step.changedAt ? (
+                            <p className="mt-1 font-body text-[10px] uppercase tracking-[0.08em] text-[var(--color-muted-soft)]">
+                              {formatChangedAt(step.changedAt)}
+                            </p>
+                          ) : null}
+                        </div>
+                      </div>
+
+                      {index < liveStatusSteps.length - 1 ? (
+                        <div className={`ml-[9px] h-[24px] border-l ${getConnectorClass(step.state, nextStep?.state ?? null)}`} />
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          </div>
+
+          <aside className="order-1 min-w-0 space-y-4 sm:space-y-5 lg:order-2 lg:sticky lg:top-24 lg:h-fit">
+            <section className="rounded-[var(--border-radius)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-4 sm:px-5 sm:py-5">
+              <p className="font-body text-[10px] uppercase tracking-[0.2em] text-[var(--color-accent)]">Quick Actions</p>
+              <div className="mt-4 flex flex-col gap-3">
+                <Link
+                  to="/shop"
+                  className="font-body text-[11px] uppercase tracking-[0.15em] text-[var(--color-primary)] transition-colors duration-200 hover:text-[var(--color-accent)]"
+                >
+                  &larr; Continue Shopping
+                </Link>
+                <Link
+                  to="/checkout/confirmation"
+                  className="font-body text-[11px] uppercase tracking-[0.15em] text-[var(--color-primary)] transition-colors duration-200 hover:text-[var(--color-accent)] [overflow-wrap:anywhere]"
+                >
+                  Back to Confirmation &rarr;
+                </Link>
+              </div>
+            </section>
+
+            <section className="rounded-[var(--border-radius)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-4 sm:px-5 sm:py-5">
+              <p className="font-body text-[10px] uppercase tracking-[0.2em] text-[var(--color-accent)]">Need Help?</p>
+              <p className="mt-2 font-body text-[12px] text-[var(--color-muted)]">
+                Questions about this order, delivery updates, or payment?
+              </p>
+              <a
+                href={`mailto:${storeConfig.contact.email}`}
+                className="mt-4 inline-block font-body text-[11px] uppercase tracking-[0.12em] text-[var(--color-primary)] transition-colors hover:text-[var(--color-accent)]"
+              >
+                Email Support
+              </a>
+            </section>
+          </aside>
+        </div>
       </div>
     </div>
   );

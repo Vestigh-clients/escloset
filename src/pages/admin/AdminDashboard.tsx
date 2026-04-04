@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   CartesianGrid,
@@ -44,7 +44,7 @@ const statusBadgeClass: Record<string, string> = {
   pending: "border border-[var(--color-border)] text-[var(--color-muted)]",
   confirmed: "border border-[var(--color-primary)] text-[var(--color-primary)]",
   processing: "border border-[var(--color-accent)] text-[var(--color-accent)]",
-  shipped: "bg-[var(--color-accent)] text-[var(--color-primary)]",
+  shipped: "bg-[var(--color-accent)] text-[var(--color-secondary)]",
   delivered: "bg-[var(--color-primary)] text-[var(--color-secondary)]",
   cancelled: "border border-[var(--color-danger)] text-[var(--color-danger)]",
 };

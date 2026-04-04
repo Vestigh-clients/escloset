@@ -721,7 +721,7 @@ const Shop = () => {
           The <span className="italic text-primary">Shop</span>
         </h1>
         <p className="mt-4 max-w-xl text-lg text-on-surface-variant">
-          Discover a curated collection of premium Ghanaian fashion and international elegance. Designed for the bold and the beautiful.
+          Shop stylish, carefully selected clothing that brings together trend, elegance, and confidence.
         </p>
       </header>
 

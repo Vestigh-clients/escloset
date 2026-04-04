@@ -50,7 +50,7 @@ const SubaccountDetails = ({ data, platformFeePercent }: SubaccountDetailsProps)
         <DetailItem label="Contact email" value={data.primary_contact_email || "-"} />
       </dl>
 
-      <div className="mt-6 rounded-[var(--border-radius)] border border-[var(--color-border)] bg-[rgba(var(--color-accent-rgb),0.05)] px-4 py-4">
+      <div className="mt-6 rounded-[var(--border-radius)] border border-[var(--color-border)] bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.05)] px-4 py-4">
         <p className="font-body text-[12px] leading-6 text-[var(--color-muted)]">
           Your subaccount was created and is managed by Vestigh. To update your settlement bank or account details, contact us on WhatsApp.
         </p>

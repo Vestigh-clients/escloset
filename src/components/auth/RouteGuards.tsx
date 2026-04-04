@@ -2,6 +2,7 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { REDIRECT_AFTER_LOGIN_KEY } from "@/services/authService";
+import { buildAuthModalSearch } from "@/lib/authModal";
 
 interface RouteGuardProps {
   children: ReactNode;
@@ -31,7 +32,11 @@ export const ProtectedRoute = ({ children }: RouteGuardProps) => {
   if (!isAuthenticated) {
     const intendedPath = `${location.pathname}${location.search}${location.hash}`;
     storeIntendedPath(intendedPath);
-    return <Navigate to="/auth/login" replace />;
+    const authSearch = buildAuthModalSearch("", {
+      mode: "login",
+      redirect: intendedPath,
+    });
+    return <Navigate to={`/?${authSearch}`} replace />;
   }
 
   return <>{children}</>;

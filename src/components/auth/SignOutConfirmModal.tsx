@@ -1,4 +1,4 @@
-﻿interface SignOutConfirmModalProps {
+interface SignOutConfirmModalProps {
   isOpen: boolean;
   isSubmitting: boolean;
   onConfirm: () => void;
@@ -24,7 +24,7 @@ const SignOutConfirmModal = ({ isOpen, isSubmitting, onConfirm, onCancel }: Sign
               type="button"
               onClick={onConfirm}
               disabled={isSubmitting}
-              className="w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-[14px] font-body text-[11px] uppercase tracking-[0.16em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-65"
+              className="w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-[14px] font-body text-[11px] uppercase tracking-[0.16em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)] disabled:cursor-not-allowed disabled:opacity-65"
             >
               {isSubmitting ? "Please wait..." : "Sign Out Anyway"}
             </button>

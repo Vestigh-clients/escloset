@@ -1,11 +1,9 @@
-﻿import { useMemo, useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import AuthCheckbox from "@/components/auth/AuthCheckbox";
-import AuthDivider from "@/components/auth/AuthDivider";
 import AuthInputField from "@/components/auth/AuthInputField";
 import AuthPageLayout from "@/components/auth/AuthPageLayout";
-import GoogleOAuthButton from "@/components/auth/GoogleOAuthButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { GHANAIAN_PHONE_HELPER_TEXT, getGhanaianPhoneError } from "@/lib/phoneValidation";
 import {
@@ -15,13 +13,15 @@ import {
   getRequiredError,
   sanitizeInputText,
 } from "@/lib/authValidation";
+import { buildAuthModalSearch, buildPathWithSearch } from "@/lib/authModal";
 import { AuthServiceError } from "@/services/authService";
 
 type RegisterField = "firstName" | "lastName" | "email" | "phone" | "password" | "confirmPassword";
 
 const Register = () => {
+  const location = useLocation();
   const navigate = useNavigate();
-  const { register, loginWithGoogle } = useAuth();
+  const { register } = useAuth();
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -43,7 +43,6 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
 
   const fieldErrors = useMemo(
     () => ({
@@ -105,13 +104,20 @@ const Register = () => {
         marketingOptIn,
       });
 
-      navigate("/auth/login", {
+      navigate(
+        buildPathWithSearch(
+          location.pathname,
+          buildAuthModalSearch(location.search, {
+            mode: "login",
+            justRegistered: true,
+            email: normalizedEmail,
+          }),
+          location.hash,
+        ),
+        {
         replace: true,
-        state: {
-          justRegistered: true,
-          email: normalizedEmail,
         },
-      });
+      );
     } catch (error) {
       if (error instanceof AuthServiceError) {
         if (error.code === "email_exists") {
@@ -148,35 +154,14 @@ const Register = () => {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    setGeneralError(null);
-    setIsGoogleSubmitting(true);
-
-    try {
-      await loginWithGoogle();
-    } catch (error) {
-      if (error instanceof AuthServiceError) {
-        setGeneralError(error.message);
-      } else {
-        setGeneralError("Google sign-in could not start. Please try again.");
-      }
-      setIsGoogleSubmitting(false);
-    }
-  };
-
   return (
-    <AuthPageLayout>
+    <AuthPageLayout showPanelImage={false}>
       <h1 className="font-display text-[42px] italic leading-none text-[var(--color-primary)]">Create your account</h1>
       <p className="mt-3 font-body text-[13px] font-light leading-[1.8] text-[var(--color-muted)]">
         Sign up to save your details, check out faster, and track your orders.
       </p>
 
-      <div className="mt-8">
-        <GoogleOAuthButton onClick={handleGoogleSignIn} disabled={isSubmitting || isGoogleSubmitting} />
-        <AuthDivider />
-      </div>
-
-      <form onSubmit={handleSubmit} noValidate>
+      <form onSubmit={handleSubmit} className="mt-8" noValidate>
         <AuthInputField
           id="register-first-name"
           label="First Name"
@@ -284,8 +269,8 @@ const Register = () => {
 
         <button
           type="submit"
-          disabled={isSubmitting || isGoogleSubmitting}
-          className="mt-8 w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-[18px] font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-65"
+          disabled={isSubmitting}
+          className="mt-8 w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-[18px] font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)] disabled:cursor-not-allowed disabled:opacity-65"
         >
           {isSubmitting ? "Please wait..." : "Create Account"}
         </button>
@@ -293,7 +278,18 @@ const Register = () => {
 
       <p className="mt-6 font-body text-[12px] text-[var(--color-muted)]">
         Already have an account?{" "}
-        <Link to="/auth/login" className="text-[var(--color-primary)] transition-colors hover:text-[var(--color-accent)]">
+        <Link
+          to={buildPathWithSearch(
+            location.pathname,
+            buildAuthModalSearch(location.search, {
+              mode: "login",
+              justRegistered: false,
+              email: null,
+            }),
+            location.hash,
+          )}
+          className="text-[var(--color-primary)] transition-colors hover:text-[var(--color-accent)]"
+        >
           Sign in
         </Link>
       </p>

@@ -149,18 +149,18 @@ const Footer = () => {
         <div>
           <h5 className="mb-6 font-manrope text-xs font-semibold uppercase tracking-[0.18em] text-[#B0004A]">Newsletter</h5>
           <p className="mb-4 font-manrope text-xs font-light text-[#5E5E5E]">Join our inner circle for exclusive drops.</p>
-          <form onSubmit={handleNewsletterSubmit} className="flex items-end gap-3">
+          <form onSubmit={handleNewsletterSubmit} className="flex flex-wrap items-end gap-3 sm:flex-nowrap">
             <input
               type="email"
               value={newsletterEmail}
               onChange={(event) => setNewsletterEmail(event.target.value)}
               required
               placeholder="Email Address"
-              className="w-full border-b border-[rgba(227,189,199,0.15)] bg-transparent pb-2 font-manrope text-xs text-[#1A1C1C] placeholder:text-[#8f6e78] focus:border-[#D81B60] focus:border-b-2 focus:outline-none"
+              className="min-w-0 flex-1 border-b border-[rgba(186,194,201,0.15)] bg-transparent pb-2 font-manrope text-xs text-[#1A1C1C] placeholder:text-[#8f6e78] focus:border-[#D81B60] focus:border-b-2 focus:outline-none"
             />
             <button
               type="submit"
-              className="bg-[#D81B60] px-4 py-2 font-manrope text-xs font-semibold text-white transition-all duration-300 hover:-translate-y-1 hover:bg-[#B0004A]"
+              className="shrink-0 bg-[#D81B60] px-4 py-2 font-manrope text-xs font-semibold text-white transition-all duration-300 hover:-translate-y-1 hover:bg-[#B0004A]"
             >
               JOIN
             </button>

@@ -1,4 +1,4 @@
-﻿import { type ChangeEvent, useEffect, useRef, useState } from "react";
+import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { AlertCircle, Camera, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useStorefrontConfig } from "@/contexts/StorefrontConfigContext";
@@ -279,7 +279,7 @@ const TryOnModal = ({ product, isOpen, onClose }: TryOnModalProps) => {
               type="button"
               onClick={handleStartTryOn}
               disabled={!modelFile}
-              className="mt-6 w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-[18px] font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-40"
+              className="mt-6 w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-[18px] font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)] disabled:cursor-not-allowed disabled:opacity-40"
             >
               Start Try-On
             </button>
@@ -347,7 +347,7 @@ const TryOnModal = ({ product, isOpen, onClose }: TryOnModalProps) => {
                 link.download = `${normalizedStoreName}-tryon-${product.slug}.png`;
                 link.click();
               }}
-              className="mt-6 w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-4 font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)]"
+              className="mt-6 w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-4 font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)]"
             >
               Download Photo
             </button>
@@ -372,7 +372,7 @@ const TryOnModal = ({ product, isOpen, onClose }: TryOnModalProps) => {
             <button
               type="button"
               onClick={resetTryOn}
-              className="w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-4 font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)]"
+              className="w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-4 font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)]"
             >
               Try Again
             </button>

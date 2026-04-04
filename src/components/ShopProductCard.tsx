@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
 import ProductImagePlaceholder from "@/components/products/ProductImagePlaceholder";
@@ -52,7 +52,7 @@ const ShopProductCard = ({ product, size = "regular" }: ShopProductCardProps) =>
   };
 
   const imageHoverOverlay = (
-    <div className="pointer-events-none absolute inset-x-0 bottom-0 flex h-12 translate-y-full items-center justify-center bg-[rgba(var(--color-primary-rgb),0.88)] transition-transform duration-300 ease-in-out group-hover:translate-y-0">
+    <div className="pointer-events-none absolute inset-x-0 bottom-0 flex h-12 translate-y-full items-center justify-center bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.88)] transition-transform duration-300 ease-in-out group-hover:translate-y-0">
       <span className="font-body text-[11px] uppercase tracking-[0.15em] text-[var(--color-secondary)]">Add to Cart</span>
     </div>
   );
@@ -95,7 +95,7 @@ const ShopProductCard = ({ product, size = "regular" }: ShopProductCardProps) =>
               type="button"
               onClick={handleAddToCart}
               disabled={isOutOfStock}
-              className="w-fit rounded-[var(--border-radius)] bg-[var(--color-primary)] px-8 py-[14px] font-body text-[11px] uppercase tracking-[0.15em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:bg-[var(--color-border)] disabled:text-[var(--color-muted)]"
+              className="w-fit rounded-[var(--border-radius)] bg-[var(--color-primary)] px-8 py-[14px] font-body text-[11px] uppercase tracking-[0.15em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)] disabled:cursor-not-allowed disabled:bg-[var(--color-border)] disabled:text-[var(--color-muted)]"
             >
               {isOutOfStock ? "Out of Stock" : requiresVariantSelection ? "Select Options" : "Add to Cart"}
             </button>

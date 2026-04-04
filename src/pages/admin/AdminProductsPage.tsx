@@ -1,30 +1,25 @@
-﻿import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   deleteAdminProduct,
+  fetchAdminCategories,
   fetchAdminProducts,
   fetchProductOrderCount,
   type AdminProductListItem,
 } from "@/services/adminService";
 import { formatCurrency } from "@/lib/adminFormatting";
 
-const categoryTabs = [
-  { label: "All", slug: "" },
-  { label: "Hair Care", slug: "hair-care" },
-  { label: "Men", slug: "mens-fashion" },
-  { label: "Women", slug: "womens-fashion" },
-  { label: "Bags", slug: "bags" },
-  { label: "Shoes", slug: "shoes" },
-];
-
 const PAGE_SIZE = 20;
+const defaultCategoryTabs = [{ label: "All", slug: "" }];
 
 const AdminProductsPage = () => {
+  const navigate = useNavigate();
   const [searchInput, setSearchInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [categorySlug, setCategorySlug] = useState("");
   const [availability, setAvailability] = useState<"all" | "available" | "unavailable">("all");
   const [page, setPage] = useState(1);
+  const [categoryTabs, setCategoryTabs] = useState<Array<{ label: string; slug: string }>>(defaultCategoryTabs);
 
   const [rows, setRows] = useState<AdminProductListItem[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -80,6 +75,40 @@ const AdminProductsPage = () => {
     };
   }, [searchTerm, categorySlug, availability, page]);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadCategoryTabs = async () => {
+      try {
+        const categories = await fetchAdminCategories();
+        if (!isMounted) return;
+
+        const tabs = [
+          ...defaultCategoryTabs,
+          ...categories.map((category) => ({
+            label: category.name,
+            slug: category.slug,
+          })),
+        ];
+
+        setCategoryTabs(tabs);
+        setCategorySlug((currentSlug) => {
+          if (!currentSlug) return currentSlug;
+          return tabs.some((tab) => tab.slug === currentSlug) ? currentSlug : "";
+        });
+      } catch {
+        if (!isMounted) return;
+        setCategoryTabs(defaultCategoryTabs);
+      }
+    };
+
+    void loadCategoryTabs();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   const pageNumbers = useMemo(() => {
@@ -127,6 +156,10 @@ const AdminProductsPage = () => {
     }
   };
 
+  const openEditor = (productId: string) => {
+    navigate(`/admin/products/${productId}/edit`);
+  };
+
   return (
     <div className="admin-page">
       <div className="admin-page-header">
@@ -134,7 +167,7 @@ const AdminProductsPage = () => {
         <div className="admin-page-actions">
           <Link
             to="/admin/products/new"
-            className="rounded-[var(--border-radius)] bg-[var(--color-primary)] px-7 py-3 text-center font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)]"
+            className="rounded-[var(--border-radius)] bg-[var(--color-primary)] px-7 py-3 text-center font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)]"
           >
             Add New Product
           </Link>
@@ -230,7 +263,22 @@ const AdminProductsPage = () => {
                 const isOut = product.stock_quantity === 0;
 
                 return (
-                  <tr key={product.id} className="border-b border-[var(--color-surface-strong)] hover:bg-[rgba(var(--color-accent-rgb),0.04)]">
+                  <tr
+                    key={product.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => openEditor(product.id)}
+                    onKeyDown={(event) => {
+                      if (event.target !== event.currentTarget) {
+                        return;
+                      }
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        openEditor(product.id);
+                      }
+                    }}
+                    className="cursor-pointer border-b border-[var(--color-surface-strong)] hover:bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.04)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+                  >
                     <td className="px-2 py-4 pl-0">
                       <div className="h-16 w-12 overflow-hidden bg-[var(--color-surface-alt)]">
                         {product.image_url ? (
@@ -264,7 +312,7 @@ const AdminProductsPage = () => {
                         {product.stock_quantity}
                       </p>
                       {isLow ? (
-                        <span className="mt-1 inline-block rounded-[var(--border-radius)] bg-[rgba(var(--color-accent-rgb),0.15)] px-1.5 py-0.5 font-body text-[8px] uppercase tracking-[0.08em] text-[var(--color-accent)]">
+                        <span className="mt-1 inline-block rounded-[var(--border-radius)] bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.15)] px-1.5 py-0.5 font-body text-[8px] uppercase tracking-[0.08em] text-[var(--color-accent)]">
                           Low
                         </span>
                       ) : null}
@@ -287,14 +335,13 @@ const AdminProductsPage = () => {
                     </td>
                     <td className="px-0 py-4">
                       <div className="flex items-center gap-2 font-body text-[10px] uppercase tracking-[0.1em]">
-                        <Link to={`/admin/products/${product.id}/edit`} className="text-[var(--color-muted)] transition-colors hover:text-[var(--color-primary)]">
-                          Edit
-                        </Link>
-                        <span className="text-[var(--color-border)]">|</span>
                         <button
                           type="button"
                           disabled={deletingId === product.id}
-                          onClick={() => void onDelete(product)}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void onDelete(product);
+                          }}
                           className="text-[var(--color-muted)] transition-colors hover:text-[var(--color-danger)] disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           {deletingId === product.id ? "Deleting..." : "Delete"}
@@ -323,7 +370,22 @@ const AdminProductsPage = () => {
             const isOut = product.stock_quantity === 0;
 
             return (
-              <div key={product.id} className="admin-mobile-card">
+              <div
+                key={product.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => openEditor(product.id)}
+                onKeyDown={(event) => {
+                  if (event.target !== event.currentTarget) {
+                    return;
+                  }
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    openEditor(product.id);
+                  }
+                }}
+                className="admin-mobile-card cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+              >
                 <div className="flex gap-3">
                   <div className="h-[53px] w-[40px] overflow-hidden bg-[var(--color-surface-alt)]">
                     {product.image_url ? (
@@ -365,13 +427,13 @@ const AdminProductsPage = () => {
                 </div>
 
                 <div className="mt-2 flex justify-end gap-3 font-body text-[10px] uppercase tracking-[0.1em]">
-                  <Link to={`/admin/products/${product.id}/edit`} className="text-[var(--color-muted)] hover:text-[var(--color-primary)]">
-                    Edit
-                  </Link>
                   <button
                     type="button"
                     disabled={deletingId === product.id}
-                    onClick={() => void onDelete(product)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      void onDelete(product);
+                    }}
                     className="text-[var(--color-muted)] hover:text-[var(--color-danger)] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {deletingId === product.id ? "Deleting..." : "Delete"}

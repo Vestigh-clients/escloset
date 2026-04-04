@@ -4,6 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import AuthPageLayout from "@/components/auth/AuthPageLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { sanitizeInputText } from "@/lib/authValidation";
+import { buildAuthModalSearch, buildPathWithSearch } from "@/lib/authModal";
 import { AuthServiceError, VERIFY_EMAIL_STORAGE_KEY } from "@/services/authService";
 
 interface VerifyEmailLocationState {
@@ -106,7 +107,16 @@ const VerifyEmail = () => {
 
         <p className="mt-8 font-body text-[12px] text-[var(--color-muted)]">
           Wrong email?{" "}
-          <Link to="/auth/register" className="text-[var(--color-primary)] transition-colors hover:text-[var(--color-accent)]">
+          <Link
+            to={buildPathWithSearch(
+              location.pathname,
+              buildAuthModalSearch(location.search, {
+                mode: "register",
+              }),
+              location.hash,
+            )}
+            className="text-[var(--color-primary)] transition-colors hover:text-[var(--color-accent)]"
+          >
             Go back
           </Link>
         </p>

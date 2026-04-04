@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   createAdminDiscountCode,
   deleteAdminDiscountCode,
@@ -309,7 +309,7 @@ const AdminDiscountCodesPage = () => {
           <button
             type="button"
             onClick={openCreateForm}
-            className="rounded-[var(--border-radius)] bg-[var(--color-primary)] px-7 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)]"
+            className="rounded-[var(--border-radius)] bg-[var(--color-primary)] px-7 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)]"
           >
             Create Code
           </button>
@@ -406,11 +406,11 @@ const AdminDiscountCodesPage = () => {
                 const expired = row.expires_at ? isExpired(row.expires_at) : false;
 
                 return [
-                  <tr key={row.id} className="border-b border-[var(--color-surface-strong)] hover:bg-[rgba(var(--color-accent-rgb),0.04)]">
+                  <tr key={row.id} className="border-b border-[var(--color-surface-strong)] hover:bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.04)]">
                     <td className="px-2 py-4 pl-0 font-mono text-[12px] uppercase tracking-[0.1em] text-[var(--color-accent)]">{codeForDisplay(row.code)}</td>
                     <td className="px-2 py-4">
                       <span className="inline-block rounded-[var(--border-radius)] border border-[var(--color-border)] px-2 py-1 font-body text-[9px] uppercase tracking-[0.12em] text-[var(--color-muted)]">
-                        {row.type === "percentage" ? "%" : "GH₵"}
+                        {row.type === "percentage" ? "%" : "GH?"}
                       </span>
                     </td>
                     <td className="px-2 py-4 font-body text-[13px] text-[var(--color-primary)]">
@@ -602,7 +602,7 @@ const AdminDiscountCodesPage = () => {
                 className={`rounded-[var(--border-radius)] border px-6 py-6 text-left transition-colors duration-200 ${
                   form.type === "percentage" ? "border-[var(--color-primary)]" : "border-[var(--color-border)]"
                 }`}
-                style={{ backgroundColor: form.type === "percentage" ? "rgba(var(--color-primary-rgb),0.08)" : "transparent" }}
+                style={{ backgroundColor: form.type === "percentage" ? "rgba(var(--color-navbar-solid-foreground-rgb),0.08)" : "transparent" }}
               >
                 <p className="font-display text-[18px] italic text-[var(--color-primary)]">Percentage (%)</p>
               </button>
@@ -613,16 +613,16 @@ const AdminDiscountCodesPage = () => {
                 className={`rounded-[var(--border-radius)] border px-6 py-6 text-left transition-colors duration-200 ${
                   form.type === "fixed_amount" ? "border-[var(--color-primary)]" : "border-[var(--color-border)]"
                 }`}
-                style={{ backgroundColor: form.type === "fixed_amount" ? "rgba(var(--color-primary-rgb),0.08)" : "transparent" }}
+                style={{ backgroundColor: form.type === "fixed_amount" ? "rgba(var(--color-navbar-solid-foreground-rgb),0.08)" : "transparent" }}
               >
-                <p className="font-display text-[18px] italic text-[var(--color-primary)]">Fixed Amount (GH₵)</p>
+                <p className="font-display text-[18px] italic text-[var(--color-primary)]">Fixed Amount (GH?)</p>
               </button>
             </div>
 
             <div className="grid gap-5 md:grid-cols-2">
               <div>
                 <label className="font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-muted-soft)]">
-                  {form.type === "percentage" ? "Discount %" : "Discount Amount (GH₵)"}
+                  {form.type === "percentage" ? "Discount %" : "Discount Amount (GH?)"}
                 </label>
                 <input
                   inputMode="decimal"
@@ -726,7 +726,7 @@ const AdminDiscountCodesPage = () => {
                           customerSearchInput: customer.email,
                         }))
                       }
-                      className="block w-full border-b border-[var(--color-surface-strong)] px-4 py-3 text-left hover:bg-[rgba(var(--color-accent-rgb),0.05)]"
+                      className="block w-full border-b border-[var(--color-surface-strong)] px-4 py-3 text-left hover:bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.05)]"
                     >
                       <p className="font-body text-[12px] text-[var(--color-primary)]">{`${customer.first_name} ${customer.last_name}`.trim()}</p>
                       <p className="font-body text-[11px] text-[var(--color-muted)]">{customer.email}</p>
@@ -783,7 +783,7 @@ const AdminDiscountCodesPage = () => {
                 type="button"
                 onClick={() => void saveForm()}
                 disabled={isSaving}
-                className="w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-4 font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:opacity-65"
+                className="w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-4 font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)] disabled:opacity-65"
               >
                 {isSaving ? "Saving..." : form.id ? "Update Code" : "Save Code"}
               </button>

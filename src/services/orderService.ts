@@ -134,9 +134,11 @@ export interface OrderDetails {
   total: number;
   payment_method: string | null;
   mobile_money_number: string | null;
+  contact_email?: string | null;
   payment_status?: "pending" | "paid" | "failed" | "review";
   paystack_reference?: string | null;
   paid_at?: string | null;
+  stock_committed?: boolean;
   shipping_address_snapshot: Json;
   created_at: string;
   updated_at: string | null;

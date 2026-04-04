@@ -225,7 +225,7 @@ const AdminProductReviewsPage = () => {
               </tr>
             ) : (
               rows.map((row) => (
-                <tr key={row.id} className="border-b border-[var(--color-surface-strong)] hover:bg-[rgba(var(--color-accent-rgb),0.04)]">
+                <tr key={row.id} className="border-b border-[var(--color-surface-strong)] hover:bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.04)]">
                   <td className="px-2 py-4 pl-0">
                     {row.productSlug ? (
                       <Link

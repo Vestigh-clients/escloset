@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import {
   createAdminCategory,
   deleteAdminCategory,
@@ -214,7 +214,7 @@ const AdminCategoriesPage = () => {
           <button
             type="button"
             onClick={openNewForm}
-            className="rounded-[var(--border-radius)] bg-[var(--color-primary)] px-7 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)]"
+            className="rounded-[var(--border-radius)] bg-[var(--color-primary)] px-7 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)]"
           >
             Add Category
           </button>
@@ -265,7 +265,7 @@ const AdminCategoriesPage = () => {
               </tr>
             ) : (
               renderedCategories.flatMap((category) => [
-                <tr key={`row-${category.id}`} className="border-b border-[var(--color-surface-strong)] hover:bg-[rgba(var(--color-accent-rgb),0.04)]">
+                <tr key={`row-${category.id}`} className="border-b border-[var(--color-surface-strong)] hover:bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.04)]">
                   <td className="px-2 py-4 pl-0">
                     <div className="h-12 w-12 overflow-hidden bg-[var(--color-surface-alt)]">
                       {category.image_url ? (

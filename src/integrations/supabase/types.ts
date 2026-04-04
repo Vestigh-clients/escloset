@@ -466,6 +466,7 @@ export type Database = {
           shipping_address_id: string | null
           shipping_address_snapshot: Json
           shipping_fee: number
+          stock_committed: boolean
           status: Database["public"]["Enums"]["order_status"]
           subtotal: number
           total: number
@@ -494,6 +495,7 @@ export type Database = {
           shipping_address_id?: string | null
           shipping_address_snapshot: Json
           shipping_fee?: number
+          stock_committed?: boolean
           status?: Database["public"]["Enums"]["order_status"]
           subtotal: number
           total: number
@@ -522,6 +524,7 @@ export type Database = {
           shipping_address_id?: string | null
           shipping_address_snapshot?: Json
           shipping_fee?: number
+          stock_committed?: boolean
           status?: Database["public"]["Enums"]["order_status"]
           subtotal?: number
           total?: number
@@ -706,6 +709,23 @@ export type Database = {
           target_customer_id: string
         }
         Returns: Database["public"]["Enums"]["customer_role"]
+      }
+      cancel_order_and_restore_stock: {
+        Args: {
+          p_changed_by?: string | null
+          p_order_id: string
+          p_reason?: string | null
+        }
+        Returns: Json
+      }
+      confirm_paid_order_and_commit_stock: {
+        Args: {
+          p_amount_paid?: number | null
+          p_changed_by?: string | null
+          p_order_number: string
+          p_payment_reference?: string | null
+        }
+        Returns: Json
       }
       current_user_is_admin: {
         Args: Record<PropertyKey, never>

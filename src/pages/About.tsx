@@ -14,8 +14,8 @@ const About = () => {
 
   return (
     <div className="bg-[#F9F9F9] font-manrope text-[#1A1C1C]">
-      <header className="relative overflow-hidden border-b border-[#e9d7de] bg-gradient-to-br from-[#ffffff] via-[#fff6fa] to-[#f9f9f9]">
-        <div className="absolute -left-24 top-10 h-56 w-56 rounded-full bg-[#fce4ec] blur-3xl" />
+      <header className="relative overflow-hidden border-b border-[#dde2e6] bg-gradient-to-br from-[#ffffff] via-[#f5f7f8] to-[#f9f9f9]">
+        <div className="absolute -left-24 top-10 h-56 w-56 rounded-full bg-[#e9ecef] blur-3xl" />
         <div className="absolute -right-24 bottom-0 h-56 w-56 rounded-full bg-[#f8d6e4] blur-3xl" />
         <div className="relative mx-auto max-w-screen-2xl px-4 pb-14 pt-16 md:px-8 md:pb-20 md:pt-20">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#B0004A]">About E&amp;S Closet</p>
@@ -38,13 +38,13 @@ const About = () => {
                 <p key={paragraph}>{paragraph}</p>
               ))}
             </div>
-            <p className="mt-8 border-t border-[#efdde4] pt-6 font-notoSerif text-xl font-semibold italic text-[#B0004A]">
+            <p className="mt-8 border-t border-[#e1e5e8] pt-6 font-notoSerif text-xl font-semibold italic text-[#B0004A]">
               Founded by Enam and Sara. Built with heart. Inspired by purpose.
             </p>
           </article>
 
           <aside className="space-y-6 lg:col-span-4">
-            <div className="rounded-[8px] border border-[#e3bdc7] bg-[#fff7fa] p-6">
+            <div className="rounded-[8px] border border-[#e3bdc7] bg-[#f5f7f8] p-6">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#B0004A]">Brand Promise</p>
               <h3 className="mt-2 font-notoSerif text-2xl font-bold text-[#1A1C1C]">Confidence in Every Piece</h3>
               <p className="mt-4 text-sm leading-relaxed text-[#5E5E5E]">
@@ -56,10 +56,10 @@ const About = () => {
             <div className="rounded-[8px] border border-[#e3bdc7] bg-white p-6">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#B0004A]">Rooted In</p>
               <p className="mt-3 text-sm text-[#5E5E5E]">Kumasi Technical University</p>
-              <div className="my-4 h-px w-full bg-[#efdde4]" />
+              <div className="my-4 h-px w-full bg-[#e1e5e8]" />
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#B0004A]">Built For</p>
               <p className="mt-3 text-sm text-[#5E5E5E]">Bold women and men who value elegance, identity, and expression.</p>
-              <div className="my-4 h-px w-full bg-[#efdde4]" />
+              <div className="my-4 h-px w-full bg-[#e1e5e8]" />
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#B0004A]">Driven By</p>
               <p className="mt-3 text-sm text-[#5E5E5E]">Faith, resilience, and the courage to start small and dream big.</p>
             </div>

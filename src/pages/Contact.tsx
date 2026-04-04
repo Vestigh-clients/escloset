@@ -110,8 +110,8 @@ const Contact = () => {
 
   return (
     <div className="bg-[#F9F9F9] font-manrope text-[#1A1C1C]">
-      <header className="relative overflow-hidden border-b border-[#e9d7de] bg-gradient-to-br from-[#ffffff] via-[#fff7fa] to-[#f9f9f9]">
-        <div className="absolute -left-20 top-16 h-52 w-52 rounded-full bg-[#fce4ec] blur-3xl" />
+      <header className="relative overflow-hidden border-b border-[#dde2e6] bg-gradient-to-br from-[#ffffff] via-[#f5f7f8] to-[#f9f9f9]">
+        <div className="absolute -left-20 top-16 h-52 w-52 rounded-full bg-[#e9ecef] blur-3xl" />
         <div className="absolute -right-20 bottom-2 h-56 w-56 rounded-full bg-[#f7d0df] blur-3xl" />
         <div className="relative mx-auto max-w-screen-2xl px-4 pb-14 pt-16 md:px-8 md:pb-20 md:pt-20">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#B0004A]">Contact Us</p>
@@ -138,10 +138,10 @@ const Contact = () => {
                     className="group rounded-[8px] border border-[#e3bdc7] bg-white p-5 transition-all duration-300 hover:-translate-y-1 hover:border-[#D81B60] hover:shadow-[0_16px_28px_rgba(26,28,28,0.08)]"
                   >
                     <div className="flex items-start justify-between gap-4">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-full border border-[#f1cedb] bg-[#fff6fa] text-[#B0004A] transition-colors group-hover:border-[#D81B60] group-hover:text-[#D81B60]">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-full border border-[#dfe3e6] bg-[#f5f7f8] text-[#B0004A] transition-colors group-hover:border-[#D81B60] group-hover:text-[#D81B60]">
                         {iconForChannel(channel.icon)}
                       </div>
-                      <span className="rounded-full border border-[#efdde4] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#B0004A]">
+                      <span className="rounded-full border border-[#e1e5e8] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#B0004A]">
                         {channel.label}
                       </span>
                     </div>
@@ -178,7 +178,7 @@ const Contact = () => {
                     href={buildWhatsAppContactLink(storefrontConfig.storeName, storefrontConfig.contact.whatsapp)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between rounded-md border border-[#efdde4] px-4 py-3 text-sm text-[#1A1C1C] transition-colors hover:border-[#D81B60] hover:text-[#B0004A]"
+                    className="flex items-center justify-between rounded-md border border-[#e1e5e8] px-4 py-3 text-sm text-[#1A1C1C] transition-colors hover:border-[#D81B60] hover:text-[#B0004A]"
                   >
                     <span>Chat on WhatsApp</span>
                     <MessageCircle size={16} />
@@ -187,7 +187,7 @@ const Contact = () => {
                 {storefrontConfig.contact.email.trim() ? (
                   <a
                     href={`mailto:${storefrontConfig.contact.email.trim()}`}
-                    className="flex items-center justify-between rounded-md border border-[#efdde4] px-4 py-3 text-sm text-[#1A1C1C] transition-colors hover:border-[#D81B60] hover:text-[#B0004A]"
+                    className="flex items-center justify-between rounded-md border border-[#e1e5e8] px-4 py-3 text-sm text-[#1A1C1C] transition-colors hover:border-[#D81B60] hover:text-[#B0004A]"
                   >
                     <span>Send an Email</span>
                     <Mail size={16} />
@@ -195,7 +195,7 @@ const Contact = () => {
                 ) : null}
                 <a
                   href="/shop"
-                  className="flex items-center justify-between rounded-md border border-[#efdde4] px-4 py-3 text-sm text-[#1A1C1C] transition-colors hover:border-[#D81B60] hover:text-[#B0004A]"
+                  className="flex items-center justify-between rounded-md border border-[#e1e5e8] px-4 py-3 text-sm text-[#1A1C1C] transition-colors hover:border-[#D81B60] hover:text-[#B0004A]"
                 >
                   <span>Continue Shopping</span>
                   <span className="material-symbols-outlined text-base">arrow_forward</span>
@@ -203,7 +203,7 @@ const Contact = () => {
               </div>
             </div>
 
-            <div className="rounded-[8px] border border-[#e3bdc7] bg-[#fff7fa] p-6">
+            <div className="rounded-[8px] border border-[#e3bdc7] bg-[#f5f7f8] p-6">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#B0004A]">Follow Us</p>
               {socialChannels.length > 0 ? (
                 <div className="mt-4 space-y-3">
@@ -213,7 +213,7 @@ const Contact = () => {
                       href={social.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-between rounded-md border border-[#efdde4] bg-white px-4 py-3 text-sm text-[#1A1C1C] transition-colors hover:border-[#D81B60] hover:text-[#B0004A]"
+                      className="flex items-center justify-between rounded-md border border-[#e1e5e8] bg-white px-4 py-3 text-sm text-[#1A1C1C] transition-colors hover:border-[#D81B60] hover:text-[#B0004A]"
                     >
                       <span className="flex items-center gap-2">
                         {social.label === "Instagram" ? <Instagram size={15} /> : null}

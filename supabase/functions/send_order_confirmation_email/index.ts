@@ -18,12 +18,15 @@ const SITE_URL = Deno.env.get("SITE_URL") ?? "https://escloset.vestigh.com";
 interface OrderPayload {
   id: string;
   order_number: string;
+  status?: string | null;
+  payment_status?: string | null;
   subtotal: number;
   shipping_fee: number;
   discount_amount: number | null;
   total: number;
   payment_method: string | null;
   mobile_money_number: string | null;
+  contact_email?: string | null;
   shipping_address_snapshot: Record<string, unknown> | null;
   confirmation_email_sent: boolean;
   customer: {
@@ -39,6 +42,25 @@ interface OrderPayload {
     variant_label: string | null;
   }>;
 }
+
+const resolveRecipientEmail = (order: OrderPayload): string | null => {
+  const snapshot = order.shipping_address_snapshot;
+  const snapshotEmail = safeString(
+    snapshot?.email ?? snapshot?.contact_email ?? snapshot?.recipient_email,
+  );
+  const payloadEmail = safeString(order.contact_email);
+  const customerEmail = safeString(order.customer?.email);
+
+  const resolved = snapshotEmail ?? payloadEmail ?? customerEmail;
+  return resolved ? resolved.toLowerCase() : null;
+};
+
+const resolveRecipientName = (order: OrderPayload): string => {
+  const snapshot = order.shipping_address_snapshot;
+  const snapshotName = safeString(snapshot?.recipient_name);
+  const customerFirstName = safeString(order.customer?.first_name);
+  return snapshotName ?? customerFirstName ?? "there";
+};
 
 const formatAmount = (value: number) => {
   try {
@@ -145,6 +167,24 @@ Deno.serve(async (request: Request) => {
       });
     }
 
+    const normalizedStatus = safeString(order.status)?.toLowerCase() ?? "";
+    const normalizedPaymentStatus = safeString(order.payment_status)?.toLowerCase() ?? "";
+    const normalizedPaymentMethod = safeString(order.payment_method)?.toLowerCase() ?? "";
+
+    if (normalizedStatus === "cancelled") {
+      return new Response(JSON.stringify({ success: true, skipped: true, reason: "order_cancelled" }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (normalizedPaymentMethod === "online" && normalizedPaymentStatus !== "paid") {
+      return new Response(JSON.stringify({ success: true, skipped: true, reason: "awaiting_payment" }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { data: orderItemsData, error: orderItemsError } = await adminClient
       .from("order_items")
       .select("product_name, product_image_url, quantity, unit_price, subtotal, variant_label")
@@ -157,7 +197,7 @@ Deno.serve(async (request: Request) => {
 
     const orderItems = (orderItemsData ?? order.order_items ?? []) as OrderPayload["order_items"];
 
-    const customerEmail = order.customer?.email?.trim();
+    const customerEmail = resolveRecipientEmail(order);
     if (!customerEmail) {
       throw new Error("Order customer email is missing");
     }
@@ -169,13 +209,14 @@ Deno.serve(async (request: Request) => {
       });
     }
 
-    const firstNameRaw = order.customer?.first_name?.trim() || "there";
+    const firstNameRaw = resolveRecipientName(order);
     const discountAmount = Math.max(0, Number(order.discount_amount || 0));
     const addressLines = buildAddressLines(order.shipping_address_snapshot);
     const { minDays, maxDays } = normalizeBusinessDayWindow(order.shipping_address_snapshot);
     const snapshot = await loadEmailBranding(adminClient, { fallbackSiteUrl: SITE_URL });
     const trackingBaseUrl = normalizeSiteUrl(snapshot.identity.siteUrl);
     const trackingUrl = `${trackingBaseUrl}/orders/${encodeURIComponent(order.order_number)}`;
+    const senderEmailAddress = safeString(Deno.env.get("ORDER_CONFIRMATION_FROM_EMAIL")) || snapshot.identity.supportEmail;
 
     const itemRows = orderItems
       .map((item) => {
@@ -314,7 +355,7 @@ Deno.serve(async (request: Request) => {
       body: JSON.stringify({
         from: formatFromEmail(
           snapshot.identity.storeName,
-          Deno.env.get("ORDER_CONFIRMATION_FROM_EMAIL") || "orders@store.com",
+          senderEmailAddress,
         ),
         to: [customerEmail],
         reply_to: snapshot.identity.supportEmail,

@@ -115,6 +115,27 @@ const getAddressLines = (snapshot: Record<string, unknown> | null): string[] => 
   return [recipient, addressLine1, addressLine2, cityState, country].filter(Boolean);
 };
 
+const resolveRecipientEmail = (
+  shippingSnapshot: Record<string, unknown> | null,
+  customerEmail: string | null,
+): string | null => {
+  const snapshotEmail = safeString(
+    shippingSnapshot?.email ?? shippingSnapshot?.contact_email ?? shippingSnapshot?.recipient_email,
+  );
+  const fallbackCustomerEmail = safeString(customerEmail);
+  const resolved = snapshotEmail ?? fallbackCustomerEmail;
+  return resolved ? resolved.toLowerCase() : null;
+};
+
+const resolveRecipientName = (
+  shippingSnapshot: Record<string, unknown> | null,
+  customerFirstName: string | null,
+): string => {
+  const snapshotName = safeString(shippingSnapshot?.recipient_name);
+  const fallbackName = safeString(customerFirstName);
+  return snapshotName ?? fallbackName ?? "there";
+};
+
 const resolveDeliveryWindow = async (
   adminClient: ReturnType<typeof createClient>,
   shippingSnapshot: Record<string, unknown> | null,
@@ -473,11 +494,13 @@ Deno.serve(async (request: Request) => {
       order_number?: string;
       new_status?: string;
       cancel_reason?: string;
+      history_id?: string;
     };
 
     const orderNumber = safeString(body.order_number);
     const newStatusRaw = safeString(body.new_status)?.toLowerCase();
     const cancelReasonFromBody = safeString(body.cancel_reason);
+    const historyId = safeString(body.history_id);
 
     if (!orderNumber) {
       return jsonResponse(400, { success: false, message: "order_number is required" });
@@ -526,9 +549,9 @@ Deno.serve(async (request: Request) => {
     }
 
     const customer = mapMaybeEmbeddedRecord(order.customers);
-    const customerEmail = safeString(customer?.email);
-    const firstName = safeString(customer?.first_name) || "there";
     const shippingSnapshot = asRecord(order.shipping_address_snapshot);
+    const firstName = resolveRecipientName(shippingSnapshot, safeString(customer?.first_name));
+    const customerEmail = resolveRecipientEmail(shippingSnapshot, safeString(customer?.email));
     const orderItems = Array.isArray(order.order_items) ? order.order_items : [];
     const addressLines = getAddressLines(shippingSnapshot);
 
@@ -556,6 +579,7 @@ Deno.serve(async (request: Request) => {
     );
     const html = buildEmailHtml(order, orderItems, addressLines, template, snapshot);
     const text = buildEmailText(order, orderItems, addressLines, template, snapshot);
+    const senderEmailAddress = safeString(Deno.env.get("ORDER_FROM_EMAIL_ADDRESS")) || snapshot.identity.supportEmail;
 
     const resendResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -566,7 +590,7 @@ Deno.serve(async (request: Request) => {
       body: JSON.stringify({
         from: formatFromEmail(
           snapshot.identity.storeName,
-          Deno.env.get("ORDER_FROM_EMAIL_ADDRESS") ?? "orders@store.com",
+          senderEmailAddress,
         ),
         to: [customerEmail],
         reply_to: snapshot.identity.supportEmail,
@@ -585,13 +609,36 @@ Deno.serve(async (request: Request) => {
       return jsonResponse(500, { success: false, message: "Failed to send order status update email" });
     }
 
+    let targetHistoryId = historyId;
+
+    if (!targetHistoryId) {
+      const { data: historyRow, error: historyLookupError } = await adminClient
+        .from("order_status_history")
+        .select("id")
+        .eq("order_id", order.id)
+        .eq("new_status", newStatus)
+        .order("changed_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (historyLookupError) {
+        console.error("Failed to resolve order_status_history row for notified_customer update", historyLookupError);
+      } else if (historyRow?.id) {
+        targetHistoryId = historyRow.id;
+      }
+    }
+
+    if (!targetHistoryId) {
+      return jsonResponse(200, {
+        success: true,
+        message: "Email sent, but notification history row was not found",
+      });
+    }
+
     const { error: updateError } = await adminClient
       .from("order_status_history")
       .update({ notified_customer: true })
-      .eq("order_id", order.id)
-      .eq("new_status", newStatus)
-      .order("changed_at", { ascending: false })
-      .limit(1);
+      .eq("id", targetHistoryId);
 
     if (updateError) {
       console.error("Failed to update notified_customer on order_status_history", updateError);

@@ -1,11 +1,13 @@
-﻿import { useMemo, useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { useMemo, useState, type FormEvent } from "react";
+import { Link, useLocation } from "react-router-dom";
 import AuthInputField from "@/components/auth/AuthInputField";
 import AuthPageLayout from "@/components/auth/AuthPageLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { getEmailError, sanitizeInputText } from "@/lib/authValidation";
+import { buildAuthModalSearch, buildPathWithSearch } from "@/lib/authModal";
 
 const ForgotPassword = () => {
+  const location = useLocation();
   const { sendPasswordReset } = useAuth();
 
   const [email, setEmail] = useState("");
@@ -36,7 +38,7 @@ const ForgotPassword = () => {
     const siteUrl = typeof window !== "undefined" ? window.location.origin : "";
 
     try {
-      await sendPasswordReset(normalizedEmail, `${siteUrl}/auth/reset-password`);
+      await sendPasswordReset(normalizedEmail, `${siteUrl}/?auth=reset-password`);
     } catch {
       // This flow always returns a generic success message to prevent account enumeration.
     } finally {
@@ -69,7 +71,7 @@ const ForgotPassword = () => {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="mt-8 w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-[18px] font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-65"
+          className="mt-8 w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-[18px] font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)] disabled:cursor-not-allowed disabled:opacity-65"
         >
           {isSubmitting ? "Please wait..." : "Send Reset Link"}
         </button>
@@ -79,7 +81,16 @@ const ForgotPassword = () => {
 
       <p className="mt-6 font-body text-[12px] text-[var(--color-muted)]">
         Remembered your password?{" "}
-        <Link to="/auth/login" className="text-[var(--color-primary)] transition-colors hover:text-[var(--color-accent)]">
+        <Link
+          to={buildPathWithSearch(
+            location.pathname,
+            buildAuthModalSearch(location.search, {
+              mode: "login",
+            }),
+            location.hash,
+          )}
+          className="text-[var(--color-primary)] transition-colors hover:text-[var(--color-accent)]"
+        >
           Sign in
         </Link>
       </p>

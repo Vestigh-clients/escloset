@@ -36,7 +36,7 @@ const LoadingState = ({ items }: { items: number }) => (
 );
 
 const EmptyState = ({ message }: { message: string }) => (
-  <div className="rounded-[var(--border-radius)] border border-[var(--color-border)] bg-[rgba(var(--color-accent-rgb),0.03)] px-4 py-5">
+  <div className="rounded-[var(--border-radius)] border border-[var(--color-border)] bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.03)] px-4 py-5">
     <p className="font-body text-[12px] text-[var(--color-muted)]">{message}</p>
   </div>
 );

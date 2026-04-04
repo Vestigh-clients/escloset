@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Check, Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import OrderSummaryDetails from "@/components/orders/OrderSummaryDetails";
@@ -9,7 +9,6 @@ import { useCart } from "@/contexts/CartContext";
 import { getDeliveryWindow } from "@/lib/orderPresentation";
 import {
   fetchOrderConfirmationDetails,
-  triggerOrderConfirmationEmail,
   type OrderDetails,
 } from "@/services/orderService";
 
@@ -89,11 +88,35 @@ const ConfirmationSkeleton = () => (
 const hasUppercaseLetter = (value: string) => /[A-Z]/.test(value);
 const hasNumber = (value: string) => /[0-9]/.test(value);
 
+const resolveOrderEmail = (order: OrderDetails): string => {
+  const payloadEmail = typeof order.contact_email === "string" ? order.contact_email.trim().toLowerCase() : "";
+  if (payloadEmail) {
+    return payloadEmail;
+  }
+
+  if (
+    order.shipping_address_snapshot &&
+    typeof order.shipping_address_snapshot === "object" &&
+    !Array.isArray(order.shipping_address_snapshot)
+  ) {
+    const snapshot = order.shipping_address_snapshot as Record<string, unknown>;
+    const snapshotEmailCandidate =
+      (typeof snapshot.email === "string" ? snapshot.email : null) ??
+      (typeof snapshot.contact_email === "string" ? snapshot.contact_email : null) ??
+      (typeof snapshot.recipient_email === "string" ? snapshot.recipient_email : null);
+    const snapshotEmail = snapshotEmailCandidate?.trim().toLowerCase() ?? "";
+    if (snapshotEmail) {
+      return snapshotEmail;
+    }
+  }
+
+  return order.customer.email.trim().toLowerCase();
+};
+
 const CheckoutConfirmation = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { clearCart } = useCart();
-  const emailTriggerStartedRef = useRef(false);
 
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
   const [order, setOrder] = useState<OrderDetails | null>(null);
@@ -164,34 +187,6 @@ const CheckoutConfirmation = () => {
     };
   }, [orderNumber]);
 
-  useEffect(() => {
-    if (!order || order.confirmation_email_sent || emailTriggerStartedRef.current) {
-      return;
-    }
-
-    emailTriggerStartedRef.current = true;
-
-    const sendEmail = async () => {
-      try {
-        await triggerOrderConfirmationEmail(order.order_number);
-        setOrder((previous) =>
-          previous
-            ? {
-                ...previous,
-                confirmation_email_sent: true,
-              }
-            : previous,
-        );
-      } catch (error) {
-        if (import.meta.env.DEV) {
-          console.error("Failed to trigger order confirmation email", error);
-        }
-      }
-    };
-
-    void sendEmail();
-  }, [order]);
-
   useEffect(
     () => () => {
       if (typeof window === "undefined") {
@@ -221,6 +216,7 @@ const CheckoutConfirmation = () => {
 
   const canSubmitPassword = passwordRules.minLength && passwordRules.uppercase && passwordRules.number;
   const shouldShowGuestAccountPrompt = !isAuthenticated && !isPromptDismissed;
+  const orderContactEmail = order ? resolveOrderEmail(order) : "";
 
   const handleCreateAccount = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -233,7 +229,7 @@ const CheckoutConfirmation = () => {
     setIsCreatingAccount(true);
 
     try {
-      const orderEmail = order.customer.email.trim().toLowerCase();
+      const orderEmail = resolveOrderEmail(order);
       const orderFirstName = order.customer.first_name.trim();
       const orderLastName = order.customer.last_name.trim();
 
@@ -334,7 +330,9 @@ const CheckoutConfirmation = () => {
           <p className="mt-4 font-body text-[14px] font-light leading-[1.8] text-[var(--color-muted)]">
             Your order <span className="text-[var(--color-primary)]">{order.order_number}</span> is confirmed.
           </p>
-          <p className="mt-2 font-body text-[13px] font-light text-[var(--color-muted-soft)]">We&apos;ll send updates to {order.customer.email}</p>
+          <p className="mt-2 font-body text-[13px] font-light text-[var(--color-muted-soft)]">
+            We&apos;ll send updates to {orderContactEmail || order.customer.email}
+          </p>
           <div className="my-12 border-b border-[var(--color-border)]" />
         </section>
 
@@ -466,7 +464,7 @@ const CheckoutConfirmation = () => {
                 <button
                   type="submit"
                   disabled={!canSubmitPassword || isCreatingAccount}
-                  className="mt-6 w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-4 font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="mt-6 w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-4 font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isCreatingAccount ? "Creating..." : "Create Account"}
                 </button>

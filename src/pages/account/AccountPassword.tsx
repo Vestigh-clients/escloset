@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { AccountInputField } from "@/components/account/AccountFields";
 import { useAuth } from "@/contexts/AuthContext";
@@ -191,7 +191,7 @@ const AccountPassword = () => {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="mt-8 rounded-[var(--border-radius)] bg-[var(--color-primary)] px-8 py-3 font-body text-[11px] uppercase tracking-[0.14em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-65"
+          className="mt-8 rounded-[var(--border-radius)] bg-[var(--color-primary)] px-8 py-3 font-body text-[11px] uppercase tracking-[0.14em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)] disabled:cursor-not-allowed disabled:opacity-65"
         >
           {isSubmitting ? "Updating..." : "Update Password"}
         </button>

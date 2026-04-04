@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { storeKeyPrefix } from "@/config/store.config";
 import { buildCustomersCsv, fetchAdminCustomers, fetchAdminCustomersForExport, type AdminCustomerListItem } from "@/services/adminManagementService";
@@ -237,7 +237,7 @@ const AdminCustomersPage = () => {
                   <tr
                     key={row.id}
                     onClick={() => navigate(`/admin/customers/${row.id}`)}
-                    className="cursor-pointer border-b border-[var(--color-surface-strong)] transition-colors hover:bg-[rgba(var(--color-accent-rgb),0.04)]"
+                    className="cursor-pointer border-b border-[var(--color-surface-strong)] transition-colors hover:bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.04)]"
                   >
                     <td className="px-2 py-4 pl-0">
                       <div className="flex items-center">

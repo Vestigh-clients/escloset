@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState, type TouchEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type TouchEvent } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import TryOnModal from "@/components/TryOnModal";
 import ProductFetchErrorState from "@/components/products/ProductFetchErrorState";
@@ -9,6 +9,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useThemeConfig } from "@/contexts/ThemeContext";
 import { supabase } from "@/integrations/supabase/client";
 import { getCategoryLabel } from "@/lib/categories";
+import { buildAuthModalSearch, buildPathWithSearch } from "@/lib/authModal";
 import { formatPrice } from "@/lib/price";
 import { shouldShowPriceVariesByVariantNote } from "@/lib/productPricing";
 import { getFeaturedProducts, getRelatedProducts } from "@/services/productService";
@@ -782,7 +783,14 @@ const ProductPage = () => {
   const categoryShopLink = normalizedCategorySlug ? `/shop?category=${encodeURIComponent(normalizedCategorySlug)}` : "/shop";
   const reviewAverageRating = reviewSummary.totalReviews > 0 ? reviewSummary.averageRating : 0;
   const reviewBodyLength = reviewBody.trim().length;
-  const loginRedirectLink = `/auth/login?redirect=${encodeURIComponent(`${location.pathname}${location.search}${location.hash}`)}`;
+  const loginRedirectLink = buildPathWithSearch(
+    location.pathname,
+    buildAuthModalSearch(location.search, {
+      mode: "login",
+      redirect: `${location.pathname}${location.search}${location.hash}`,
+    }),
+    location.hash,
+  );
   const canSubmitReview =
     Boolean(product?.id) &&
     Boolean(user?.id) &&
@@ -1261,7 +1269,7 @@ const ProductPage = () => {
                                   className={`relative h-9 w-9 rounded-full transition-all ${
                                     isSelected
                                       ? "ring-2 ring-primary ring-offset-2 ring-offset-[var(--color-surface)]"
-                                      : "border border-[rgba(227,189,199,0.35)]"
+                                      : "border border-[rgba(186,194,201,0.35)]"
                                   } ${isUnavailable ? "cursor-not-allowed opacity-40" : "hover:scale-110"}`}
                                   style={{ backgroundColor: optionValue.color_hex || primaryThemeColor }}
                                 >
@@ -1299,8 +1307,8 @@ const ProductPage = () => {
                                     isSelected
                                       ? "border-2 border-primary font-bold text-primary"
                                       : isUnavailable
-                                        ? "cursor-not-allowed border-[rgba(227,189,199,0.3)] text-on-surface-variant/50 line-through"
-                                        : "border-[rgba(227,189,199,0.35)] text-on-surface hover:border-primary hover:text-primary"
+                                        ? "cursor-not-allowed border-[rgba(186,194,201,0.3)] text-on-surface-variant/50 line-through"
+                                        : "border-[rgba(186,194,201,0.35)] text-on-surface hover:border-primary hover:text-primary"
                                   }`}
                                 >
                                   {optionValue.value}
@@ -1322,8 +1330,8 @@ const ProductPage = () => {
                   disabled={isAddToCartDisabled}
                   className={`flex items-center justify-center gap-3 rounded-md py-4 text-xs font-bold uppercase tracking-widest transition-all ${
                     isAddToCartDisabled
-                      ? "cursor-not-allowed bg-[rgba(227,189,199,0.7)] text-on-surface-variant"
-                      : "bg-gradient-to-r from-[#D81B60] to-[#F06292] text-white shadow-[0_12px_30px_rgba(216,27,96,0.2)] hover:opacity-90 active:scale-[0.98]"
+                      ? "cursor-not-allowed bg-[rgba(186,194,201,0.7)] text-on-surface-variant"
+                      : "bg-gradient-to-r from-[#D81B60] to-[#F06292] text-white shadow-[0_12px_30px_rgba(26,28,28,0.16)] hover:opacity-90 active:scale-[0.98]"
                   }`}
                 >
                   <span className="material-symbols-outlined">shopping_cart</span>
@@ -1334,7 +1342,7 @@ const ProductPage = () => {
                   <button
                     type="button"
                     onClick={() => setTryOnOpen(true)}
-                    className="flex items-center justify-center gap-3 rounded-md border border-[rgba(227,189,199,0.3)] bg-[rgba(232,232,232,0.45)] py-4 text-xs font-bold uppercase tracking-widest text-on-surface transition-all hover:bg-[rgba(232,232,232,0.7)] active:scale-[0.98]"
+                    className="flex items-center justify-center gap-3 rounded-md border border-[rgba(186,194,201,0.3)] bg-[rgba(232,232,232,0.45)] py-4 text-xs font-bold uppercase tracking-widest text-on-surface transition-all hover:bg-[rgba(232,232,232,0.7)] active:scale-[0.98]"
                   >
                     <span className="material-symbols-outlined">photo_camera</span>
                     Virtual Try-On
@@ -1342,7 +1350,7 @@ const ProductPage = () => {
                 ) : null}
               </div>
 
-              <div className="flex flex-col gap-3 border-t border-[rgba(227,189,199,0.3)] pt-5">
+              <div className="flex flex-col gap-3 border-t border-[rgba(186,194,201,0.3)] pt-5">
                 <div className="flex items-center gap-2 text-xs text-on-surface-variant">
                   <span className="material-symbols-outlined text-sm">local_shipping</span>
                   Free delivery in Accra &amp; Tema within 24 hours.
@@ -1357,11 +1365,11 @@ const ProductPage = () => {
         </div>
 
         {storeConfig.features.reviews ? (
-          <section className="mt-16 border-t border-[rgba(227,189,199,0.3)] pt-12">
+          <section className="mt-16 border-t border-[rgba(186,194,201,0.3)] pt-12">
           <button
             type="button"
             onClick={() => setReviewSectionOpen((current) => !current)}
-            className="group flex w-full items-center justify-between rounded-lg border border-[rgba(227,189,199,0.4)] bg-white/70 px-4 py-4 text-left transition-colors hover:border-primary"
+            className="group flex w-full items-center justify-between rounded-lg border border-[rgba(186,194,201,0.4)] bg-white/70 px-4 py-4 text-left transition-colors hover:border-primary"
             aria-expanded={isReviewSectionOpen}
             aria-controls="product-reviews-content"
           >
@@ -1383,7 +1391,7 @@ const ProductPage = () => {
 
           {isReviewSectionOpen ? (
           <div id="product-reviews-content" className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-12">
-            <aside className="rounded-lg border border-[rgba(227,189,199,0.35)] bg-white/70 p-6 lg:col-span-4">
+            <aside className="rounded-lg border border-[rgba(186,194,201,0.35)] bg-white/70 p-6 lg:col-span-4">
               <p className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant">Overall Rating</p>
               <div className="mt-3 flex items-end gap-3">
                 <p className="font-notoSerif text-5xl font-bold leading-none text-on-surface">{reviewAverageRating.toFixed(1)}</p>
@@ -1401,8 +1409,11 @@ const ProductPage = () => {
 
                   return (
                     <div key={`rating-level-${ratingLevel}`} className="grid grid-cols-[28px_1fr_30px] items-center gap-3">
-                      <span className="text-xs text-on-surface-variant">{ratingLevel}★</span>
-                      <div className="h-2 overflow-hidden rounded-full bg-[rgba(227,189,199,0.25)]">
+                      <span className="text-xs text-on-surface-variant">
+                        {ratingLevel}
+                        &#9733;
+                      </span>
+                      <div className="h-2 overflow-hidden rounded-full bg-[rgba(186,194,201,0.25)]">
                         <div
                           className="h-full rounded-full bg-gradient-to-r from-[#D81B60] to-[#F06292]"
                           style={{ width: `${widthPercent}%` }}
@@ -1416,7 +1427,7 @@ const ProductPage = () => {
             </aside>
 
             <div className="space-y-6 lg:col-span-8">
-              <div className="rounded-lg border border-[rgba(227,189,199,0.35)] bg-white/70 p-6">
+              <div className="rounded-lg border border-[rgba(186,194,201,0.35)] bg-white/70 p-6">
                 <h3 className="text-sm font-bold uppercase tracking-widest text-on-surface/80">Write a Review</h3>
                 <p className="mt-1 text-xs text-on-surface-variant">Share fit, quality, and how the piece looked in person.</p>
 
@@ -1439,7 +1450,7 @@ const ProductPage = () => {
                     <p className="text-xs text-on-surface-variant">Sign in to leave your review.</p>
                     <Link
                       to={loginRedirectLink}
-                      className="rounded-md border border-[rgba(227,189,199,0.4)] px-4 py-2 text-[11px] font-semibold uppercase tracking-widest text-on-surface transition-colors hover:border-primary hover:text-primary"
+                      className="rounded-md border border-[rgba(186,194,201,0.4)] px-4 py-2 text-[11px] font-semibold uppercase tracking-widest text-on-surface transition-colors hover:border-primary hover:text-primary"
                     >
                       Sign In
                     </Link>
@@ -1447,7 +1458,7 @@ const ProductPage = () => {
                 ) : isExistingReviewLoading ? (
                   <p className="mt-4 text-xs text-on-surface-variant">Checking your previous review...</p>
                 ) : existingReview ? (
-                  <div className="mt-4 rounded-md border border-[rgba(227,189,199,0.35)] bg-[rgba(232,232,232,0.38)] p-4">
+                  <div className="mt-4 rounded-md border border-[rgba(186,194,201,0.35)] bg-[rgba(232,232,232,0.38)] p-4">
                     <p className="text-xs uppercase tracking-widest text-on-surface-variant">{existingReviewMessage}</p>
                     <div className="mt-2">
                       <StarRating rating={existingReview.rating} className="h-4 w-4" />
@@ -1490,7 +1501,7 @@ const ProductPage = () => {
                         onChange={(event) => setReviewTitle(event.target.value)}
                         placeholder="Review title (optional)"
                         maxLength={80}
-                        className="h-11 rounded-md border border-[rgba(227,189,199,0.35)] bg-white px-3 text-sm text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/60 focus:border-primary"
+                        className="h-11 rounded-md border border-[rgba(186,194,201,0.35)] bg-white px-3 text-sm text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/60 focus:border-primary"
                       />
                       <button
                         type="button"
@@ -1499,7 +1510,7 @@ const ProductPage = () => {
                         className={`h-11 rounded-md text-[11px] font-bold uppercase tracking-widest transition-all ${
                           canSubmitReview
                             ? "bg-gradient-to-r from-[#D81B60] to-[#F06292] text-white hover:opacity-90 active:scale-[0.98]"
-                            : "cursor-not-allowed bg-[rgba(227,189,199,0.7)] text-on-surface-variant"
+                            : "cursor-not-allowed bg-[rgba(186,194,201,0.7)] text-on-surface-variant"
                         }`}
                       >
                         {isSubmittingReview ? "Submitting..." : "Submit Review"}
@@ -1512,7 +1523,7 @@ const ProductPage = () => {
                         onChange={(event) => setReviewBody(event.target.value)}
                         rows={4}
                         placeholder="Tell shoppers what stood out about this product."
-                        className="w-full rounded-md border border-[rgba(227,189,199,0.35)] bg-white px-3 py-2 text-sm leading-relaxed text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/60 focus:border-primary"
+                        className="w-full rounded-md border border-[rgba(186,194,201,0.35)] bg-white px-3 py-2 text-sm leading-relaxed text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/60 focus:border-primary"
                       />
                       <p className="mt-2 text-right text-[11px] text-on-surface-variant">
                         {reviewBodyLength < 12 ? `${12 - reviewBodyLength} more characters required` : "Looks good"}
@@ -1523,21 +1534,21 @@ const ProductPage = () => {
               </div>
 
               {isReviewsLoading ? (
-                <div className="rounded-lg border border-[rgba(227,189,199,0.35)] bg-white/70 p-6">
+                <div className="rounded-lg border border-[rgba(186,194,201,0.35)] bg-white/70 p-6">
                   <p className="text-sm text-on-surface-variant">Loading reviews...</p>
                 </div>
               ) : reviewsError ? (
-                <div className="rounded-lg border border-[rgba(227,189,199,0.35)] bg-white/70 p-6">
+                <div className="rounded-lg border border-[rgba(186,194,201,0.35)] bg-white/70 p-6">
                   <p className="text-sm text-[var(--theme-danger)]">{reviewsError}</p>
                 </div>
               ) : reviews.length === 0 ? (
-                <div className="rounded-lg border border-[rgba(227,189,199,0.35)] bg-white/70 p-6">
+                <div className="rounded-lg border border-[rgba(186,194,201,0.35)] bg-white/70 p-6">
                   <p className="text-sm text-on-surface-variant">No reviews yet. Be the first to share your experience.</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {reviews.map((review) => (
-                    <article key={review.id} className="rounded-lg border border-[rgba(227,189,199,0.35)] bg-white/70 p-5">
+                    <article key={review.id} className="rounded-lg border border-[rgba(186,194,201,0.35)] bg-white/70 p-5">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <p className="text-sm font-semibold text-on-surface">{review.authorDisplayName}</p>
                         <p className="text-[11px] uppercase tracking-widest text-on-surface-variant">
@@ -1581,7 +1592,7 @@ const ProductPage = () => {
       </main>
 
       {!isCartOpen ? (
-        <div className="fixed inset-x-0 bottom-0 z-[900] border-t border-[rgba(227,189,199,0.45)] bg-surface/95 backdrop-blur md:hidden">
+        <div className="fixed inset-x-0 bottom-0 z-[900] border-t border-[rgba(186,194,201,0.45)] bg-surface/95 backdrop-blur md:hidden">
           <div className="mx-auto flex max-w-screen-2xl flex-col gap-2 px-4 pb-4 pt-3">
             <button
               type="button"
@@ -1589,8 +1600,8 @@ const ProductPage = () => {
               disabled={isAddToCartDisabled}
               className={`flex items-center justify-center gap-2 rounded-md py-3 text-[11px] font-bold uppercase tracking-widest transition-all ${
                 isAddToCartDisabled
-                  ? "cursor-not-allowed bg-[rgba(227,189,199,0.7)] text-on-surface-variant"
-                  : "bg-gradient-to-r from-[#D81B60] to-[#F06292] text-white shadow-[0_8px_22px_rgba(216,27,96,0.2)] active:scale-[0.98]"
+                  ? "cursor-not-allowed bg-[rgba(186,194,201,0.7)] text-on-surface-variant"
+                  : "bg-gradient-to-r from-[#D81B60] to-[#F06292] text-white shadow-[0_8px_22px_rgba(26,28,28,0.16)] active:scale-[0.98]"
               }`}
             >
               <span className="material-symbols-outlined text-base">shopping_cart</span>
@@ -1601,7 +1612,7 @@ const ProductPage = () => {
               <button
                 type="button"
                 onClick={() => setTryOnOpen(true)}
-                className="flex items-center justify-center gap-2 rounded-md border border-[rgba(227,189,199,0.4)] bg-[rgba(232,232,232,0.45)] py-3 text-[11px] font-bold uppercase tracking-widest text-on-surface transition-all active:scale-[0.98]"
+                className="flex items-center justify-center gap-2 rounded-md border border-[rgba(186,194,201,0.4)] bg-[rgba(232,232,232,0.45)] py-3 text-[11px] font-bold uppercase tracking-widest text-on-surface transition-all active:scale-[0.98]"
               >
                 <span className="material-symbols-outlined text-base">photo_camera</span>
                 Virtual Try-On
@@ -1613,7 +1624,7 @@ const ProductPage = () => {
 
       {isLightboxOpen ? (
         <div
-          className="fixed inset-0 z-[2000] cursor-zoom-out bg-[rgba(var(--color-primary-rgb),0.95)]"
+          className="fixed inset-0 z-[2000] cursor-zoom-out bg-black/95"
           onClick={handleCloseLightbox}
           onTouchStart={handleLightboxTouchStart}
           onTouchEnd={handleLightboxTouchEnd}
@@ -1745,7 +1756,7 @@ const ProductPage = () => {
                 </thead>
                 <tbody>
                   {shoeSizeGuideRows.map((row, index) => (
-                    <tr key={row.uk} className={index % 2 === 0 ? "bg-[var(--color-secondary)]" : "bg-[rgba(var(--color-primary-rgb),0.03)]"}>
+                    <tr key={row.uk} className={index % 2 === 0 ? "bg-[var(--color-secondary)]" : "bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.03)]"}>
                       <td className="px-4 py-2.5 font-body text-[12px] text-[var(--color-muted)]">{row.uk}</td>
                       <td className="px-4 py-2.5 font-body text-[12px] text-[var(--color-muted)]">{row.eu}</td>
                       <td className="px-4 py-2.5 font-body text-[12px] text-[var(--color-muted)]">{row.us}</td>
@@ -1766,7 +1777,7 @@ const ProductPage = () => {
                 </thead>
                 <tbody>
                   {clothingSizeGuideRows.map((row, index) => (
-                    <tr key={row.size} className={index % 2 === 0 ? "bg-[var(--color-secondary)]" : "bg-[rgba(var(--color-primary-rgb),0.03)]"}>
+                    <tr key={row.size} className={index % 2 === 0 ? "bg-[var(--color-secondary)]" : "bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.03)]"}>
                       <td className="px-4 py-2.5 font-body text-[12px] text-[var(--color-muted)]">{row.size}</td>
                       <td className="px-4 py-2.5 font-body text-[12px] text-[var(--color-muted)]">{row.chest}</td>
                       <td className="px-4 py-2.5 font-body text-[12px] text-[var(--color-muted)]">{row.waist}</td>

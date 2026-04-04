@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   buildStatusLabel,
@@ -18,7 +18,7 @@ const statusBadgeClass: Record<string, string> = {
   pending: "border border-[var(--color-border)] text-[var(--color-muted)]",
   confirmed: "border border-[var(--color-primary)] text-[var(--color-primary)]",
   processing: "border border-[var(--color-accent)] text-[var(--color-accent)]",
-  shipped: "bg-[var(--color-accent)] text-[var(--color-primary)]",
+  shipped: "bg-[var(--color-accent)] text-[var(--color-secondary)]",
   delivered: "bg-[var(--color-primary)] text-[var(--color-secondary)]",
   cancelled: "border border-[var(--color-danger)] text-[var(--color-danger)]",
 };
@@ -418,7 +418,7 @@ const AdminOrderDetailPage = () => {
               type="button"
               onClick={() => void onUpdateStatus()}
               disabled={!nextStatus || isStatusSubmitting}
-              className="mt-4 w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-3 font-body text-[11px] uppercase tracking-[0.12em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
+              className="mt-4 w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-3 font-body text-[11px] uppercase tracking-[0.12em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isStatusSubmitting ? "Updating..." : "Update Status"}
             </button>
@@ -452,7 +452,7 @@ const AdminOrderDetailPage = () => {
               type="button"
               onClick={() => void onUpdatePayment()}
               disabled={isPaymentSubmitting}
-              className="mt-4 w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-3 font-body text-[11px] uppercase tracking-[0.12em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
+              className="mt-4 w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-3 font-body text-[11px] uppercase tracking-[0.12em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isPaymentSubmitting ? "Updating..." : "Update Payment"}
             </button>

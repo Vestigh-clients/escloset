@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Navigate } from "react-router-dom";
 import {
   demoteCustomerToRole,
@@ -187,14 +187,14 @@ const AdminUsersPage = () => {
           <button
             type="button"
             onClick={openPanel}
-            className="rounded-[var(--border-radius)] bg-[var(--color-primary)] px-7 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)]"
+            className="rounded-[var(--border-radius)] bg-[var(--color-primary)] px-7 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)]"
           >
             Promote Customer
           </button>
         </div>
       </div>
 
-      <div className="mb-8 rounded-[var(--border-radius)] border border-[var(--color-border)] bg-[rgba(var(--color-accent-rgb),0.08)] px-5 py-4">
+      <div className="mb-8 rounded-[var(--border-radius)] border border-[var(--color-border)] bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.08)] px-5 py-4">
         <p className="font-body text-[12px] leading-[1.8] text-[var(--color-muted)]">
           Admin users can manage products, orders and customers. Super Admins have full access including this page, site settings and
           role management. Role changes are logged and cannot be undone without super admin access.
@@ -242,7 +242,7 @@ const AdminUsersPage = () => {
                 const dateValue = row.assigned_at || row.created_at;
                 const canDemote = row.role === "admin" && row.customer_id !== user?.id;
                 return [
-                  <tr key={row.customer_id} className="border-b border-[var(--color-surface-strong)] hover:bg-[rgba(var(--color-accent-rgb),0.04)]">
+                  <tr key={row.customer_id} className="border-b border-[var(--color-surface-strong)] hover:bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.04)]">
                     <td className="px-2 py-4 pl-0">
                       <div className="flex items-center gap-[10px]">
                         <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-[var(--color-primary)] font-body text-[12px] text-[var(--color-secondary)]">
@@ -340,7 +340,7 @@ const AdminUsersPage = () => {
 
                 <p className="admin-mobile-ellipsis mt-2 font-body text-[11px] text-[var(--color-muted-soft)]">{row.customer.email}</p>
                 <p className="mt-1 font-body text-[11px] text-[var(--color-muted-soft)]">
-                  {row.promoted_by_name || "System"} · {formatDateShort(dateValue)}
+                  {row.promoted_by_name || "System"} � {formatDateShort(dateValue)}
                 </p>
 
                 <div className="mt-2 flex justify-end font-body text-[10px] uppercase tracking-[0.1em]">
@@ -399,7 +399,7 @@ const AdminUsersPage = () => {
                         setSelectedCustomer(candidate);
                         setSearchInput(candidate.email);
                       }}
-                      className="block w-full border-b border-[var(--color-surface-strong)] px-4 py-3 text-left hover:bg-[rgba(var(--color-accent-rgb),0.05)]"
+                      className="block w-full border-b border-[var(--color-surface-strong)] px-4 py-3 text-left hover:bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.05)]"
                     >
                       <p className="font-body text-[12px] text-[var(--color-primary)]">{`${candidate.first_name} ${candidate.last_name}`.trim()}</p>
                       <p className="font-body text-[11px] text-[var(--color-muted)]">{candidate.email}</p>
@@ -433,7 +433,7 @@ const AdminUsersPage = () => {
                 className={`rounded-[var(--border-radius)] border px-6 py-6 text-left transition-colors duration-200 ${
                   selectedRole === "admin" ? "border-[var(--color-primary)]" : "border-[var(--color-border)]"
                 }`}
-                style={{ backgroundColor: selectedRole === "admin" ? "rgba(var(--color-primary-rgb),0.08)" : "transparent" }}
+                style={{ backgroundColor: selectedRole === "admin" ? "rgba(var(--color-navbar-solid-foreground-rgb),0.08)" : "transparent" }}
               >
                 <p className="font-display text-[18px] italic text-[var(--color-primary)]">Admin</p>
               </button>
@@ -444,7 +444,7 @@ const AdminUsersPage = () => {
                 className={`rounded-[var(--border-radius)] border px-6 py-6 text-left transition-colors duration-200 ${
                   selectedRole === "super_admin" ? "border-[var(--color-primary)]" : "border-[var(--color-border)]"
                 }`}
-                style={{ backgroundColor: selectedRole === "super_admin" ? "rgba(var(--color-primary-rgb),0.08)" : "transparent" }}
+                style={{ backgroundColor: selectedRole === "super_admin" ? "rgba(var(--color-navbar-solid-foreground-rgb),0.08)" : "transparent" }}
               >
                 <p className="font-display text-[18px] italic text-[var(--color-primary)]">Super Admin</p>
               </button>
@@ -464,7 +464,7 @@ const AdminUsersPage = () => {
                 type="button"
                 onClick={() => void promote()}
                 disabled={!selectedCustomer || isPromoting}
-                className="w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-4 font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-65"
+                className="w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-4 font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)] disabled:cursor-not-allowed disabled:opacity-65"
               >
                 {isPromoting ? "Promoting..." : "Promote User"}
               </button>

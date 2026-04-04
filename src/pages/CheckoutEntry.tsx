@@ -1,18 +1,26 @@
 ﻿import { useEffect } from "react";
 import { UserCheck, UserX } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { storeConfig, storeKeyPrefix } from "@/config/store.config";
 import { useAuth } from "@/contexts/AuthContext";
 import { REDIRECT_AFTER_LOGIN_KEY } from "@/services/authService";
+import { buildAuthModalSearch, buildPathWithSearch } from "@/lib/authModal";
 
 const CHECKOUT_MODE_STORAGE_KEY = `${storeKeyPrefix}_checkout_mode`;
 const CHECKOUT_SESSION_STORAGE_KEY = `${storeKeyPrefix}_checkout_session_v1`;
 const CHECKOUT_CONTACT_PATH = "/checkout/contact";
-const LOGIN_WITH_REDIRECT_PATH = `/auth/login?redirect=${encodeURIComponent(CHECKOUT_CONTACT_PATH)}`;
-
 const CheckoutEntry = () => {
+  const location = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated, isLoading } = useAuth();
+  const loginWithRedirectPath = buildPathWithSearch(
+    location.pathname,
+    buildAuthModalSearch(location.search, {
+      mode: "login",
+      redirect: CHECKOUT_CONTACT_PATH,
+    }),
+    location.hash,
+  );
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
@@ -22,9 +30,9 @@ const CheckoutEntry = () => {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated && !storeConfig.features.guestCheckout) {
-      navigate(LOGIN_WITH_REDIRECT_PATH, { replace: true });
+      navigate(loginWithRedirectPath, { replace: true });
     }
-  }, [isAuthenticated, isLoading, navigate]);
+  }, [isAuthenticated, isLoading, loginWithRedirectPath, navigate]);
 
   const handleGuestCheckout = () => {
     if (typeof window !== "undefined") {
@@ -42,7 +50,7 @@ const CheckoutEntry = () => {
       window.sessionStorage.setItem(REDIRECT_AFTER_LOGIN_KEY, CHECKOUT_CONTACT_PATH);
     }
 
-    navigate(LOGIN_WITH_REDIRECT_PATH);
+    navigate(loginWithRedirectPath);
   };
 
   return (

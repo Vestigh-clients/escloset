@@ -22,7 +22,7 @@ const CategoryCard = ({ name, slug, imageUrl, ctaLabel }: CategoryCardProps) => 
             loading="lazy"
           />
         ) : (
-          <div className="aspect-[3/4] w-full bg-[rgba(var(--color-primary-rgb),0.08)]" aria-hidden="true" />
+          <div className="aspect-[3/4] w-full bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.08)]" aria-hidden="true" />
         )}
       </div>
       <h3 className="mt-4 font-display text-[18px] font-normal text-foreground leading-snug text-left">{name}</h3>

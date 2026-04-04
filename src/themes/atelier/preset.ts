@@ -38,7 +38,7 @@ export const atelierThemePreset: ThemePreset = {
       secondaryHoverBg: "transparent",
       outlineBg: "transparent",
       outlineFg: "#1A1C1C",
-      outlineBorder: "rgba(227, 189, 199, 0.15)",
+      outlineBorder: "rgba(186, 194, 201, 0.15)",
       outlineHoverBg: "transparent",
       outlineHoverFg: "#B0004A",
       ghostFg: "#B0004A",

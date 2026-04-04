@@ -241,6 +241,9 @@ const mapMaybeEmbeddedRecord = (value: unknown): Record<string, unknown> | null 
   return null;
 };
 
+const asPlainRecord = (value: unknown): Record<string, unknown> | null =>
+  value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
+
 const parseImageObject = (entry: unknown): ProductImageObject | null => {
   if (typeof entry === "string" && entry.trim()) {
     return {
@@ -1045,14 +1048,18 @@ export const updateAdminOrderStatus = async ({
     throw orderError;
   }
 
-  const { error: historyError } = await supabase.from("order_status_history").insert({
-    order_id: order.id,
-    previous_status: order.status,
-    new_status: nextStatus,
-    changed_by: adminEmail,
-    note: trimmedNote || null,
-    notified_customer: notifyCustomer,
-  });
+  const { data: insertedHistory, error: historyError } = await supabase
+    .from("order_status_history")
+    .insert({
+      order_id: order.id,
+      previous_status: order.status,
+      new_status: nextStatus,
+      changed_by: adminEmail,
+      note: trimmedNote || null,
+      notified_customer: false,
+    })
+    .select("id")
+    .single();
 
   if (historyError) {
     throw historyError;
@@ -1064,6 +1071,7 @@ export const updateAdminOrderStatus = async ({
         order_number: order.order_number,
         new_status: nextStatus,
         cancel_reason: nextStatus === "cancelled" && trimmedNote ? trimmedNote : undefined,
+        history_id: insertedHistory?.id,
         store_name: storeConfig.storeName,
         support_email: storeConfig.contact.email,
       },
@@ -1090,9 +1098,39 @@ interface UpdatePaymentStatusInput {
 }
 
 export const updateAdminPaymentStatus = async ({ order, paymentStatus, paymentReference }: UpdatePaymentStatusInput) => {
+  const trimmedPaymentReference = paymentReference.trim();
+
+  if (paymentStatus === "paid") {
+    const { data: commitData, error: commitError } = await supabase.rpc("confirm_paid_order_and_commit_stock", {
+      p_order_number: order.order_number,
+      p_payment_reference: trimmedPaymentReference || null,
+      p_amount_paid: order.total,
+      p_changed_by: "admin_panel",
+    });
+
+    if (commitError) {
+      throw commitError;
+    }
+
+    const commitPayload = asPlainRecord(commitData);
+    if (!commitPayload || commitPayload.ok !== true) {
+      const reason = typeof commitPayload?.reason === "string" ? commitPayload.reason : "payment_commit_failed";
+      throw new Error(reason);
+    }
+
+    await logAdminActivity("order.payment_status_updated", "orders", order.id, {
+      order_number: order.order_number,
+      previous_payment_status: order.payment_status,
+      new_payment_status: paymentStatus,
+      payment_reference: trimmedPaymentReference || null,
+    });
+
+    return;
+  }
+
   const updates: Database["public"]["Tables"]["orders"]["Update"] = {
     payment_status: paymentStatus,
-    payment_reference: paymentReference.trim() || null,
+    payment_reference: trimmedPaymentReference || null,
     updated_at: new Date().toISOString(),
   };
 
@@ -1105,7 +1143,7 @@ export const updateAdminPaymentStatus = async ({ order, paymentStatus, paymentRe
     order_number: order.order_number,
     previous_payment_status: order.payment_status,
     new_payment_status: paymentStatus,
-    payment_reference: paymentReference.trim() || null,
+    payment_reference: trimmedPaymentReference || null,
   });
 };
 
@@ -1116,58 +1154,22 @@ interface CancelOrderInput {
 }
 
 export const cancelAdminOrder = async ({ order, reason, adminEmail }: CancelOrderInput) => {
-  const nowIso = new Date().toISOString();
   const trimmedReason = reason.trim();
 
-  const { error: orderError } = await supabase
-    .from("orders")
-    .update({
-      status: "cancelled",
-      cancelled_at: nowIso,
-      cancel_reason: trimmedReason,
-      updated_at: nowIso,
-    })
-    .eq("id", order.id);
-
-  if (orderError) {
-    throw orderError;
-  }
-
-  for (const item of order.order_items) {
-    const { data: productData, error: productReadError } = await supabase
-      .from("products")
-      .select("stock_quantity")
-      .eq("id", item.product_id)
-      .single();
-
-    if (productReadError) {
-      throw productReadError;
-    }
-
-    const { error: updateProductError } = await supabase
-      .from("products")
-      .update({
-        stock_quantity: safeNumber(productData.stock_quantity) + safeNumber(item.quantity),
-        updated_at: nowIso,
-      })
-      .eq("id", item.product_id);
-
-    if (updateProductError) {
-      throw updateProductError;
-    }
-  }
-
-  const { error: historyError } = await supabase.from("order_status_history").insert({
-    order_id: order.id,
-    previous_status: order.status,
-    new_status: "cancelled",
-    changed_by: adminEmail,
-    note: trimmedReason,
-    notified_customer: false,
+  const { data: cancelData, error: cancelError } = await supabase.rpc("cancel_order_and_restore_stock", {
+    p_order_id: order.id,
+    p_reason: trimmedReason || null,
+    p_changed_by: adminEmail,
   });
 
-  if (historyError) {
-    throw historyError;
+  if (cancelError) {
+    throw cancelError;
+  }
+
+  const cancelPayload = asPlainRecord(cancelData);
+  if (!cancelPayload || cancelPayload.ok !== true) {
+    const reasonCode = typeof cancelPayload?.reason === "string" ? cancelPayload.reason : "cancel_failed";
+    throw new Error(reasonCode);
   }
 
   await logAdminActivity("order.cancelled", "orders", order.id, {

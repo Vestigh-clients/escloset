@@ -1,4 +1,4 @@
-﻿import { Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import SignOutConfirmModal from "@/components/auth/SignOutConfirmModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSignOutWithCartWarning } from "@/hooks/useSignOutWithCartWarning";
@@ -34,7 +34,7 @@ const AccountHome = () => {
           <button
             type="button"
             onClick={requestSignOut}
-            className="rounded-[var(--border-radius)] bg-[var(--color-primary)] px-5 py-[14px] text-left font-body text-[11px] uppercase tracking-[0.14em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)]"
+            className="rounded-[var(--border-radius)] bg-[var(--color-primary)] px-5 py-[14px] text-left font-body text-[11px] uppercase tracking-[0.14em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)]"
           >
             Sign Out
           </button>

@@ -1,11 +1,17 @@
-﻿import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import AuthInputField from "@/components/auth/AuthInputField";
 import AuthPageLayout from "@/components/auth/AuthPageLayout";
-import GoogleOAuthButton from "@/components/auth/GoogleOAuthButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { getEmailError, getRequiredError, sanitizeInputText } from "@/lib/authValidation";
+import {
+  AUTH_MODAL_EMAIL_QUERY_PARAM,
+  AUTH_MODAL_REGISTERED_QUERY_PARAM,
+  buildAuthModalSearch,
+  buildPathWithSearch,
+  clearAuthModalSearch,
+} from "@/lib/authModal";
 import { AuthServiceError, REDIRECT_AFTER_LOGIN_KEY } from "@/services/authService";
 
 type LoginField = "email" | "password";
@@ -23,7 +29,7 @@ const sanitizeRedirectPath = (candidate: string | null): string | null => {
   return value;
 };
 
-const readPostLoginRedirect = (search: string): string => {
+const readPostLoginRedirect = (pathname: string, search: string, hash: string): string => {
   if (typeof window === "undefined") {
     return "/";
   }
@@ -36,14 +42,17 @@ const readPostLoginRedirect = (search: string): string => {
   }
 
   const storedRedirect = sanitizeRedirectPath(raw);
-  return storedRedirect ?? queryRedirect ?? "/";
+  const fallbackSearch = clearAuthModalSearch(search);
+  const fallbackPath = buildPathWithSearch(pathname, fallbackSearch, hash);
+  return storedRedirect ?? queryRedirect ?? fallbackPath;
 };
 
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const locationState = location.state as LoginLocationState | null;
-  const { isAuthenticated, isLoading, login, loginWithGoogle, resendEmailVerification } = useAuth();
+  const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const { isAuthenticated, isLoading, login, resendEmailVerification } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -55,16 +64,15 @@ const Login = () => {
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [isEmailNotVerified, setIsEmailNotVerified] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
   const [isResendingEmail, setIsResendingEmail] = useState(false);
   const [resendMessage, setResendMessage] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      navigate(readPostLoginRedirect(location.search), { replace: true });
+      navigate(readPostLoginRedirect(location.pathname, location.search, location.hash), { replace: true });
     }
-  }, [isLoading, isAuthenticated, location.search, navigate]);
+  }, [isAuthenticated, isLoading, location.hash, location.pathname, location.search, navigate]);
 
   const fieldErrors = useMemo(
     () => ({
@@ -112,7 +120,7 @@ const Login = () => {
         email: sanitizeInputText(email).toLowerCase(),
         password,
       });
-      navigate(readPostLoginRedirect(location.search), { replace: true });
+      navigate(readPostLoginRedirect(location.pathname, location.search, location.hash), { replace: true });
     } catch (error) {
       if (error instanceof AuthServiceError) {
         if (error.code === "email_not_verified") {
@@ -128,23 +136,6 @@ const Login = () => {
       }
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    setGeneralError(null);
-    setResendMessage(null);
-    setIsGoogleSubmitting(true);
-
-    try {
-      await loginWithGoogle();
-    } catch (error) {
-      if (error instanceof AuthServiceError) {
-        setGeneralError(error.message);
-      } else {
-        setGeneralError("Google sign-in could not start. Please try again.");
-      }
-      setIsGoogleSubmitting(false);
     }
   };
 
@@ -173,23 +164,23 @@ const Login = () => {
   };
 
   return (
-    <AuthPageLayout>
+    <AuthPageLayout showPanelImage={false}>
       <h1 className="font-display text-[42px] italic leading-none text-[var(--color-primary)]">Welcome back</h1>
       <p className="mt-3 font-body text-[13px] font-light leading-[1.8] text-[var(--color-muted)]">
         Sign in to continue checkout, manage your account, and track orders.
       </p>
 
-      {locationState?.justRegistered ? (
+      {locationState?.justRegistered || searchParams.get(AUTH_MODAL_REGISTERED_QUERY_PARAM) === "1" ? (
         <p className="mt-4 font-body text-[11px] text-[var(--color-success)]">
-          Account created successfully{locationState.email ? ` for ${locationState.email}` : ""}. Please sign in.
+          Account created successfully
+          {locationState?.email || searchParams.get(AUTH_MODAL_EMAIL_QUERY_PARAM)
+            ? ` for ${locationState?.email ?? searchParams.get(AUTH_MODAL_EMAIL_QUERY_PARAM) ?? ""}`
+            : ""}
+          . Please sign in.
         </p>
       ) : null}
 
-      <div className="mt-8">
-        <GoogleOAuthButton onClick={handleGoogleSignIn} disabled={isSubmitting || isGoogleSubmitting} />
-      </div>
-
-      <form onSubmit={handleSubmit} className="mt-6" noValidate>
+      <form onSubmit={handleSubmit} className="mt-8" noValidate>
         <AuthInputField
           id="login-email"
           label="Email"
@@ -228,7 +219,13 @@ const Login = () => {
 
         <div className="mt-2 text-right">
           <Link
-            to="/auth/forgot-password"
+            to={buildPathWithSearch(
+              location.pathname,
+              buildAuthModalSearch(location.search, {
+                mode: "forgot-password",
+              }),
+              location.hash,
+            )}
             className="font-body text-[11px] text-[var(--color-muted)] transition-colors hover:text-[var(--color-primary)]"
           >
             Forgot your password?
@@ -255,8 +252,8 @@ const Login = () => {
 
         <button
           type="submit"
-          disabled={isSubmitting || isGoogleSubmitting}
-          className="mt-8 w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-[18px] font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-65"
+          disabled={isSubmitting}
+          className="mt-8 w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-[18px] font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)] disabled:cursor-not-allowed disabled:opacity-65"
         >
           {isSubmitting ? "Please wait..." : "Sign In"}
         </button>
@@ -264,7 +261,18 @@ const Login = () => {
 
       <p className="mt-6 font-body text-[12px] text-[var(--color-muted)]">
         Don&apos;t have an account?{" "}
-        <Link to="/auth/register" className="text-[var(--color-primary)] transition-colors hover:text-[var(--color-accent)]">
+        <Link
+          to={buildPathWithSearch(
+            location.pathname,
+            buildAuthModalSearch(location.search, {
+              mode: "register",
+              justRegistered: false,
+              email: null,
+            }),
+            location.hash,
+          )}
+          className="text-[var(--color-primary)] transition-colors hover:text-[var(--color-accent)]"
+        >
           Create account
         </Link>
       </p>

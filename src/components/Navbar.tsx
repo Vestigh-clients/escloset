@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate, useSearchParams } from "react-router-do
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import { useStorefrontConfig } from "@/contexts/StorefrontConfigContext";
+import { buildAuthModalSearch, buildPathWithSearch } from "@/lib/authModal";
 
 type NavItem = {
   key: string;
@@ -115,7 +116,17 @@ const Navbar = () => {
     navigate(query ? `/shop?${query}` : "/shop");
   };
 
-  const accountRoute = isAuthenticated ? "/account" : "/auth/login";
+  const accountRoute = useMemo(() => {
+    if (isAuthenticated) {
+      return "/account";
+    }
+
+    const authSearch = buildAuthModalSearch(location.search, {
+      mode: "login",
+      redirect: "/account",
+    });
+    return buildPathWithSearch(location.pathname, authSearch, location.hash);
+  }, [isAuthenticated, location.hash, location.pathname, location.search]);
 
   return (
     <header className="bg-surface/80 dark:bg-zinc-950/80 docked full-width sticky top-0 z-50 w-full shadow-sm backdrop-blur-xl dark:shadow-none">
@@ -151,7 +162,7 @@ const Navbar = () => {
             />
           </form>
 
-          <div className="flex items-center gap-3 sm:gap-4 text-[#D81B60] dark:text-[#fce4ec]">
+          <div className="flex items-center gap-3 sm:gap-4 text-[#D81B60] dark:text-[#e9ecef]">
             {isAdmin ? (
               <Link
                 to="/admin"

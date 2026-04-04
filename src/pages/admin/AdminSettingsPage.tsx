@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { storeKeyPrefix } from "@/config/store.config";
 import { clearTestOrders, fetchSiteSettings, saveSiteSetting, buildFullDataExportZip, type SiteSettingRow } from "@/services/adminManagementService";
@@ -353,7 +353,7 @@ const AdminSettingsPage = () => {
               onClick={() => setSetting("review_moderation_required", isReviewModerationRequired ? "false" : "true")}
               className={`mt-3 rounded-[var(--border-radius)] border px-4 py-2 font-body text-[10px] uppercase tracking-[0.1em] transition-colors ${
                 isReviewModerationRequired
-                  ? "border-[var(--color-accent)] bg-[rgba(var(--color-accent-rgb),0.14)] text-[var(--color-accent)]"
+                  ? "border-[var(--color-accent)] bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.14)] text-[var(--color-accent)]"
                   : "border-[var(--color-border)] bg-transparent text-[var(--color-muted)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
               }`}
             >
@@ -387,7 +387,7 @@ const AdminSettingsPage = () => {
             type="button"
             onClick={() => void saveSection("general")}
             disabled={sectionSaving.general}
-            className="settings-save-button rounded-[var(--border-radius)] bg-[var(--color-primary)] px-8 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-65"
+            className="settings-save-button rounded-[var(--border-radius)] bg-[var(--color-primary)] px-8 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)] disabled:cursor-not-allowed disabled:opacity-65"
           >
             {sectionSaving.general ? "Saving..." : "Save General"}
           </button>
@@ -438,7 +438,7 @@ const AdminSettingsPage = () => {
             type="button"
             onClick={() => void saveSection("orders")}
             disabled={sectionSaving.orders}
-            className="settings-save-button rounded-[var(--border-radius)] bg-[var(--color-primary)] px-8 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-65"
+            className="settings-save-button rounded-[var(--border-radius)] bg-[var(--color-primary)] px-8 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)] disabled:cursor-not-allowed disabled:opacity-65"
           >
             {sectionSaving.orders ? "Saving..." : "Save Orders"}
           </button>
@@ -486,7 +486,7 @@ const AdminSettingsPage = () => {
             type="button"
             onClick={() => void saveSection("notifications")}
             disabled={sectionSaving.notifications}
-            className="settings-save-button rounded-[var(--border-radius)] bg-[var(--color-primary)] px-8 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-65"
+            className="settings-save-button rounded-[var(--border-radius)] bg-[var(--color-primary)] px-8 py-3 font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)] disabled:cursor-not-allowed disabled:opacity-65"
           >
             {sectionSaving.notifications ? "Saving..." : "Save Notifications"}
           </button>
@@ -521,7 +521,7 @@ const AdminSettingsPage = () => {
         ) : (
           <div className="w-full max-w-[560px]">
             <p className="mb-3 font-body text-[11px] text-[var(--color-muted)]">
-              Type CONFIRM to delete all orders where customer email contains &apos;test&apos; or order total is GH₵0.00
+              Type CONFIRM to delete all orders where customer email contains &apos;test&apos; or order total is GH?0.00
             </p>
             <input
               value={confirmValue}

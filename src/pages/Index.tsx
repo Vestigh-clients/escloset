@@ -71,31 +71,22 @@ const Index = () => {
   );
 
   return (
-    <div className="bg-[#F9F9F9] font-notoSerif text-[#1A1C1C] selection:bg-[#fce4ec] selection:text-[#3e001f]">
+    <div className="bg-[#F9F9F9] font-notoSerif text-[#1A1C1C] selection:bg-[#e9ecef] selection:text-[#3e001f]">
       <main>
         <section className="relative flex h-[921px] items-center overflow-hidden bg-[#F3F3F4]">
-          <div className="absolute inset-0 grid grid-cols-1 md:grid-cols-2">
-            <div className="relative overflow-hidden">
-              <img
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3f9jYXGfvt1P6Lgk1hbWAdxbZcUmvY80TyZ_aa1CBmBxavQhPcJJEfwq-krnJWkdUrPm2NvB9vD_tAu0VQ7fQQf55UvpF8vrB_3NVgOhSfXko4nyD56yxdnBq2K3O3ECsg784u7DuAchGjhHKHWeGquXRpXP7yRnmEQcowWdvL9IbQMXsC2TO-FEttRIejDjl3lvvCt8sEhA1201Ri4HOrtY8cSDUn_Iv1_5qedhC09dI6UeF7MMorilAj_KCdDZ7-KA9sRJVmpQ"
-                alt="Editorial male model in charcoal grey suit"
-                className="h-full w-full object-cover"
-              />
-            </div>
-            <div className="relative hidden overflow-hidden md:block">
-              <img
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGPVas7T5HsblTTLyVgGyZteedwrjIUHqR1_j0xaIBnzcoR2eATLvu6VDWcrbqTZHgMQVMdL93i2eb5VhRbKBUhgl5BoDgn5TXdqeYmQwB3vIpFAM69Tz2O3SzCzvGc8JbZVi40arj1f8YHCE1u8kbrDX2zS4StMxWE12cbwQLnDJtcaG19dLPBaxDzahs57x1azeuwKKPte76Qz9Qjre73q5PyKAUCYxlbf2mIENv4d1UD8qiXIKCEMuZfHybt5c9t8o6dWUrnI4"
-                alt="Editorial female model in vibrant pink silk"
-                className="h-full w-full object-cover"
-              />
-            </div>
+          <div className="absolute inset-0 overflow-hidden">
+            <img
+              src="/assets/homepage-hero.jpg"
+              alt="Stylish couple in coordinated modern fashion"
+              className="h-full w-full object-cover object-[center_20%]"
+            />
           </div>
 
           <div className="absolute inset-0 bg-gradient-to-r from-[#F9F9F9]/88 via-[#F9F9F9]/42 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#F9F9F9]/64 via-transparent to-transparent" />
 
-          <div className="relative z-10 mx-auto w-full max-w-[1536px] px-4 sm:px-8">
-            <div className="max-w-2xl bg-[rgba(249,249,249,0.86)] p-7 shadow-[0_20px_45px_rgba(26,28,28,0.08)] backdrop-blur-[12px] sm:p-10 md:ml-4">
+          <div className="relative z-10 mx-auto w-full max-w-[1536px] self-end px-4 pb-6 sm:px-8 sm:pb-10 md:pb-14">
+            <div className="max-w-lg rounded-2xl border border-[#e3bdc7] bg-[rgba(249,249,249,0.86)] p-5 shadow-[0_20px_45px_rgba(26,28,28,0.08)] backdrop-blur-[12px] sm:max-w-xl sm:p-6 md:ml-4">
               <h1 className="font-notoSerif text-[2.7rem] font-bold leading-[1.05] text-[#1A1C1C] sm:text-[3.5rem]">
                 Your Wardrobe,
                 <br />
@@ -264,7 +255,7 @@ const Index = () => {
           <div className="mx-auto max-w-[1280px] px-4 sm:px-8">
             <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-12">
               <div className="relative">
-                <div className="absolute -left-10 -top-10 h-64 w-64 bg-[#fce4ec]/80 blur-3xl" />
+                <div className="absolute -left-10 -top-10 h-64 w-64 bg-[#e9ecef]/80 blur-3xl" />
                 <img
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuBEpLhqUZzVZo7P9fGAgmXdUNjlST_StPhgD8GA_wSTggUVM-SQjKIhFwS2gAMIuNLc7IqhqLAXXkTX-ia8kUSOML4NL1bpHEN5L9v13ffnixOfizMRKJMz6TWblOtZa6A-z-ISdP5tJqRmYhEiRJFDgxo5xNGN1gH2OmSSy7bNSCsoHPnpV-ZGOL-I6mWsF1NfpFYy5GU7k2aoRW28Ull-M5vxvN5lfMkpvI8-G_IBUoYKNeiZFKabJzh0d3eTfUpOR3oSAcHj6Lk"
                   alt="Luxury Showroom"
@@ -279,18 +270,18 @@ const Index = () => {
 
                 <div className="mt-6 space-y-4 text-base leading-relaxed text-[#5E5E5E] md:text-lg">
                   <p>
-                    At E&S Closet, we believe that luxury shouldn&apos;t be an unreachable dream. Born in the heart of
-                    Ghana, our mission is to redefine the digital atelier experience for the modern African consumer.
+                    E&S Closet was created with the idea that great style should feel both beautiful and attainable. We believe fashion should inspire confidence, reflect individuality, and make every woman feel her best without compromise.
                   </p>
                   <p>
-                    We meticulously curate high-end, contemporary pieces that blend global trends with local
-                    sophistication. Every garment in our closet is a testament to quality craftsmanship and timeless
-                    style, brought to you at prices that respect your lifestyle.
+                   Based in Ghana, our brand is built around carefully selected styles that bring together modern trends, elegance, and effortless sophistication. Each collection is chosen for women who appreciate fashion that feels refined, confident, and easy to wear.
+                  </p>
+                  <p>
+                    At E&S Closet, we are more than just a store. We are a destination for women who want to look polished, feel empowered, and enjoy fashion that fits both their taste and their lifestyle.
                   </p>
                   <div className="flex items-center gap-4 pt-4">
                     <span className="h-[2px] w-12 bg-[#D81B60]" />
                     <span className="font-manrope text-sm font-semibold uppercase tracking-[0.18em] text-[#B0004A]">
-                      Established 2024
+                      Established 2026
                     </span>
                   </div>
                 </div>
@@ -300,9 +291,6 @@ const Index = () => {
         </section>
       </main>
 
-      <button className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center bg-[rgba(249,249,249,0.8)] text-[#D81B60] backdrop-blur-[20px] md:hidden">
-        <span className="material-symbols-outlined">shopping_bag</span>
-      </button>
     </div>
   );
 };

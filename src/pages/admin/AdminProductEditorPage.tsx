@@ -1050,7 +1050,7 @@ const AdminProductEditorPage = () => {
     }
 
     element.style.transition = "none";
-    element.style.background = "rgba(var(--color-accent-rgb),0.15)";
+    element.style.background = "rgba(var(--color-navbar-solid-foreground-rgb),0.15)";
 
     window.setTimeout(() => {
       element.style.transition = "background 0.6s ease";
@@ -1624,7 +1624,7 @@ const AdminProductEditorPage = () => {
   }
 
   return (
-    <div className="admin-page">
+    <div className="admin-page pb-28 md:pb-0">
       <div className="admin-page-header mb-6 flex flex-wrap items-start justify-between gap-3">
         <h1 className="admin-page-title font-display text-[34px] italic text-[var(--color-primary)]">
           {isEditMode ? "Edit Product" : "Add Product"}
@@ -1649,7 +1649,7 @@ const AdminProductEditorPage = () => {
                     ? "cursor-not-allowed opacity-65"
                     : aiDisabledByName
                       ? "cursor-not-allowed opacity-40"
-                      : "hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)]"
+                      : "hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)]"
                 }`}
               >
                 {aiButtonLabel}
@@ -1945,11 +1945,11 @@ const AdminProductEditorPage = () => {
                           {optionType.values.map((optionValue) => (
                             <span
                               key={optionValue.local_id}
-                              className="inline-flex items-center gap-1 rounded-[var(--border-radius)] border border-[var(--color-border)] bg-[rgba(var(--color-primary-rgb),0.06)] px-2.5 py-1 font-body text-[11px] text-[var(--color-primary)]"
+                              className="inline-flex items-center gap-1 rounded-[var(--border-radius)] border border-[var(--color-border)] bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.06)] px-2.5 py-1 font-body text-[11px] text-[var(--color-primary)]"
                             >
                               {optionValue.color_hex ? (
                                 <span
-                                  className="inline-block h-2 w-2 rounded-full border border-[rgba(var(--color-primary-rgb),0.1)]"
+                                  className="inline-block h-2 w-2 rounded-full border border-[rgba(var(--color-navbar-solid-foreground-rgb),0.1)]"
                                   style={{ backgroundColor: optionValue.color_hex }}
                                 />
                               ) : null}
@@ -1992,7 +1992,7 @@ const AdminProductEditorPage = () => {
               <button
                 type="button"
                 onClick={onGenerateVariants}
-                className="rounded-[var(--border-radius)] border border-[var(--color-accent)] bg-transparent px-5 py-2 font-body text-[10px] uppercase tracking-[0.1em] text-[var(--color-accent)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)]"
+                className="rounded-[var(--border-radius)] border border-[var(--color-accent)] bg-transparent px-5 py-2 font-body text-[10px] uppercase tracking-[0.1em] text-[var(--color-accent)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)]"
               >
                 Generate Variants
               </button>
@@ -2027,7 +2027,7 @@ const AdminProductEditorPage = () => {
                     return (
                       <div
                         key={variant.local_id}
-                        className="grid min-w-[780px] grid-cols-[1.6fr_80px_130px_1.2fr_90px_85px] items-center gap-3 border-b border-[var(--color-border)] py-3 font-body text-[13px] text-[var(--color-primary)] transition-colors hover:bg-[rgba(var(--color-accent-rgb),0.03)]"
+                        className="grid min-w-[780px] grid-cols-[1.6fr_80px_130px_1.2fr_90px_85px] items-center gap-3 border-b border-[var(--color-border)] py-3 font-body text-[13px] text-[var(--color-primary)] transition-colors hover:bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.03)]"
                       >
                         <div>
                           <input
@@ -2042,11 +2042,11 @@ const AdminProductEditorPage = () => {
                               return (
                                 <span
                                   key={[variant.local_id, optionSelection.option_type_local_id, optionSelection.option_value_local_id].join("-")}
-                                  className="inline-flex items-center gap-1 rounded-[var(--border-radius)] border border-[var(--color-surface)] bg-[rgba(var(--color-primary-rgb),0.04)] px-2 py-0.5 font-body text-[9px] text-[var(--color-muted)]"
+                                  className="inline-flex items-center gap-1 rounded-[var(--border-radius)] border border-[var(--color-surface)] bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.04)] px-2 py-0.5 font-body text-[9px] text-[var(--color-muted)]"
                                 >
                                   {optionMeta.optionValue.color_hex ? (
                                     <span
-                                      className="inline-block h-2 w-2 rounded-full border border-[rgba(var(--color-primary-rgb),0.1)]"
+                                      className="inline-block h-2 w-2 rounded-full border border-[rgba(var(--color-navbar-solid-foreground-rgb),0.1)]"
                                       style={{ backgroundColor: optionMeta.optionValue.color_hex }}
                                     />
                                   ) : null}
@@ -2298,7 +2298,7 @@ const AdminProductEditorPage = () => {
                 {tags.map((tag) => (
                   <span
                     key={tag}
-                    className="inline-flex items-center gap-1 rounded-[var(--border-radius)] border border-[var(--color-border)] bg-[rgba(var(--color-primary-rgb),0.06)] px-2.5 py-1 font-body text-[11px] text-[var(--color-primary)]"
+                    className="inline-flex items-center gap-1 rounded-[var(--border-radius)] border border-[var(--color-border)] bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.06)] px-2.5 py-1 font-body text-[11px] text-[var(--color-primary)]"
                   >
                     {tag}
                     <button type="button" onClick={() => setTags((current) => current.filter((entry) => entry !== tag))}>
@@ -2436,7 +2436,7 @@ const AdminProductEditorPage = () => {
               <button
                 type="button"
                 onClick={onRemoveQueuedPreviewImage}
-                className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-[var(--border-radius)] bg-[rgba(var(--color-primary-rgb),0.78)] font-body text-[12px] leading-none text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-danger)]"
+                className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-[var(--border-radius)] bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.78)] font-body text-[12px] leading-none text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-danger)]"
                 aria-label="Remove queued image"
               >
                 &times;
@@ -2455,7 +2455,7 @@ const AdminProductEditorPage = () => {
                       Primary
                     </span>
                   ) : null}
-                  <div className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-2 bg-[rgba(var(--color-primary-rgb),0.45)] py-1 text-white">
+                  <div className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-2 bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.45)] py-1 text-white">
                     <button type="button" onClick={() => void onReorderImage(index, "left")} disabled={index === 0}>
                       &#8592;
                     </button>
@@ -2525,7 +2525,7 @@ const AdminProductEditorPage = () => {
           </label>
 
           {!hasVariants && variantToggleWarning ? (
-            <div className="mt-2 rounded-[var(--border-radius)] border border-[var(--color-border)] bg-[rgba(var(--color-accent-rgb),0.08)] px-4 py-3">
+            <div className="mt-2 rounded-[var(--border-radius)] border border-[var(--color-border)] bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.08)] px-4 py-3">
               <p className="font-body text-[11px] text-[var(--color-accent)]">
                 Turning this off will not delete existing variants but stock will no longer be tracked per variant.
               </p>
@@ -2624,7 +2624,7 @@ const AdminProductEditorPage = () => {
             type="button"
             onClick={() => void save(false)}
             disabled={isSaving}
-            className="w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-5 py-4 font-body text-[11px] uppercase tracking-[0.15em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-65"
+            className="hidden w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-5 py-4 font-body text-[11px] uppercase tracking-[0.15em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)] disabled:cursor-not-allowed disabled:opacity-65 md:block"
           >
             {isSaving ? "Saving..." : isEditMode ? "Update Product" : "Save Product"}
           </button>
@@ -2688,6 +2688,17 @@ const AdminProductEditorPage = () => {
             </div>
           ) : null}
         </div>
+      </div>
+
+      <div className="fixed inset-x-4 bottom-4 z-[210] md:hidden">
+        <button
+          type="button"
+          onClick={() => void save(false)}
+          disabled={isSaving}
+          className="w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-5 py-4 font-body text-[11px] uppercase tracking-[0.15em] text-[var(--color-secondary)] shadow-[0_12px_30px_rgba(26,28,28,0.24)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)] disabled:cursor-not-allowed disabled:opacity-65"
+        >
+          {isSaving ? "Saving..." : isEditMode ? "Update Product" : "Add Product"}
+        </button>
       </div>
     </div>
   );

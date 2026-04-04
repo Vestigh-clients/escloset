@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   assignCustomerRole,
@@ -28,7 +28,7 @@ const statusBadgeClass: Record<string, string> = {
   pending: "border border-[var(--color-border)] text-[var(--color-muted)]",
   confirmed: "border border-[var(--color-primary)] text-[var(--color-primary)]",
   processing: "border border-[var(--color-accent)] text-[var(--color-accent)]",
-  shipped: "bg-[var(--color-accent)] text-[var(--color-primary)]",
+  shipped: "bg-[var(--color-accent)] text-[var(--color-secondary)]",
   delivered: "bg-[var(--color-primary)] text-[var(--color-secondary)]",
   cancelled: "border border-[var(--color-danger)] text-[var(--color-danger)]",
 };
@@ -298,7 +298,7 @@ const AdminCustomerDetailPage = () => {
                           <tr
                             key={order.order_number}
                             onClick={() => navigate(`/admin/orders/${order.order_number}`)}
-                            className="cursor-pointer border-b border-[var(--color-surface-strong)] transition-colors hover:bg-[rgba(var(--color-accent-rgb),0.04)]"
+                            className="cursor-pointer border-b border-[var(--color-surface-strong)] transition-colors hover:bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.04)]"
                           >
                             <td className="px-2 py-4 pl-0 font-body text-[11px] uppercase tracking-[0.08em] text-[var(--color-accent)]">{order.order_number}</td>
                             <td className="px-2 py-4 font-body text-[12px] text-[var(--color-primary)]">{order.items_count}</td>
@@ -426,7 +426,7 @@ const AdminCustomerDetailPage = () => {
                     type="button"
                     onClick={() => void saveNote()}
                     disabled={isSavingNote}
-                    className="mt-4 rounded-[var(--border-radius)] bg-[var(--color-primary)] px-6 py-2.5 font-body text-[10px] uppercase tracking-[0.1em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-65"
+                    className="mt-4 rounded-[var(--border-radius)] bg-[var(--color-primary)] px-6 py-2.5 font-body text-[10px] uppercase tracking-[0.1em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)] disabled:cursor-not-allowed disabled:opacity-65"
                   >
                     {isSavingNote ? "Saving..." : "Save Note"}
                   </button>
@@ -516,7 +516,7 @@ const AdminCustomerDetailPage = () => {
                   type="button"
                   onClick={() => void updateRole()}
                   disabled={isUpdatingRole || selectedRole === currentRole}
-                  className="mt-4 w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-3 font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-65"
+                  className="mt-4 w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-4 py-3 font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)] disabled:cursor-not-allowed disabled:opacity-65"
                 >
                   {isUpdatingRole ? "Updating..." : "Update Role"}
                 </button>

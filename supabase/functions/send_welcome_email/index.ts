@@ -231,6 +231,7 @@ Deno.serve(async (request: Request) => {
       `Unsubscribe: ${snapshot.identity.unsubscribeUrl}`,
       `You're receiving this because you created an account at ${normalizedSiteUrl}`,
     ].join("\n");
+    const senderEmailAddress = safeString(Deno.env.get("WELCOME_FROM_EMAIL_ADDRESS")) || snapshot.identity.supportEmail;
 
     const resendResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -241,7 +242,7 @@ Deno.serve(async (request: Request) => {
       body: JSON.stringify({
         from: formatFromEmail(
           snapshot.identity.storeName,
-          Deno.env.get("WELCOME_FROM_EMAIL_ADDRESS") ?? "hello@store.com",
+          senderEmailAddress,
         ),
         to: [customerEmail],
         reply_to: snapshot.identity.supportEmail,
