@@ -1,3 +1,4 @@
+import { Plus, Search, Sparkles, SlidersHorizontal, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -11,7 +12,169 @@ import { formatCurrency } from "@/lib/adminFormatting";
 
 const PAGE_SIZE = 20;
 const defaultCategoryTabs = [{ label: "All", slug: "" }];
+const availabilityTabs = [
+  { label: "All", value: "all" },
+  { label: "Available", value: "available" },
+  { label: "Unavailable", value: "unavailable" },
+] as const;
 
+const truncateSkuByHalf = (sku: string | null) => {
+  const value = sku?.trim();
+  if (!value) return "No SKU";
+  const keepLength = Math.max(2, Math.ceil(value.length * 0.5));
+  return `${value.slice(0, keepLength)}...`;
+};
+
+const truncateNameByHalf = (name: string) => {
+  const value = name.trim();
+  if (!value) return "Untitled product";
+  const keepLength = Math.max(2, Math.ceil(value.length * 0.5));
+  return `${value.slice(0, keepLength)}...`;
+};
+
+// ── Bottom sheet for mobile filters ─────────────────────────────────────────
+const FilterSheet = ({
+  open,
+  onClose,
+  availability,
+  setAvailability,
+  categorySlug,
+  setCategorySlug,
+  categoryTabs,
+  setPage,
+}: {
+  open: boolean;
+  onClose: () => void;
+  availability: "all" | "available" | "unavailable";
+  setAvailability: (v: "all" | "available" | "unavailable") => void;
+  categorySlug: string;
+  setCategorySlug: (v: string) => void;
+  categoryTabs: Array<{ label: string; slug: string }>;
+  setPage: (p: number) => void;
+}) => {
+  // close on Escape
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [open, onClose]);
+
+  // lock body scroll while open
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
+
+  const activeFilterCount =
+    (availability !== "all" ? 1 : 0) + (categorySlug !== "" ? 1 : 0);
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        className={`fixed inset-0 z-40 bg-black/40 transition-opacity duration-300 lg:hidden ${
+          open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+      />
+
+      {/* Sheet */}
+      <div
+        className={`fixed bottom-0 left-0 right-0 z-50 rounded-t-[28px] bg-white shadow-[0_-8px_40px_rgba(0,0,0,0.12)] transition-transform duration-300 ease-out lg:hidden ${
+          open ? "translate-y-0" : "translate-y-full"
+        }`}
+        style={{ maxHeight: "80dvh", overflowY: "auto" }}
+      >
+        {/* Drag handle */}
+        <div className="flex justify-center pt-3 pb-1">
+          <div className="h-1 w-10 rounded-full bg-[rgba(var(--color-primary-rgb),0.15)]" />
+        </div>
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-3 border-b border-[rgba(var(--color-primary-rgb),0.08)]">
+          <p className="font-body text-[14px] font-semibold text-[var(--color-navbar-solid-foreground)]">Filters</p>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--color-muted)] hover:bg-[rgba(var(--color-primary-rgb),0.06)]"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="px-5 py-4 space-y-5">
+          {/* Availability */}
+          <div>
+            <p className="font-body text-[10px] uppercase tracking-[0.18em] text-[var(--color-primary)] mb-2.5">Availability</p>
+            <div className="flex flex-wrap gap-2">
+              {availabilityTabs.map((opt) => {
+                const active = availability === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => { setAvailability(opt.value); setPage(1); }}
+                    className={`rounded-full border px-4 py-2 font-body text-[10px] uppercase tracking-[0.12em] transition-colors ${
+                      active ? "text-white" : "text-[var(--color-muted)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+                    }`}
+                    style={{
+                      borderColor: active ? "var(--color-primary)" : "rgba(var(--color-primary-rgb),0.16)",
+                      background: active ? "var(--color-primary)" : "transparent",
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Categories */}
+          <div>
+            <p className="font-body text-[10px] uppercase tracking-[0.18em] text-[var(--color-primary)] mb-2.5">Categories</p>
+            <div className="flex flex-wrap gap-2">
+              {categoryTabs.map((tab) => {
+                const active = categorySlug === tab.slug;
+                return (
+                  <button
+                    key={tab.slug || "all"}
+                    type="button"
+                    onClick={() => { setCategorySlug(tab.slug); setPage(1); }}
+                    className={`rounded-full border px-4 py-2 font-body text-[10px] uppercase tracking-[0.12em] transition-colors ${
+                      active ? "text-white" : "text-[var(--color-muted)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+                    }`}
+                    style={{
+                      borderColor: active ? "var(--color-primary)" : "rgba(var(--color-primary-rgb),0.16)",
+                      background: active ? "var(--color-primary)" : "transparent",
+                    }}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Done button */}
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full rounded-full py-3 font-body text-[11px] uppercase tracking-[0.14em] text-white"
+            style={{ background: "var(--color-primary)" }}
+          >
+            Done{activeFilterCount > 0 ? ` · ${activeFilterCount} active` : ""}
+          </button>
+        </div>
+
+        {/* Safe-area spacer */}
+        <div className="h-4" />
+      </div>
+    </>
+  );
+};
+
+// ── Main page ────────────────────────────────────────────────────────────────
 const AdminProductsPage = () => {
   const navigate = useNavigate();
   const [searchInput, setSearchInput] = useState("");
@@ -20,6 +183,7 @@ const AdminProductsPage = () => {
   const [availability, setAvailability] = useState<"all" | "available" | "unavailable">("all");
   const [page, setPage] = useState(1);
   const [categoryTabs, setCategoryTabs] = useState<Array<{ label: string; slug: string }>>(defaultCategoryTabs);
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
 
   const [rows, setRows] = useState<AdminProductListItem[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -32,15 +196,11 @@ const AdminProductsPage = () => {
       setSearchTerm(searchInput.trim());
       setPage(1);
     }, 300);
-
-    return () => {
-      window.clearTimeout(timeout);
-    };
+    return () => window.clearTimeout(timeout);
   }, [searchInput]);
 
   useEffect(() => {
     let isMounted = true;
-
     const loadProducts = async () => {
       setIsLoading(true);
       setLoadError(null);
@@ -52,7 +212,6 @@ const AdminProductsPage = () => {
           page,
           pageSize: PAGE_SIZE,
         });
-
         if (!isMounted) return;
         setRows(result.rows);
         setTotalCount(result.totalCount);
@@ -62,51 +221,32 @@ const AdminProductsPage = () => {
         setTotalCount(0);
         setLoadError("Unable to load products.");
       } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+        if (isMounted) setIsLoading(false);
       }
     };
-
     void loadProducts();
-
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, [searchTerm, categorySlug, availability, page]);
 
   useEffect(() => {
     let isMounted = true;
-
     const loadCategoryTabs = async () => {
       try {
         const categories = await fetchAdminCategories();
         if (!isMounted) return;
-
         const tabs = [
           ...defaultCategoryTabs,
-          ...categories.map((category) => ({
-            label: category.name,
-            slug: category.slug,
-          })),
+          ...categories.map((c) => ({ label: c.name, slug: c.slug })),
         ];
-
         setCategoryTabs(tabs);
-        setCategorySlug((currentSlug) => {
-          if (!currentSlug) return currentSlug;
-          return tabs.some((tab) => tab.slug === currentSlug) ? currentSlug : "";
-        });
+        setCategorySlug((cur) => (!cur ? cur : tabs.some((t) => t.slug === cur) ? cur : ""));
       } catch {
         if (!isMounted) return;
         setCategoryTabs(defaultCategoryTabs);
       }
     };
-
     void loadCategoryTabs();
-
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, []);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
@@ -115,10 +255,12 @@ const AdminProductsPage = () => {
     const pages: number[] = [];
     const start = Math.max(1, page - 2);
     const end = Math.min(totalPages, start + 4);
-    for (let current = start; current <= end; current += 1) {
-      pages.push(current);
-    }
+    for (let cur = start; cur <= end; cur++) pages.push(cur);
     return pages;
+  }, [page, totalPages]);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
   }, [page, totalPages]);
 
   const onDelete = async (product: AdminProductListItem) => {
@@ -126,28 +268,14 @@ const AdminProductsPage = () => {
     try {
       const usageCount = await fetchProductOrderCount(product.id);
       if (usageCount > 0) {
-        window.alert(
-          `This product has ${usageCount} orders and cannot be deleted. Set it to unavailable instead.`,
-        );
+        window.alert(`This product has ${usageCount} orders and cannot be deleted. Set it to unavailable instead.`);
         return;
       }
-
       const shouldDelete = window.confirm(`Delete ${product.name}? This cannot be undone.`);
-      if (!shouldDelete) {
-        return;
-      }
-
-      await deleteAdminProduct(product.id, {
-        name: product.name,
-        slug: product.slug,
-      });
-
+      if (!shouldDelete) return;
+      await deleteAdminProduct(product.id, { name: product.name, slug: product.slug });
       const refreshed = await fetchAdminProducts({
-        searchTerm,
-        categorySlug: categorySlug || undefined,
-        availability,
-        page,
-        pageSize: PAGE_SIZE,
+        searchTerm, categorySlug: categorySlug || undefined, availability, page, pageSize: PAGE_SIZE,
       });
       setRows(refreshed.rows);
       setTotalCount(refreshed.totalCount);
@@ -156,343 +284,434 @@ const AdminProductsPage = () => {
     }
   };
 
-  const openEditor = (productId: string) => {
-    navigate(`/admin/products/${productId}/edit`);
-  };
+  const openEditor = (productId: string) => navigate(`/admin/products/${productId}/edit`);
+
+  const activeFilterCount =
+    (availability !== "all" ? 1 : 0) + (categorySlug !== "" ? 1 : 0);
 
   return (
-    <div className="admin-page">
-      <div className="admin-page-header">
-        <h1 className="admin-page-title font-display text-[36px] italic text-[var(--color-primary)]">Products</h1>
-        <div className="admin-page-actions flex flex-wrap items-center gap-2">
-          <Link
-            to="/admin/products/add-with-ai"
-            className="rounded-[var(--border-radius)] border border-[var(--color-accent)] bg-transparent px-6 py-3 text-center font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-accent)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)]"
-          >
-            Add with AI
-          </Link>
-          <Link
-            to="/admin/products/new"
-            className="rounded-[var(--border-radius)] bg-[var(--color-primary)] px-7 py-3 text-center font-body text-[11px] uppercase tracking-[0.1em] text-[var(--color-secondary)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)]"
-          >
-            Add New Product
-          </Link>
-        </div>
-      </div>
+    <div className="admin-page lux-page-enter overflow-visible min-h-[calc(100dvh-3.5rem)] md:min-h-[calc(100dvh-4rem)] flex flex-col">
+      <div className="mx-auto flex w-full max-w-[1120px] flex-1 flex-col text-left">
 
-      <div className="mb-5 flex flex-wrap items-end gap-4 border-b border-[var(--color-border)] pb-5">
-        <div className="admin-search-wrap w-full max-w-[280px]">
-          <input
-            value={searchInput}
-            onChange={(event) => setSearchInput(event.target.value)}
-            placeholder="Search by name or SKU..."
-            className="w-full border-0 border-b border-[var(--color-border)] bg-transparent px-0 pb-2 font-body text-[12px] text-[var(--color-primary)] outline-none placeholder:text-[var(--color-muted-soft)] focus:border-[var(--color-primary)]"
-          />
+        {/* ── Page header ──────────────────────────────────────────────────────── */}
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="font-body text-[11px] uppercase tracking-[0.22em] text-[var(--color-primary)]">Catalog</p>
+            <h1 className="mt-3 font-display text-[38px] italic leading-[1.04] text-[var(--color-navbar-solid-foreground)] sm:text-[50px]">
+              Products
+            </h1>
+            <p className="mt-2 max-w-[680px] font-body text-[13px] leading-[1.8] text-[var(--color-muted)] sm:text-[14px]">
+              Browse inventory, filter quickly, and jump into editing with the same smooth admin flow as Add with AI.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              to="/admin/products/add-with-ai"
+              className="inline-flex items-center gap-2 rounded-full border px-5 py-2.5 font-body text-[11px] uppercase tracking-[0.12em] transition-colors hover:bg-[rgba(var(--color-primary-rgb),0.08)]"
+              style={{
+                borderColor: "rgba(var(--color-primary-rgb),0.2)",
+                color: "var(--color-primary)",
+                background: "rgba(var(--color-primary-rgb),0.04)",
+              }}
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              Add with AI
+            </Link>
+            <Link
+              to="/admin/products/new"
+              className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 font-body text-[11px] uppercase tracking-[0.12em] text-white transition-opacity hover:opacity-90"
+              style={{ background: "var(--color-primary)" }}
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Add New Product
+            </Link>
+          </div>
         </div>
 
-        <div className="admin-filter-pills flex flex-wrap gap-2">
-          {categoryTabs.map((tab) => {
-            const isActive = categorySlug === tab.slug;
-            return (
+        {/* ── Filter card ───────────────────────────────────────────────────────
+            Desktop: search + availability + categories
+            Mobile:  search + "Filter" button that opens the bottom sheet
+        ────────────────────────────────────────────────────────────────────── */}
+        <section
+          className="mt-7 rounded-[28px] border bg-white p-4 shadow-[0_14px_48px_rgba(26,28,28,0.06)] sm:p-5"
+          style={{ borderColor: "rgba(var(--color-primary-rgb),0.15)" }}
+        >
+          <div className="flex flex-col gap-4">
+
+            {/* Search row */}
+            <div className="flex items-center gap-2 lg:justify-between">
+              {/* Search input — full width on mobile, capped on desktop */}
+              <label className="relative block flex-1 lg:max-w-[360px]">
+                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-primary)]" />
+                <input
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  placeholder="Search by name or SKU..."
+                  className="h-11 w-full rounded-full border bg-white pl-10 pr-4 font-body text-[13px] text-[var(--color-navbar-solid-foreground)] outline-none transition-colors placeholder:text-[var(--color-muted-soft)] focus:border-[var(--color-primary)]"
+                  style={{ borderColor: "rgba(var(--color-primary-rgb),0.18)" }}
+                />
+              </label>
+
+              {/* Mobile: Filter button */}
               <button
-                key={tab.slug || "all"}
                 type="button"
-                onClick={() => {
-                  setCategorySlug(tab.slug);
-                  setPage(1);
-                }}
-                className={`rounded-[var(--border-radius)] border px-4 py-2 font-body text-[10px] uppercase tracking-[0.1em] transition-colors ${
-                  isActive
-                    ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-[var(--color-secondary)]"
-                    : "border-[var(--color-border)] text-[var(--color-muted)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+                onClick={() => setFilterSheetOpen(true)}
+                className="relative flex h-11 shrink-0 items-center gap-2 rounded-full border px-4 font-body text-[11px] uppercase tracking-[0.12em] text-[var(--color-primary)] transition-colors hover:bg-[rgba(var(--color-primary-rgb),0.06)] lg:hidden"
+                style={{ borderColor: "rgba(var(--color-primary-rgb),0.2)" }}
+              >
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+                Filter
+                {activeFilterCount > 0 && (
+                  <span
+                    className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full font-body text-[9px] text-white"
+                    style={{ background: "var(--color-primary)" }}
+                  >
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Desktop: Availability pills */}
+              <div className="hidden flex-wrap gap-2 lg:flex">
+                {availabilityTabs.map((opt) => {
+                  const active = availability === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => { setAvailability(opt.value); setPage(1); }}
+                      className={`rounded-full border px-4 py-2 font-body text-[10px] uppercase tracking-[0.12em] transition-colors ${
+                        active ? "text-white" : "text-[var(--color-muted)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+                      }`}
+                      style={{
+                        borderColor: active ? "var(--color-primary)" : "rgba(var(--color-primary-rgb),0.16)",
+                        background: active ? "var(--color-primary)" : "transparent",
+                      }}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Categories — desktop only */}
+            <div className="hidden border-t border-[rgba(var(--color-primary-rgb),0.1)] pt-4 lg:block">
+              <p className="font-body text-[10px] uppercase tracking-[0.16em] text-[var(--color-primary)]">Categories</p>
+              <div className="admin-filter-scroll mt-2 flex gap-2 overflow-x-auto pb-1">
+                {categoryTabs.map((tab) => {
+                  const active = categorySlug === tab.slug;
+                  return (
+                    <button
+                      key={tab.slug || "all"}
+                      type="button"
+                      onClick={() => { setCategorySlug(tab.slug); setPage(1); }}
+                      className={`shrink-0 rounded-full border px-4 py-2 font-body text-[10px] uppercase tracking-[0.12em] transition-colors ${
+                        active ? "text-white" : "text-[var(--color-muted)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+                      }`}
+                      style={{
+                        borderColor: active ? "var(--color-primary)" : "rgba(var(--color-primary-rgb),0.16)",
+                        background: active ? "var(--color-primary)" : "transparent",
+                      }}
+                    >
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Count + page */}
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[rgba(var(--color-primary-rgb),0.1)] pt-3">
+              <p className="font-body text-[11px] uppercase tracking-[0.12em] text-[var(--color-primary)]">
+                {totalCount === 0 ? "No products found" : `${totalCount} product${totalCount === 1 ? "" : "s"} found`}
+              </p>
+              <p className="font-body text-[11px] text-[var(--color-muted)]">
+                Page {Math.min(page, totalPages)} of {totalPages}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Desktop table (md+) ───────────────────────────────────────────────── */}
+        <div
+          className="mt-4 hidden overflow-hidden rounded-[24px] border bg-white lg:block"
+          style={{ borderColor: "rgba(var(--color-primary-rgb),0.12)" }}
+        >
+          <table className="w-full table-fixed border-collapse">
+            <colgroup>
+              <col style={{ width: "8%" }} />
+              <col style={{ width: "29%" }} />
+              <col style={{ width: "14%" }} />
+              <col style={{ width: "14%" }} />
+              <col style={{ width: "12%" }} />
+              <col style={{ width: "11%" }} />
+              <col style={{ width: "12%" }} />
+            </colgroup>
+              <thead className="bg-[rgba(var(--color-primary-rgb),0.03)]">
+                <tr>
+                  {["Image", "Name & SKU", "Category", "Price", "Stock", "Status", "Actions"].map((h) => (
+                    <th
+                      key={h}
+                      className="px-2 py-2.5 text-left font-body text-[9px] uppercase tracking-[0.11em] text-[var(--color-muted-soft)] first:pl-3 last:pr-3"
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {isLoading ? (
+                  <tr><td colSpan={7} className="px-3 py-9 text-center font-body text-[12px] text-[var(--color-muted-soft)]">Loading products...</td></tr>
+                ) : loadError ? (
+                  <tr><td colSpan={7} className="px-3 py-9 text-center font-body text-[12px] text-[var(--color-danger)]">{loadError}</td></tr>
+                ) : rows.length === 0 ? (
+                  <tr><td colSpan={7} className="px-3 py-9 text-center font-body text-[12px] text-[var(--color-muted-soft)]">No products found.</td></tr>
+                ) : (
+                  rows.map((product) => {
+                    const threshold = product.low_stock_threshold ?? 5;
+                    const isLow = product.stock_quantity <= threshold && product.stock_quantity > 0;
+                    const isOut = product.stock_quantity === 0;
+                    return (
+                      <tr
+                        key={product.id}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => openEditor(product.id)}
+                        onKeyDown={(e) => {
+                          if (e.target !== e.currentTarget) return;
+                          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openEditor(product.id); }
+                        }}
+                        className="cursor-pointer border-t border-[rgba(var(--color-primary-rgb),0.1)] transition-colors hover:bg-[rgba(var(--color-primary-rgb),0.04)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+                      >
+                        <td className="px-2 py-3 pl-3">
+                          <div className="h-14 w-10 overflow-hidden rounded-[10px] border border-[rgba(var(--color-primary-rgb),0.12)] bg-[var(--color-surface-alt)]">
+                            {product.image_url
+                              ? <img src={product.image_url} alt={product.name} className="h-full w-full object-cover" />
+                              : <div className="h-full w-full bg-[var(--color-surface-strong)]" />}
+                          </div>
+                        </td>
+                        <td className="px-2 py-3">
+                          <p className="truncate font-body text-[12px] text-[var(--color-navbar-solid-foreground)]" title={product.name}>
+                            {truncateNameByHalf(product.name)}
+                          </p>
+                          <p className="mt-0.5 truncate font-body text-[9px] uppercase tracking-[0.05em] text-[var(--color-muted-soft)]">
+                            {truncateSkuByHalf(product.sku)}
+                          </p>
+                        </td>
+                        <td className="px-2 py-3 font-body text-[10px] uppercase tracking-[0.06em] text-[var(--color-accent)]">
+                          <span className="block truncate" title={product.category_name || "Uncategorized"}>
+                            {product.category_name || "Uncategorized"}
+                          </span>
+                        </td>
+                        <td className="px-2 py-3">
+                          <p className="whitespace-nowrap font-body text-[12px] text-[var(--color-navbar-solid-foreground)]">{formatCurrency(product.price)}</p>
+                          {product.compare_at_price && (
+                            <p className="whitespace-nowrap font-body text-[10px] text-[var(--color-muted-soft)] line-through">{formatCurrency(product.compare_at_price)}</p>
+                          )}
+                        </td>
+                        <td className="px-2 py-3">
+                          <p className={`font-body text-[12px] ${isOut ? "text-[var(--color-danger)]" : isLow ? "text-[var(--color-accent)]" : "text-[var(--color-navbar-solid-foreground)]"}`}>
+                            {product.stock_quantity}
+                          </p>
+                          {isLow && <span className="mt-1 inline-block rounded-full bg-[rgba(var(--color-accent-rgb),0.15)] px-1.5 py-0.5 font-body text-[7px] uppercase tracking-[0.06em] text-[var(--color-accent)]">Low</span>}
+                          {isOut && <span className="mt-1 inline-block rounded-full bg-[rgba(var(--color-danger-rgb),0.15)] px-1.5 py-0.5 font-body text-[7px] uppercase tracking-[0.06em] text-[var(--color-danger)]">Out</span>}
+                        </td>
+                        <td className="px-2 py-3">
+                          <span className={`inline-block whitespace-nowrap rounded-full px-2 py-1 font-body text-[8px] uppercase tracking-[0.08em] ${product.is_available ? "border border-[var(--color-accent)] text-[var(--color-accent)]" : "border border-[var(--color-danger)] text-[var(--color-danger)]"}`}>
+                            {product.is_available ? "Available" : "Unavailable"}
+                          </span>
+                        </td>
+                        <td className="px-2 py-3 pr-3">
+                          <div className="flex items-center justify-end gap-1.5 font-body text-[9px] uppercase tracking-[0.08em]">
+                            <button
+                              type="button"
+                              disabled={deletingId === product.id}
+                              onClick={(e) => { e.stopPropagation(); void onDelete(product); }}
+                              className="whitespace-nowrap rounded-full border border-transparent px-2.5 py-1 text-[var(--color-muted)] transition-colors hover:border-[rgba(var(--color-danger-rgb),0.25)] hover:text-[var(--color-danger)] disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              {deletingId === product.id ? "Deleting..." : "Delete"}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+        </div>
+
+        {/* ── Mobile cards (< md) — original layout with truncation fixes ───────── */}
+        <div className="mt-4 space-y-3 lg:hidden">
+          {isLoading ? (
+            <p
+              className="rounded-[22px] border bg-white px-4 py-8 text-center font-body text-[12px] text-[var(--color-muted-soft)]"
+              style={{ borderColor: "rgba(var(--color-primary-rgb),0.12)" }}
+            >
+              Loading products...
+            </p>
+          ) : loadError ? (
+            <p
+              className="rounded-[22px] border bg-white px-4 py-8 text-center font-body text-[12px] text-[var(--color-danger)]"
+              style={{ borderColor: "rgba(var(--color-primary-rgb),0.12)" }}
+            >
+              {loadError}
+            </p>
+          ) : rows.length === 0 ? (
+            <p
+              className="rounded-[22px] border bg-white px-4 py-8 text-center font-body text-[12px] text-[var(--color-muted-soft)]"
+              style={{ borderColor: "rgba(var(--color-primary-rgb),0.12)" }}
+            >
+              No products found.
+            </p>
+          ) : (
+            rows.map((product) => {
+              const threshold = product.low_stock_threshold ?? 5;
+              const isLow = product.stock_quantity <= threshold && product.stock_quantity > 0;
+              const isOut = product.stock_quantity === 0;
+
+              return (
+                <div
+                  key={product.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => openEditor(product.id)}
+                  onKeyDown={(e) => {
+                    if (e.target !== e.currentTarget) return;
+                    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openEditor(product.id); }
+                  }}
+                  className="cursor-pointer rounded-[22px] border bg-white p-4 shadow-[0_8px_30px_rgba(26,28,28,0.06)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+                  style={{ borderColor: "rgba(var(--color-primary-rgb),0.12)" }}
+                >
+                  {/* Row 1: image + name/SKU (70% width, truncated) */}
+                  <div className="flex gap-3">
+                    <div className="h-[56px] w-[44px] shrink-0 overflow-hidden rounded-[10px] border border-[rgba(var(--color-primary-rgb),0.12)] bg-[var(--color-surface-alt)]">
+                      {product.image_url
+                        ? <img src={product.image_url} alt={product.name} className="h-full w-full object-cover" />
+                        : <div className="h-full w-full bg-[var(--color-surface-strong)]" />}
+                    </div>
+                    {/* Name container: 70% of card width, hard truncate */}
+                    <div className="min-w-0" style={{ width: "70%" }}>
+                      <p
+                        className="font-body text-[13px] text-[var(--color-navbar-solid-foreground)] truncate"
+                        title={product.name}
+                      >
+                        {truncateNameByHalf(product.name)}
+                      </p>
+                      <p
+                        className="mt-1 truncate font-body text-[10px] uppercase tracking-[0.06em] text-[var(--color-muted-soft)]"
+                        title={product.sku || "No SKU"}
+                      >
+                        {truncateSkuByHalf(product.sku)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Row 2: category + price */}
+                  <div className="mt-3 flex items-center justify-between gap-3">
+                    <p className="truncate font-body text-[10px] uppercase tracking-[0.1em] text-[var(--color-accent)]">
+                      {product.category_name || "Uncategorized"}
+                    </p>
+                    <div className="shrink-0 text-right">
+                      <p className="font-body text-[13px] text-[var(--color-navbar-solid-foreground)]">{formatCurrency(product.price)}</p>
+                      {product.compare_at_price && (
+                        <p className="font-body text-[11px] text-[var(--color-muted-soft)] line-through">{formatCurrency(product.compare_at_price)}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Row 3: stock + status badge */}
+                  <div className="mt-2 flex items-center justify-between gap-3">
+                    <p className={`font-body text-[12px] ${isOut ? "text-[var(--color-danger)]" : isLow ? "text-[var(--color-accent)]" : "text-[var(--color-navbar-solid-foreground)]"}`}>
+                      Stock {product.stock_quantity}
+                      {isLow && (
+                        <span className="ml-1.5 inline-block rounded-full bg-[rgba(var(--color-accent-rgb),0.15)] px-1.5 py-0.5 font-body text-[8px] uppercase tracking-[0.08em] text-[var(--color-accent)]">Low</span>
+                      )}
+                      {isOut && (
+                        <span className="ml-1.5 inline-block rounded-full bg-[rgba(var(--color-danger-rgb),0.15)] px-1.5 py-0.5 font-body text-[8px] uppercase tracking-[0.08em] text-[var(--color-danger)]">Out</span>
+                      )}
+                    </p>
+                    <span className={`inline-block rounded-full px-2.5 py-1 font-body text-[9px] uppercase tracking-[0.12em] ${product.is_available ? "border border-[var(--color-accent)] text-[var(--color-accent)]" : "border border-[var(--color-danger)] text-[var(--color-danger)]"}`}>
+                      {product.is_available ? "Available" : "Unavailable"}
+                    </span>
+                  </div>
+
+                  {/* Row 4: delete */}
+                  <div className="mt-3 flex justify-end gap-3 font-body text-[10px] uppercase tracking-[0.1em]">
+                    <button
+                      type="button"
+                      disabled={deletingId === product.id}
+                      onClick={(e) => { e.stopPropagation(); void onDelete(product); }}
+                      className="rounded-full border border-transparent px-3 py-1 text-[var(--color-muted)] transition-colors hover:border-[rgba(var(--color-danger-rgb),0.25)] hover:text-[var(--color-danger)] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {deletingId === product.id ? "Deleting..." : "Delete"}
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* ── Pagination ────────────────────────────────────────────────────────── */}
+        <div
+          className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-[22px] border bg-white px-4 py-3"
+          style={{ borderColor: "rgba(var(--color-primary-rgb),0.12)" }}
+        >
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1}
+            className="rounded-full border px-4 py-2 font-body text-[10px] uppercase tracking-[0.1em] text-[var(--color-primary)] transition-colors hover:bg-[rgba(var(--color-primary-rgb),0.06)] disabled:cursor-not-allowed disabled:opacity-40"
+            style={{ borderColor: "rgba(var(--color-primary-rgb),0.2)" }}
+          >
+            Previous
+          </button>
+
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {pageNumbers.map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => setPage(n)}
+                className={`h-8 min-w-8 rounded-full px-3 font-body text-[11px] transition-colors ${
+                  n === page
+                    ? "bg-[var(--color-primary)] text-white"
+                    : "text-[var(--color-muted)] hover:bg-[rgba(var(--color-primary-rgb),0.08)] hover:text-[var(--color-primary)]"
                 }`}
               >
-                {tab.label}
+                {n}
               </button>
-            );
-          })}
-        </div>
+            ))}
+          </div>
 
-        <div>
-          <select
-            value={availability}
-            onChange={(event) => {
-              setAvailability(event.target.value as "all" | "available" | "unavailable");
-              setPage(1);
-            }}
-            className="border-0 border-b border-[var(--color-border)] bg-transparent pb-2 font-body text-[12px] text-[var(--color-primary)] outline-none focus:border-[var(--color-primary)]"
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages}
+            className="rounded-full border px-4 py-2 font-body text-[10px] uppercase tracking-[0.1em] text-[var(--color-primary)] transition-colors hover:bg-[rgba(var(--color-primary-rgb),0.06)] disabled:cursor-not-allowed disabled:opacity-40"
+            style={{ borderColor: "rgba(var(--color-primary-rgb),0.2)" }}
           >
-            <option value="all">All</option>
-            <option value="available">Available</option>
-            <option value="unavailable">Unavailable</option>
-          </select>
+            Next
+          </button>
         </div>
       </div>
 
-      <div className="hidden overflow-x-auto md:block">
-        <table className="min-w-[980px] w-full border-collapse">
-          <thead>
-            <tr className="border-b border-[var(--color-border)]">
-              {["Image", "Name & SKU", "Category", "Price", "Stock", "Status", "Actions"].map((heading) => (
-                <th
-                  key={heading}
-                  className="px-2 py-3 text-left font-body text-[10px] uppercase tracking-[0.12em] text-[var(--color-muted-soft)] first:pl-0 last:pr-0"
-                >
-                  {heading}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              <tr>
-                <td colSpan={7} className="px-0 py-8 text-center font-body text-[12px] text-[var(--color-muted-soft)]">
-                  Loading products...
-                </td>
-              </tr>
-            ) : loadError ? (
-              <tr>
-                <td colSpan={7} className="px-0 py-8 text-center font-body text-[12px] text-[var(--color-danger)]">
-                  {loadError}
-                </td>
-              </tr>
-            ) : rows.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="px-0 py-8 text-center font-body text-[12px] text-[var(--color-muted-soft)]">
-                  No products found.
-                </td>
-              </tr>
-            ) : (
-              rows.map((product) => {
-                const threshold = product.low_stock_threshold ?? 5;
-                const isLow = product.stock_quantity <= threshold && product.stock_quantity > 0;
-                const isOut = product.stock_quantity === 0;
-
-                return (
-                  <tr
-                    key={product.id}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => openEditor(product.id)}
-                    onKeyDown={(event) => {
-                      if (event.target !== event.currentTarget) {
-                        return;
-                      }
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        openEditor(product.id);
-                      }
-                    }}
-                    className="cursor-pointer border-b border-[var(--color-surface-strong)] hover:bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.04)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
-                  >
-                    <td className="px-2 py-4 pl-0">
-                      <div className="h-16 w-12 overflow-hidden bg-[var(--color-surface-alt)]">
-                        {product.image_url ? (
-                          <img src={product.image_url} alt={product.name} className="h-full w-full object-cover" />
-                        ) : (
-                          <div className="h-full w-full bg-[var(--color-surface-strong)]" />
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-2 py-4">
-                      <p className="font-body text-[13px] text-[var(--color-primary)]">{product.name}</p>
-                      <p className="mt-0.5 font-body text-[10px] text-[var(--color-muted-soft)]">{product.sku || "No SKU"}</p>
-                    </td>
-                    <td className="px-2 py-4 font-body text-[11px] uppercase tracking-[0.08em] text-[var(--color-accent)]">
-                      {product.category_name || "Uncategorized"}
-                    </td>
-                    <td className="px-2 py-4">
-                      <p className="font-body text-[13px] text-[var(--color-primary)]">{formatCurrency(product.price)}</p>
-                      {product.compare_at_price ? (
-                        <p className="font-body text-[11px] text-[var(--color-muted-soft)] line-through">
-                          {formatCurrency(product.compare_at_price)}
-                        </p>
-                      ) : null}
-                    </td>
-                    <td className="px-2 py-4">
-                      <p
-                        className={`font-body text-[13px] ${
-                          isOut ? "text-[var(--color-danger)]" : isLow ? "text-[var(--color-accent)]" : "text-[var(--color-primary)]"
-                        }`}
-                      >
-                        {product.stock_quantity}
-                      </p>
-                      {isLow ? (
-                        <span className="mt-1 inline-block rounded-[var(--border-radius)] bg-[rgba(var(--color-navbar-solid-foreground-rgb),0.15)] px-1.5 py-0.5 font-body text-[8px] uppercase tracking-[0.08em] text-[var(--color-accent)]">
-                          Low
-                        </span>
-                      ) : null}
-                      {isOut ? (
-                        <span className="mt-1 inline-block rounded-[var(--border-radius)] bg-[rgba(var(--color-danger-rgb),0.15)] px-1.5 py-0.5 font-body text-[8px] uppercase tracking-[0.08em] text-[var(--color-danger)]">
-                          Out
-                        </span>
-                      ) : null}
-                    </td>
-                    <td className="px-2 py-4">
-                      <span
-                        className={`inline-block rounded-[var(--border-radius)] px-2 py-1 font-body text-[9px] uppercase tracking-[0.12em] ${
-                          product.is_available
-                            ? "border border-[var(--color-accent)] text-[var(--color-accent)]"
-                            : "border border-[var(--color-danger)] text-[var(--color-danger)]"
-                        }`}
-                      >
-                        {product.is_available ? "Available" : "Unavailable"}
-                      </span>
-                    </td>
-                    <td className="px-0 py-4">
-                      <div className="flex items-center gap-2 font-body text-[10px] uppercase tracking-[0.1em]">
-                        <button
-                          type="button"
-                          disabled={deletingId === product.id}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            void onDelete(product);
-                          }}
-                          className="text-[var(--color-muted)] transition-colors hover:text-[var(--color-danger)] disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          {deletingId === product.id ? "Deleting..." : "Delete"}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="border-t border-[var(--color-border)] md:hidden">
-        {isLoading ? (
-          <p className="py-8 text-center font-body text-[12px] text-[var(--color-muted-soft)]">Loading products...</p>
-        ) : loadError ? (
-          <p className="py-8 text-center font-body text-[12px] text-[var(--color-danger)]">{loadError}</p>
-        ) : rows.length === 0 ? (
-          <p className="py-8 text-center font-body text-[12px] text-[var(--color-muted-soft)]">No products found.</p>
-        ) : (
-          rows.map((product) => {
-            const threshold = product.low_stock_threshold ?? 5;
-            const isLow = product.stock_quantity <= threshold && product.stock_quantity > 0;
-            const isOut = product.stock_quantity === 0;
-
-            return (
-              <div
-                key={product.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => openEditor(product.id)}
-                onKeyDown={(event) => {
-                  if (event.target !== event.currentTarget) {
-                    return;
-                  }
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    openEditor(product.id);
-                  }
-                }}
-                className="admin-mobile-card cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
-              >
-                <div className="flex gap-3">
-                  <div className="h-[53px] w-[40px] overflow-hidden bg-[var(--color-surface-alt)]">
-                    {product.image_url ? (
-                      <img src={product.image_url} alt={product.name} className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="h-full w-full bg-[var(--color-surface-strong)]" />
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-body text-[12px] text-[var(--color-primary)]">{product.name}</p>
-                    <p className="mt-1 truncate font-body text-[10px] text-[var(--color-muted-soft)]">{product.sku || "No SKU"}</p>
-                  </div>
-                </div>
-
-                <div className="mt-2 flex items-center justify-between gap-3">
-                  <p className="font-body text-[10px] uppercase tracking-[0.08em] text-[var(--color-accent)]">
-                    {product.category_name || "Uncategorized"}
-                  </p>
-                  <p className="font-body text-[12px] text-[var(--color-primary)]">{formatCurrency(product.price)}</p>
-                </div>
-
-                <div className="mt-2 flex items-center justify-between gap-3">
-                  <p
-                    className={`font-body text-[12px] ${
-                      isOut ? "text-[var(--color-danger)]" : isLow ? "text-[var(--color-accent)]" : "text-[var(--color-primary)]"
-                    }`}
-                  >
-                    Stock {product.stock_quantity}
-                  </p>
-                  <span
-                    className={`inline-block rounded-[var(--border-radius)] px-2 py-1 font-body text-[9px] uppercase tracking-[0.12em] ${
-                      product.is_available
-                        ? "border border-[var(--color-accent)] text-[var(--color-accent)]"
-                        : "border border-[var(--color-danger)] text-[var(--color-danger)]"
-                    }`}
-                  >
-                    {product.is_available ? "Available" : "Unavailable"}
-                  </span>
-                </div>
-
-                <div className="mt-2 flex justify-end gap-3 font-body text-[10px] uppercase tracking-[0.1em]">
-                  <button
-                    type="button"
-                    disabled={deletingId === product.id}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      void onDelete(product);
-                    }}
-                    className="text-[var(--color-muted)] hover:text-[var(--color-danger)] disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {deletingId === product.id ? "Deleting..." : "Delete"}
-                  </button>
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
-
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-4 font-body text-[11px] text-[var(--color-muted)]">
-        <button
-          type="button"
-          onClick={() => setPage((current) => Math.max(1, current - 1))}
-          disabled={page <= 1}
-          className="transition-colors hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          &larr; Previous
-        </button>
-
-        <div className="flex items-center gap-3">
-          {pageNumbers.map((pageNumber) => (
-            <button
-              key={pageNumber}
-              type="button"
-              onClick={() => setPage(pageNumber)}
-              className={`border-b pb-1 ${
-                pageNumber === page
-                  ? "border-[var(--color-primary)] font-medium text-[var(--color-primary)]"
-                  : "border-transparent text-[var(--color-muted)] hover:text-[var(--color-primary)]"
-              }`}
-            >
-              {pageNumber}
-            </button>
-          ))}
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
-          disabled={page >= totalPages}
-          className="transition-colors hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          Next &rarr;
-        </button>
-      </div>
+      {/* ── Mobile filter bottom sheet ─────────────────────────────────────────── */}
+      <FilterSheet
+        open={filterSheetOpen}
+        onClose={() => setFilterSheetOpen(false)}
+        availability={availability}
+        setAvailability={setAvailability}
+        categorySlug={categorySlug}
+        setCategorySlug={setCategorySlug}
+        categoryTabs={categoryTabs}
+        setPage={setPage}
+      />
     </div>
   );
 };
 
 export default AdminProductsPage;
-
-
-
-
