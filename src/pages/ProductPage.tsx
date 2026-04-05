@@ -8,10 +8,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import { useThemeConfig } from "@/contexts/ThemeContext";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { getCategoryLabel } from "@/lib/categories";
 import { buildAuthModalSearch, buildPathWithSearch } from "@/lib/authModal";
 import { formatPrice } from "@/lib/price";
 import { shouldShowPriceVariesByVariantNote } from "@/lib/productPricing";
+import { fetchActiveShippingRates, type ShippingRateRow } from "@/services/orderService";
+import { getPaymentSettings, type PaymentSettings } from "@/services/paymentSettingsService";
 import { getFeaturedProducts, getRelatedProducts } from "@/services/productService";
 import {
   buildReviewerDisplayName,
@@ -358,6 +361,96 @@ const mapOptionTypeRecord = (value: unknown): ProductOptionType | null => {
   };
 };
 
+const sanitizeShippingStateEntries = (entries: unknown[]): string[] => {
+  const seen = new Set<string>();
+  const states: string[] = [];
+
+  entries.forEach((entry) => {
+    if (typeof entry !== "string") {
+      return;
+    }
+
+    const trimmed = entry.trim();
+    if (!trimmed) {
+      return;
+    }
+
+    const dedupeKey = trimmed.toLowerCase();
+    if (seen.has(dedupeKey)) {
+      return;
+    }
+
+    seen.add(dedupeKey);
+    states.push(trimmed);
+  });
+
+  return states;
+};
+
+const parseShippingStateList = (value: Json | null): string[] => {
+  if (Array.isArray(value)) {
+    return sanitizeShippingStateEntries(value);
+  }
+
+  if (typeof value === "string" && value.trim()) {
+    try {
+      const parsed = JSON.parse(value) as unknown;
+      if (Array.isArray(parsed)) {
+        return sanitizeShippingStateEntries(parsed);
+      }
+    } catch {
+      return sanitizeShippingStateEntries(value.split(","));
+    }
+  }
+
+  return [];
+};
+
+const formatShippingCoverageLabel = (states: string[]): string => {
+  if (states.length === 0) {
+    return "All regions";
+  }
+
+  if (states.length <= 2) {
+    return states.join(", ");
+  }
+
+  return `${states.slice(0, 2).join(", ")} +${states.length - 2} more`;
+};
+
+const formatDeliveryWindow = (minimumDays: number | null, maximumDays: number | null): string => {
+  const min = Number.isFinite(Number(minimumDays)) && Number(minimumDays) > 0 ? Math.round(Number(minimumDays)) : null;
+  const max = Number.isFinite(Number(maximumDays)) && Number(maximumDays) > 0 ? Math.round(Number(maximumDays)) : null;
+
+  if (min && max) {
+    return min === max ? `${min} business day${min === 1 ? "" : "s"}` : `${min}-${max} business days`;
+  }
+
+  if (min) {
+    return `${min}+ business days`;
+  }
+
+  if (max) {
+    return `Up to ${max} business days`;
+  }
+
+  return "Estimated at checkout";
+};
+
+const formatProductWeight = (weightGrams?: number): string | null => {
+  if (!weightGrams || weightGrams <= 0) {
+    return null;
+  }
+
+  if (weightGrams >= 1000) {
+    const kilograms = weightGrams / 1000;
+    const fixed = kilograms % 1 === 0 ? kilograms.toFixed(0) : kilograms.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+    return `${fixed} kg`;
+  }
+
+  return `${weightGrams} g`;
+};
+
 const ProductPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const location = useLocation();
@@ -398,6 +491,9 @@ const ProductPage = () => {
   const [reviewMessage, setReviewMessage] = useState<string | null>(null);
   const [reviewMessageTone, setReviewMessageTone] = useState<"success" | "error" | "info">("info");
   const [isReviewSectionOpen, setReviewSectionOpen] = useState(false);
+  const [shippingRates, setShippingRates] = useState<ShippingRateRow[]>([]);
+  const [isShippingRatesLoading, setIsShippingRatesLoading] = useState(true);
+  const [paymentSettings, setPaymentSettings] = useState<PaymentSettings | null>(null);
   const lightboxTouchStartXRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -518,6 +614,32 @@ const ProductPage = () => {
 
     void fetchProduct();
   }, [slug]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadStorefrontPolicies = async () => {
+      setIsShippingRatesLoading(true);
+
+      const shippingRatesPromise = fetchActiveShippingRates().catch(() => [] as ShippingRateRow[]);
+      const paymentSettingsPromise = getPaymentSettings().catch(() => null as PaymentSettings | null);
+
+      const [activeShippingRates, activePaymentSettings] = await Promise.all([shippingRatesPromise, paymentSettingsPromise]);
+      if (!isMounted) {
+        return;
+      }
+
+      setShippingRates(activeShippingRates);
+      setPaymentSettings(activePaymentSettings);
+      setIsShippingRatesLoading(false);
+    };
+
+    void loadStorefrontPolicies();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!product?.id) {
@@ -781,6 +903,62 @@ const ProductPage = () => {
           : "text-[var(--theme-success)]";
   const stockStatusIcon = stockStatus.tone === "danger" ? "error" : stockStatus.tone === "muted" ? "info" : "check_circle";
   const categoryShopLink = normalizedCategorySlug ? `/shop?category=${encodeURIComponent(normalizedCategorySlug)}` : "/shop";
+  const selectedSku = selectedVariant?.sku?.trim() || product?.sku?.trim() || null;
+  const productWeightLabel = formatProductWeight(product?.weight_grams);
+  const shippingRateHighlights = useMemo(
+    () =>
+      [...shippingRates]
+        .map((rate) => ({
+          id: rate.id,
+          rateName: typeof rate.name === "string" && rate.name.trim() ? rate.name.trim() : "Shipping",
+          coverageLabel: formatShippingCoverageLabel(parseShippingStateList(rate.states)),
+          fee: Math.max(0, Math.round(Number(rate.base_rate) || 0)),
+          deliveryWindow: formatDeliveryWindow(rate.estimated_days_min, rate.estimated_days_max),
+        }))
+        .sort((left, right) => left.fee - right.fee)
+        .slice(0, 3),
+    [shippingRates],
+  );
+  const hasAdditionalShippingRates = shippingRates.length > shippingRateHighlights.length;
+  const paymentMethodsSummary = useMemo(() => {
+    const onlinePaymentEnabled = paymentSettings?.online_payment_enabled !== false;
+    const cashOnDeliveryEnabled = Boolean(paymentSettings?.cash_on_delivery_enabled);
+
+    if (onlinePaymentEnabled && cashOnDeliveryEnabled) {
+      return "Secure online payment and cash on delivery are available at checkout.";
+    }
+
+    if (onlinePaymentEnabled) {
+      return "Secure online payment is available at checkout.";
+    }
+
+    if (cashOnDeliveryEnabled) {
+      return "Cash on delivery is available at checkout.";
+    }
+
+    return "Available payment methods are shown at checkout before you place your order.";
+  }, [paymentSettings]);
+  const productInfoLines = useMemo(() => {
+    const lines = [`Category: ${categoryLabel}`];
+
+    if (selectedSku) {
+      lines.push(`SKU: ${selectedSku.toUpperCase()}`);
+    }
+
+    if (productWeightLabel) {
+      lines.push(`Weight: ${productWeightLabel}`);
+    }
+
+    if (sortedOptionTypes.length > 0) {
+      lines.push(`Options: ${sortedOptionTypes.map((optionType) => optionType.name).join(", ")}`);
+    }
+
+    if (product?.tags && product.tags.length > 0) {
+      lines.push(`Tags: ${product.tags.slice(0, 4).join(", ")}`);
+    }
+
+    return lines;
+  }, [categoryLabel, product?.tags, productWeightLabel, selectedSku, sortedOptionTypes]);
   const reviewAverageRating = reviewSummary.totalReviews > 0 ? reviewSummary.averageRating : 0;
   const reviewBodyLength = reviewBody.trim().length;
   const loginRedirectLink = buildPathWithSearch(
@@ -1351,13 +1529,44 @@ const ProductPage = () => {
               </div>
 
               <div className="flex flex-col gap-3 border-t border-[rgba(186,194,201,0.3)] pt-5">
-                <div className="flex items-center gap-2 text-xs text-on-surface-variant">
+                <div className="flex items-start gap-2 text-xs text-on-surface-variant">
                   <span className="material-symbols-outlined text-sm">local_shipping</span>
-                  Free delivery in Accra &amp; Tema within 24 hours.
+                  <div className="space-y-1">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-on-surface/80">Shipping</p>
+                    {isShippingRatesLoading ? (
+                      <p>Loading shipping rates...</p>
+                    ) : shippingRateHighlights.length > 0 ? (
+                      <div className="space-y-1">
+                        {shippingRateHighlights.map((shippingRate) => (
+                          <p key={shippingRate.id}>
+                            {shippingRate.rateName} ({shippingRate.coverageLabel}): {formatPrice(shippingRate.fee)} {"\u00B7"}{" "}
+                            {shippingRate.deliveryWindow}
+                          </p>
+                        ))}
+                        {hasAdditionalShippingRates ? <p>Additional regional rates are available at checkout.</p> : null}
+                      </div>
+                    ) : (
+                      <p>Shipping rates and delivery timelines are calculated from our configured backend rules at checkout.</p>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-on-surface-variant">
-                  <span className="material-symbols-outlined text-sm">verified</span>
-                  Authentic Silk Guarantee.
+                <div className="flex items-start gap-2 text-xs text-on-surface-variant">
+                  <span className="material-symbols-outlined text-sm">credit_card</span>
+                  <div className="space-y-1">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-on-surface/80">Payment</p>
+                    <p>{paymentMethodsSummary}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2 text-xs text-on-surface-variant">
+                  <span className="material-symbols-outlined text-sm">info</span>
+                  <div className="space-y-1">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-on-surface/80">Product Info</p>
+                    <div className="space-y-1">
+                      {productInfoLines.map((line, index) => (
+                        <p key={`${line}-${index}`}>{line}</p>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

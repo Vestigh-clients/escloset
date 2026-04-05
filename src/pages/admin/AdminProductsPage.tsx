@@ -341,9 +341,9 @@ const AdminProductsPage = () => {
           <div className="flex flex-col gap-4">
 
             {/* Search row */}
-            <div className="flex items-center gap-2 lg:justify-between">
+            <div className="flex items-center gap-2">
               {/* Search input — full width on mobile, capped on desktop */}
-              <label className="relative block flex-1 lg:max-w-[360px]">
+              <label className="relative block flex-1">
                 <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-primary)]" />
                 <input
                   value={searchInput}
@@ -372,9 +372,11 @@ const AdminProductsPage = () => {
                   </span>
                 )}
               </button>
+            </div>
 
-              {/* Desktop: Availability pills */}
-              <div className="hidden flex-wrap gap-2 lg:flex">
+            {/* Desktop/tablet filters under search */}
+            <div className="hidden border-t border-[rgba(var(--color-primary-rgb),0.1)] pt-4 lg:flex lg:items-start lg:justify-between lg:gap-4">
+              <div className="flex flex-wrap gap-2">
                 {availabilityTabs.map((opt) => {
                   const active = availability === opt.value;
                   return (
@@ -395,31 +397,30 @@ const AdminProductsPage = () => {
                   );
                 })}
               </div>
-            </div>
 
-            {/* Categories — desktop only */}
-            <div className="hidden border-t border-[rgba(var(--color-primary-rgb),0.1)] pt-4 lg:block">
-              <p className="font-body text-[10px] uppercase tracking-[0.16em] text-[var(--color-primary)]">Categories</p>
-              <div className="admin-filter-scroll mt-2 flex gap-2 overflow-x-auto pb-1">
-                {categoryTabs.map((tab) => {
-                  const active = categorySlug === tab.slug;
-                  return (
-                    <button
-                      key={tab.slug || "all"}
-                      type="button"
-                      onClick={() => { setCategorySlug(tab.slug); setPage(1); }}
-                      className={`shrink-0 rounded-full border px-4 py-2 font-body text-[10px] uppercase tracking-[0.12em] transition-colors ${
-                        active ? "text-white" : "text-[var(--color-muted)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
-                      }`}
-                      style={{
-                        borderColor: active ? "var(--color-primary)" : "rgba(var(--color-primary-rgb),0.16)",
-                        background: active ? "var(--color-primary)" : "transparent",
-                      }}
-                    >
-                      {tab.label}
-                    </button>
-                  );
-                })}
+              <div className="min-w-0 lg:max-w-[56%]">
+                <p className="text-right font-body text-[10px] uppercase tracking-[0.16em] text-[var(--color-primary)]">Categories</p>
+                <div className="admin-filter-scroll mt-2 flex justify-end gap-2 overflow-x-auto pb-1">
+                  {categoryTabs.map((tab) => {
+                    const active = categorySlug === tab.slug;
+                    return (
+                      <button
+                        key={tab.slug || "all"}
+                        type="button"
+                        onClick={() => { setCategorySlug(tab.slug); setPage(1); }}
+                        className={`shrink-0 rounded-full border px-4 py-2 font-body text-[10px] uppercase tracking-[0.12em] transition-colors ${
+                          active ? "text-white" : "text-[var(--color-muted)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+                        }`}
+                        style={{
+                          borderColor: active ? "var(--color-primary)" : "rgba(var(--color-primary-rgb),0.16)",
+                          background: active ? "var(--color-primary)" : "transparent",
+                        }}
+                      >
+                        {tab.label}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
