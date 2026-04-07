@@ -209,3 +209,12 @@ export function canConfigurePaymentMethods(): boolean {
   if (config.isSubaccountMode && config.platformFeePercent === 0) return true;
   return false;
 }
+
+export function getPaystackMetadata(): { store_id: string } {
+  const envStoreId = import.meta.env.VITE_STORE_ID;
+  if (typeof envStoreId === "string" && envStoreId.trim()) {
+    return { store_id: envStoreId.trim() };
+  }
+  const store_id = window.location.hostname.split(".")[0];
+  return { store_id };
+}

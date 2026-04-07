@@ -28,7 +28,7 @@ import {
   triggerOrderConfirmationEmail,
   triggerNewOrderAdminNotification,
 } from "@/services/orderService";
-import { getPaystackConfig, getTransactionCharge, isPaymentConfigured } from "@/services/paystackService";
+import { getPaystackConfig, getPaystackMetadata, getTransactionCharge, isPaymentConfigured } from "@/services/paystackService";
 import { getPaymentSettings, type PaymentSettings } from "@/services/paymentSettingsService";
 import { storeConfig, storeKeyPrefix } from "@/config/store.config";
 import { REDIRECT_AFTER_LOGIN_KEY } from "@/services/authService";
@@ -2401,6 +2401,7 @@ const Checkout = () => {
         amount: totalAmountInPesewas,
         currency: "GHS",
         ref: orderNumberForCheckout,
+        metadata: getPaystackMetadata(),
         ...(paystackConfig.isSubaccountMode && paystackConfig.subaccountCode
           ? {
               subaccount: paystackConfig.subaccountCode,
