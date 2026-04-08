@@ -1,5 +1,5 @@
-import { ChevronDown, ChevronUp, Plus, Search, Sparkles, SlidersHorizontal, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { Plus, Search, Sparkles, SlidersHorizontal, Trash2, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   deleteAdminProduct,
@@ -8,7 +8,6 @@ import {
   fetchProductOrderCount,
   type AdminProductListItem,
 } from "@/services/adminService";
-import { formatCurrency } from "@/lib/adminFormatting";
 
 const PAGE_SIZE = 20;
 const defaultCategoryTabs = [{ label: "All", slug: "" }];
@@ -18,21 +17,7 @@ const availabilityTabs = [
   { label: "Unavailable", value: "unavailable" },
 ] as const;
 
-const truncateSkuByHalf = (sku: string | null) => {
-  const value = sku?.trim();
-  if (!value) return "No SKU";
-  const keepLength = Math.max(2, Math.ceil(value.length * 0.5));
-  return `${value.slice(0, keepLength)}...`;
-};
-
-const truncateNameByHalf = (name: string) => {
-  const value = name.trim();
-  if (!value) return "Untitled product";
-  const keepLength = Math.max(2, Math.ceil(value.length * 0.5));
-  return `${value.slice(0, keepLength)}...`;
-};
-
-// ── Bottom sheet for mobile filters ─────────────────────────────────────────
+// ── Mobile filter bottom sheet ───────────────────────────────────────────────
 const FilterSheet = ({
   open,
   onClose,
@@ -41,7 +26,6 @@ const FilterSheet = ({
   categorySlug,
   setCategorySlug,
   categoryTabs,
-  setPage,
 }: {
   open: boolean;
   onClose: () => void;
@@ -50,9 +34,7 @@ const FilterSheet = ({
   categorySlug: string;
   setCategorySlug: (v: string) => void;
   categoryTabs: Array<{ label: string; slug: string }>;
-  setPage: (p: number) => void;
 }) => {
-  // close on Escape
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -60,7 +42,6 @@ const FilterSheet = ({
     return () => document.removeEventListener("keydown", handler);
   }, [open, onClose]);
 
-  // lock body scroll while open
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
@@ -71,27 +52,21 @@ const FilterSheet = ({
 
   return (
     <>
-      {/* Backdrop */}
       <div
         onClick={onClose}
         className={`fixed inset-0 z-40 bg-black/40 transition-opacity duration-300 lg:hidden ${
           open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         }`}
       />
-
-      {/* Sheet */}
       <div
         className={`fixed bottom-0 left-0 right-0 z-50 rounded-t-[28px] bg-white shadow-[0_-8px_40px_rgba(0,0,0,0.12)] transition-transform duration-300 ease-out lg:hidden ${
           open ? "translate-y-0" : "translate-y-full"
         }`}
         style={{ maxHeight: "80dvh", overflowY: "auto" }}
       >
-        {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-1">
           <div className="h-1 w-10 rounded-full bg-[rgba(var(--color-primary-rgb),0.15)]" />
         </div>
-
-        {/* Header */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-[rgba(var(--color-primary-rgb),0.08)]">
           <p className="font-body text-[14px] font-semibold text-[var(--color-navbar-solid-foreground)]">Filters</p>
           <button
@@ -102,9 +77,7 @@ const FilterSheet = ({
             <X className="h-4 w-4" />
           </button>
         </div>
-
         <div className="px-5 py-4 space-y-5">
-          {/* Availability */}
           <div>
             <p className="font-body text-[10px] uppercase tracking-[0.18em] text-[var(--color-primary)] mb-2.5">Availability</p>
             <div className="flex flex-wrap gap-2">
@@ -114,7 +87,7 @@ const FilterSheet = ({
                   <button
                     key={opt.value}
                     type="button"
-                    onClick={() => { setAvailability(opt.value); setPage(1); }}
+                    onClick={() => { setAvailability(opt.value); onClose(); }}
                     className={`rounded-full border px-4 py-2 font-body text-[10px] uppercase tracking-[0.12em] transition-colors ${
                       active ? "text-white" : "text-[var(--color-muted)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
                     }`}
@@ -129,8 +102,6 @@ const FilterSheet = ({
               })}
             </div>
           </div>
-
-          {/* Categories */}
           <div>
             <p className="font-body text-[10px] uppercase tracking-[0.18em] text-[var(--color-primary)] mb-2.5">Categories</p>
             <div className="flex flex-wrap gap-2">
@@ -140,7 +111,7 @@ const FilterSheet = ({
                   <button
                     key={tab.slug || "all"}
                     type="button"
-                    onClick={() => { setCategorySlug(tab.slug); setPage(1); }}
+                    onClick={() => { setCategorySlug(tab.slug); onClose(); }}
                     className={`rounded-full border px-4 py-2 font-body text-[10px] uppercase tracking-[0.12em] transition-colors ${
                       active ? "text-white" : "text-[var(--color-muted)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
                     }`}
@@ -155,8 +126,6 @@ const FilterSheet = ({
               })}
             </div>
           </div>
-
-          {/* Done button */}
           <button
             type="button"
             onClick={onClose}
@@ -166,11 +135,76 @@ const FilterSheet = ({
             Done{activeFilterCount > 0 ? ` · ${activeFilterCount} active` : ""}
           </button>
         </div>
-
-        {/* Safe-area spacer */}
         <div className="h-4" />
       </div>
     </>
+  );
+};
+
+// ── Product grid tile ────────────────────────────────────────────────────────
+const ProductTile = ({
+  product,
+  onClick,
+  onDelete,
+  isDeleting,
+}: {
+  product: AdminProductListItem;
+  onClick: () => void;
+  onDelete: () => void;
+  isDeleting: boolean;
+}) => {
+  const threshold = product.low_stock_threshold ?? 5;
+  const isOut = product.stock_quantity === 0;
+  const isLow = product.stock_quantity <= threshold && product.stock_quantity > 0;
+  const isUnavailable = !product.is_available;
+
+  const dotColor = isOut || isUnavailable
+    ? "bg-[var(--color-danger)]"
+    : isLow
+    ? "bg-[var(--color-accent)]"
+    : "bg-emerald-400";
+
+  const letter = product.name.trim().charAt(0).toUpperCase();
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group relative aspect-square w-full overflow-hidden rounded-[12px] border border-[rgba(var(--color-primary-rgb),0.1)] bg-[var(--color-surface-alt)] transition-transform duration-200 group-hover:scale-[1.03]"
+    >
+      {product.image_url ? (
+        <img
+          src={product.image_url}
+          alt={product.name}
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center bg-[rgba(var(--color-primary-rgb),0.06)]">
+          <span className="font-display text-[22px] italic text-[rgba(var(--color-primary-rgb),0.35)]">
+            {letter}
+          </span>
+        </div>
+      )}
+
+      {/* Status dot — top-right */}
+      <span className={`absolute right-2 top-2 h-2.5 w-2.5 rounded-full shadow-sm ${dotColor}`} />
+
+      {/* Delete button — bottom-right */}
+      <span
+        role="button"
+        aria-label={`Delete ${product.name}`}
+        onClick={(e) => { e.stopPropagation(); onDelete(); }}
+        className={`absolute bottom-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm transition-opacity duration-150 hover:bg-[var(--color-danger)] ${
+          isDeleting ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+        }`}
+      >
+        {isDeleting ? (
+          <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+        ) : (
+          <Trash2 className="h-3.5 w-3.5" />
+        )}
+      </span>
+    </button>
   );
 };
 
@@ -181,54 +215,117 @@ const AdminProductsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [categorySlug, setCategorySlug] = useState("");
   const [availability, setAvailability] = useState<"all" | "available" | "unavailable">("all");
-  const [page, setPage] = useState(1);
   const [categoryTabs, setCategoryTabs] = useState<Array<{ label: string; slug: string }>>(defaultCategoryTabs);
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
 
   const [rows, setRows] = useState<AdminProductListItem[]>([]);
   const [totalCount, setTotalCount] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [expandedCompactRowId, setExpandedCompactRowId] = useState<string | null>(null);
 
+  const offsetRef = useRef(0);
+  const isLoadingMoreRef = useRef(false);
+  const hasMoreRef = useRef(false);
+
+  // Keep hasMoreRef in sync
+  useEffect(() => { hasMoreRef.current = hasMore; }, [hasMore]);
+
+  // Debounce search
   useEffect(() => {
     const timeout = window.setTimeout(() => {
       setSearchTerm(searchInput.trim());
-      setPage(1);
     }, 300);
     return () => window.clearTimeout(timeout);
   }, [searchInput]);
 
+  // Reset and load first page when filters/search change
   useEffect(() => {
     let isMounted = true;
-    const loadProducts = async () => {
-      setIsLoading(true);
-      setLoadError(null);
+    setRows([]);
+    setTotalCount(0);
+    setHasMore(false);
+    setIsLoading(true);
+    setLoadError(null);
+    offsetRef.current = 0;
+
+    const load = async () => {
       try {
         const result = await fetchAdminProducts({
           searchTerm,
           categorySlug: categorySlug || undefined,
           availability,
-          page,
+          page: 1,
           pageSize: PAGE_SIZE,
         });
         if (!isMounted) return;
         setRows(result.rows);
         setTotalCount(result.totalCount);
+        offsetRef.current = result.rows.length;
+        setHasMore(result.rows.length < result.totalCount);
       } catch {
         if (!isMounted) return;
-        setRows([]);
-        setTotalCount(0);
         setLoadError("Unable to load products.");
       } finally {
         if (isMounted) setIsLoading(false);
       }
     };
-    void loadProducts();
-    return () => { isMounted = false; };
-  }, [searchTerm, categorySlug, availability, page]);
 
+    void load();
+    return () => { isMounted = false; };
+  }, [searchTerm, categorySlug, availability]);
+
+  // Load next batch of products
+  const loadMore = useCallback(async () => {
+    if (isLoadingMoreRef.current || !hasMoreRef.current) return;
+    isLoadingMoreRef.current = true;
+    setIsLoadingMore(true);
+    try {
+      const nextPage = Math.floor(offsetRef.current / PAGE_SIZE) + 1;
+      const result = await fetchAdminProducts({
+        searchTerm,
+        categorySlug: categorySlug || undefined,
+        availability,
+        page: nextPage,
+        pageSize: PAGE_SIZE,
+      });
+      setRows((prev) => [...prev, ...result.rows]);
+      setTotalCount(result.totalCount);
+      offsetRef.current += result.rows.length;
+      setHasMore(offsetRef.current < result.totalCount);
+    } catch {
+      // silently ignore load-more errors
+    } finally {
+      setIsLoadingMore(false);
+      isLoadingMoreRef.current = false;
+    }
+  }, [searchTerm, categorySlug, availability]);
+
+  // Scroll listener for infinite load
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!hasMoreRef.current || isLoadingMoreRef.current) return;
+      const scrolled = window.scrollY + window.innerHeight;
+      const total = document.documentElement.scrollHeight;
+      if (total - scrolled < 400) {
+        void loadMore();
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [loadMore]);
+
+  // Trigger loadMore if content doesn't fill the viewport after initial load
+  useEffect(() => {
+    if (isLoading || !hasMore) return;
+    if (document.documentElement.scrollHeight <= window.innerHeight) {
+      void loadMore();
+    }
+  }, [isLoading, hasMore, loadMore]);
+
+  // Load categories
   useEffect(() => {
     let isMounted = true;
     const loadCategoryTabs = async () => {
@@ -250,20 +347,6 @@ const AdminProductsPage = () => {
     return () => { isMounted = false; };
   }, []);
 
-  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
-
-  const pageNumbers = useMemo(() => {
-    const pages: number[] = [];
-    const start = Math.max(1, page - 2);
-    const end = Math.min(totalPages, start + 4);
-    for (let cur = start; cur <= end; cur++) pages.push(cur);
-    return pages;
-  }, [page, totalPages]);
-
-  useEffect(() => {
-    if (page > totalPages) setPage(totalPages);
-  }, [page, totalPages]);
-
   const onDelete = async (product: AdminProductListItem) => {
     setDeletingId(product.id);
     try {
@@ -275,17 +358,12 @@ const AdminProductsPage = () => {
       const shouldDelete = window.confirm(`Delete ${product.name}? This cannot be undone.`);
       if (!shouldDelete) return;
       await deleteAdminProduct(product.id, { name: product.name, slug: product.slug });
-      const refreshed = await fetchAdminProducts({
-        searchTerm, categorySlug: categorySlug || undefined, availability, page, pageSize: PAGE_SIZE,
-      });
-      setRows(refreshed.rows);
-      setTotalCount(refreshed.totalCount);
+      setRows((prev) => prev.filter((r) => r.id !== product.id));
+      setTotalCount((prev) => prev - 1);
     } finally {
       setDeletingId(null);
     }
   };
-
-  const openEditor = (productId: string) => navigate(`/admin/products/${productId}/edit`);
 
   const activeFilterCount =
     (availability !== "all" ? 1 : 0) + (categorySlug !== "" ? 1 : 0);
@@ -330,10 +408,7 @@ const AdminProductsPage = () => {
           </div>
         </div>
 
-        {/* ── Filter card ───────────────────────────────────────────────────────
-            Desktop: search + availability + categories
-            Mobile:  search + "Filter" button that opens the bottom sheet
-        ────────────────────────────────────────────────────────────────────── */}
+        {/* ── Filter card ───────────────────────────────────────────────────────── */}
         <section
           className="mt-7 rounded-[28px] border bg-white p-4 shadow-[0_14px_48px_rgba(26,28,28,0.06)] sm:p-5"
           style={{ borderColor: "rgba(var(--color-primary-rgb),0.15)" }}
@@ -342,7 +417,6 @@ const AdminProductsPage = () => {
 
             {/* Search row */}
             <div className="flex items-center gap-2">
-              {/* Search input — full width on mobile, capped on desktop */}
               <label className="relative block flex-1">
                 <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-primary)]" />
                 <input
@@ -374,7 +448,7 @@ const AdminProductsPage = () => {
               </button>
             </div>
 
-            {/* Desktop/tablet filters under search */}
+            {/* Desktop/tablet filters */}
             <div className="hidden border-t border-[rgba(var(--color-primary-rgb),0.1)] pt-4 lg:flex lg:items-start lg:justify-between lg:gap-4">
               <div className="flex flex-wrap gap-2">
                 {availabilityTabs.map((opt) => {
@@ -383,7 +457,7 @@ const AdminProductsPage = () => {
                     <button
                       key={opt.value}
                       type="button"
-                      onClick={() => { setAvailability(opt.value); setPage(1); }}
+                      onClick={() => setAvailability(opt.value)}
                       className={`rounded-full border px-4 py-2 font-body text-[10px] uppercase tracking-[0.12em] transition-colors ${
                         active ? "text-white" : "text-[var(--color-muted)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
                       }`}
@@ -407,7 +481,7 @@ const AdminProductsPage = () => {
                       <button
                         key={tab.slug || "all"}
                         type="button"
-                        onClick={() => { setCategorySlug(tab.slug); setPage(1); }}
+                        onClick={() => setCategorySlug(tab.slug)}
                         className={`shrink-0 rounded-full border px-4 py-2 font-body text-[10px] uppercase tracking-[0.12em] transition-colors ${
                           active ? "text-white" : "text-[var(--color-muted)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
                         }`}
@@ -424,328 +498,56 @@ const AdminProductsPage = () => {
               </div>
             </div>
 
-            {/* Count + page */}
-            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[rgba(var(--color-primary-rgb),0.1)] pt-3">
+            {/* Count */}
+            <div className="border-t border-[rgba(var(--color-primary-rgb),0.1)] pt-3">
               <p className="font-body text-[11px] uppercase tracking-[0.12em] text-[var(--color-primary)]">
                 {totalCount === 0 ? "No products found" : `${totalCount} product${totalCount === 1 ? "" : "s"} found`}
-              </p>
-              <p className="font-body text-[11px] text-[var(--color-muted)]">
-                Page {Math.min(page, totalPages)} of {totalPages}
               </p>
             </div>
           </div>
         </section>
 
-        {/* ── Desktop table (lg+) ───────────────────────────────────────────────── */}
-        <div
-          className="mt-4 hidden overflow-hidden rounded-[24px] border bg-white lg:block"
-          style={{ borderColor: "rgba(var(--color-primary-rgb),0.12)" }}
-        >
-          <table className="w-full table-fixed border-collapse">
-            <colgroup>
-              <col style={{ width: "8%" }} />
-              <col style={{ width: "29%" }} />
-              <col style={{ width: "14%" }} />
-              <col style={{ width: "14%" }} />
-              <col style={{ width: "12%" }} />
-              <col style={{ width: "11%" }} />
-              <col style={{ width: "12%" }} />
-            </colgroup>
-              <thead className="bg-[rgba(var(--color-primary-rgb),0.03)]">
-                <tr>
-                  {["Image", "Name & SKU", "Category", "Price", "Stock", "Status", "Actions"].map((h) => (
-                    <th
-                      key={h}
-                      className="px-2 py-2.5 text-left font-body text-[9px] uppercase tracking-[0.11em] text-[var(--color-muted-soft)] first:pl-3 last:pr-3"
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {isLoading ? (
-                  <tr><td colSpan={7} className="px-3 py-9 text-center font-body text-[12px] text-[var(--color-muted-soft)]">Loading products...</td></tr>
-                ) : loadError ? (
-                  <tr><td colSpan={7} className="px-3 py-9 text-center font-body text-[12px] text-[var(--color-danger)]">{loadError}</td></tr>
-                ) : rows.length === 0 ? (
-                  <tr><td colSpan={7} className="px-3 py-9 text-center font-body text-[12px] text-[var(--color-muted-soft)]">No products found.</td></tr>
-                ) : (
-                  rows.map((product) => {
-                    const threshold = product.low_stock_threshold ?? 5;
-                    const isLow = product.stock_quantity <= threshold && product.stock_quantity > 0;
-                    const isOut = product.stock_quantity === 0;
-                    return (
-                      <tr
-                        key={product.id}
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => openEditor(product.id)}
-                        onKeyDown={(e) => {
-                          if (e.target !== e.currentTarget) return;
-                          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openEditor(product.id); }
-                        }}
-                        className="cursor-pointer border-t border-[rgba(var(--color-primary-rgb),0.1)] transition-colors hover:bg-[rgba(var(--color-primary-rgb),0.04)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
-                      >
-                        <td className="px-2 py-3 pl-3">
-                          <div className="h-14 w-10 overflow-hidden rounded-[10px] border border-[rgba(var(--color-primary-rgb),0.12)] bg-[var(--color-surface-alt)]">
-                            {product.image_url
-                              ? <img src={product.image_url} alt={product.name} className="h-full w-full object-cover" />
-                              : <div className="h-full w-full bg-[var(--color-surface-strong)]" />}
-                          </div>
-                        </td>
-                        <td className="px-2 py-3">
-                          <p className="truncate font-body text-[12px] text-[var(--color-navbar-solid-foreground)]" title={product.name}>
-                            {truncateNameByHalf(product.name)}
-                          </p>
-                          <p className="mt-0.5 truncate font-body text-[9px] uppercase tracking-[0.05em] text-[var(--color-muted-soft)]">
-                            {truncateSkuByHalf(product.sku)}
-                          </p>
-                        </td>
-                        <td className="px-2 py-3 font-body text-[10px] uppercase tracking-[0.06em] text-[var(--color-accent)]">
-                          <span className="block truncate" title={product.category_name || "Uncategorized"}>
-                            {product.category_name || "Uncategorized"}
-                          </span>
-                        </td>
-                        <td className="px-2 py-3">
-                          <p className="whitespace-nowrap font-body text-[12px] text-[var(--color-navbar-solid-foreground)]">{formatCurrency(product.price)}</p>
-                          {product.compare_at_price && (
-                            <p className="whitespace-nowrap font-body text-[10px] text-[var(--color-muted-soft)] line-through">{formatCurrency(product.compare_at_price)}</p>
-                          )}
-                        </td>
-                        <td className="px-2 py-3">
-                          <p className={`font-body text-[12px] ${isOut ? "text-[var(--color-danger)]" : isLow ? "text-[var(--color-accent)]" : "text-[var(--color-navbar-solid-foreground)]"}`}>
-                            {product.stock_quantity}
-                          </p>
-                          {isLow && <span className="mt-1 inline-block rounded-full bg-[rgba(var(--color-accent-rgb),0.15)] px-1.5 py-0.5 font-body text-[7px] uppercase tracking-[0.06em] text-[var(--color-accent)]">Low</span>}
-                          {isOut && <span className="mt-1 inline-block rounded-full bg-[rgba(var(--color-danger-rgb),0.15)] px-1.5 py-0.5 font-body text-[7px] uppercase tracking-[0.06em] text-[var(--color-danger)]">Out</span>}
-                        </td>
-                        <td className="px-2 py-3">
-                          <span className={`inline-block whitespace-nowrap rounded-full px-2 py-1 font-body text-[8px] uppercase tracking-[0.08em] ${product.is_available ? "border border-[var(--color-accent)] text-[var(--color-accent)]" : "border border-[var(--color-danger)] text-[var(--color-danger)]"}`}>
-                            {product.is_available ? "Available" : "Unavailable"}
-                          </span>
-                        </td>
-                        <td className="px-2 py-3 pr-3">
-                          <div className="flex items-center justify-end gap-1.5 font-body text-[9px] uppercase tracking-[0.08em]">
-                            <button
-                              type="button"
-                              disabled={deletingId === product.id}
-                              onClick={(e) => { e.stopPropagation(); void onDelete(product); }}
-                              className="whitespace-nowrap rounded-full border border-transparent px-2.5 py-1 text-[var(--color-muted)] transition-colors hover:border-[rgba(var(--color-danger-rgb),0.25)] hover:text-[var(--color-danger)] disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                              {deletingId === product.id ? "Deleting..." : "Delete"}
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-        </div>
-
-        {/* Compact table (mobile/tablet) */}
-        <div
-          className="mt-4 overflow-hidden rounded-[22px] border bg-white lg:hidden"
-          style={{ borderColor: "rgba(var(--color-primary-rgb),0.12)" }}
-        >
-          <table className="w-full table-fixed border-collapse">
-            <colgroup>
-              <col style={{ width: "18%" }} />
-              <col style={{ width: "42%" }} />
-              <col style={{ width: "18%" }} />
-              <col style={{ width: "22%" }} />
-            </colgroup>
-            <thead className="bg-[rgba(var(--color-primary-rgb),0.03)]">
-              <tr>
-                {["Image", "Product", "Price", "Action"].map((heading) => (
-                  <th
-                    key={heading}
-                    className="px-2 py-2 text-left font-body text-[9px] uppercase tracking-[0.1em] text-[var(--color-muted-soft)] first:pl-3 last:pr-3"
-                  >
-                    {heading}
-                  </th>
+        {/* ── Product image grid ────────────────────────────────────────────────── */}
+        <div className="mt-6 pb-10">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <p className="font-body text-[12px] text-[var(--color-muted-soft)]">Loading products...</p>
+            </div>
+          ) : loadError ? (
+            <div className="flex items-center justify-center py-16">
+              <p className="font-body text-[12px] text-[var(--color-danger)]">{loadError}</p>
+            </div>
+          ) : rows.length === 0 ? (
+            <div className="flex items-center justify-center py-16">
+              <p className="font-body text-[12px] text-[var(--color-muted-soft)]">No products found.</p>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
+                {rows.map((product) => (
+                  <ProductTile
+                    key={product.id}
+                    product={product}
+                    onClick={() => navigate(`/admin/products/${product.id}/edit`)}
+                    onDelete={() => void onDelete(product)}
+                    isDeleting={deletingId === product.id}
+                  />
                 ))}
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan={4} className="px-3 py-9 text-center font-body text-[12px] text-[var(--color-muted-soft)]">
-                    Loading products...
-                  </td>
-                </tr>
-              ) : loadError ? (
-                <tr>
-                  <td colSpan={4} className="px-3 py-9 text-center font-body text-[12px] text-[var(--color-danger)]">
-                    {loadError}
-                  </td>
-                </tr>
-              ) : rows.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-3 py-9 text-center font-body text-[12px] text-[var(--color-muted-soft)]">
-                    No products found.
-                  </td>
-                </tr>
-              ) : (
-                rows.flatMap((product) => {
-                  const threshold = product.low_stock_threshold ?? 5;
-                  const isLow = product.stock_quantity <= threshold && product.stock_quantity > 0;
-                  const isOut = product.stock_quantity === 0;
-                  const isExpanded = expandedCompactRowId === product.id;
+              </div>
 
-                  return [
-                    <tr
-                      key={`${product.id}-main`}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => openEditor(product.id)}
-                      onKeyDown={(event) => {
-                        if (event.target !== event.currentTarget) return;
-                        if (event.key === "Enter" || event.key === " ") {
-                          event.preventDefault();
-                          openEditor(product.id);
-                        }
-                      }}
-                      className="cursor-pointer border-t border-[rgba(var(--color-primary-rgb),0.1)] transition-colors hover:bg-[rgba(var(--color-primary-rgb),0.04)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
-                    >
-                      <td className="px-2 py-2.5 pl-3">
-                        <div className="h-12 w-9 overflow-hidden rounded-[8px] border border-[rgba(var(--color-primary-rgb),0.12)] bg-[var(--color-surface-alt)]">
-                          {product.image_url ? (
-                            <img src={product.image_url} alt={product.name} className="h-full w-full object-cover" />
-                          ) : (
-                            <div className="h-full w-full bg-[var(--color-surface-strong)]" />
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-2 py-2.5">
-                        <p className="truncate font-body text-[12px] text-[var(--color-navbar-solid-foreground)]" title={product.name}>
-                          {truncateNameByHalf(product.name)}
-                        </p>
-                        <p className="mt-0.5 truncate font-body text-[9px] uppercase tracking-[0.05em] text-[var(--color-muted-soft)]" title={product.sku || "No SKU"}>
-                          {truncateSkuByHalf(product.sku)}
-                        </p>
-                      </td>
-                      <td className="px-2 py-2.5 align-top">
-                        <p className="whitespace-nowrap font-body text-[12px] text-[var(--color-navbar-solid-foreground)]">
-                          {formatCurrency(product.price)}
-                        </p>
-                        {product.compare_at_price ? (
-                          <p className="whitespace-nowrap font-body text-[10px] text-[var(--color-muted-soft)] line-through">
-                            {formatCurrency(product.compare_at_price)}
-                          </p>
-                        ) : null}
-                      </td>
-                      <td className="px-2 py-2.5 pr-3">
-                        <div className="flex flex-col items-end gap-1.5">
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              setExpandedCompactRowId((current) => (current === product.id ? null : product.id));
-                            }}
-                            className="inline-flex items-center gap-1 rounded-full border px-2 py-1 font-body text-[8px] uppercase tracking-[0.08em] text-[var(--color-primary)] transition-colors hover:bg-[rgba(var(--color-primary-rgb),0.06)]"
-                            style={{ borderColor: "rgba(var(--color-primary-rgb),0.2)" }}
-                          >
-                            {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                            Details
-                          </button>
-                          <button
-                            type="button"
-                            disabled={deletingId === product.id}
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              void onDelete(product);
-                            }}
-                            className="rounded-full border border-transparent px-2.5 py-1 font-body text-[8px] uppercase tracking-[0.08em] text-[var(--color-muted)] transition-colors hover:border-[rgba(var(--color-danger-rgb),0.25)] hover:text-[var(--color-danger)] disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            {deletingId === product.id ? "Deleting..." : "Delete"}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>,
-                    isExpanded ? (
-                      <tr key={`${product.id}-details`} className="border-t border-[rgba(var(--color-primary-rgb),0.08)] bg-[rgba(var(--color-primary-rgb),0.03)]">
-                        <td colSpan={4} className="px-3 py-2.5">
-                          <div className="grid grid-cols-2 gap-x-3 gap-y-2 font-body text-[10px] text-[var(--color-navbar-solid-foreground)]">
-                            <p className="truncate" title={product.category_name || "Uncategorized"}>
-                              <span className="mr-1 text-[var(--color-muted)]">Category:</span>
-                              {product.category_name || "Uncategorized"}
-                            </p>
-                            <p>
-                              <span className="mr-1 text-[var(--color-muted)]">Status:</span>
-                              <span className={product.is_available ? "text-[var(--color-accent)]" : "text-[var(--color-danger)]"}>
-                                {product.is_available ? "Available" : "Unavailable"}
-                              </span>
-                            </p>
-                            <p>
-                              <span className="mr-1 text-[var(--color-muted)]">Stock:</span>
-                              <span className={isOut ? "text-[var(--color-danger)]" : isLow ? "text-[var(--color-accent)]" : ""}>
-                                {product.stock_quantity}
-                              </span>
-                              {isLow ? <span className="ml-1 text-[var(--color-accent)]">(Low)</span> : null}
-                              {isOut ? <span className="ml-1 text-[var(--color-danger)]">(Out)</span> : null}
-                            </p>
-                            {product.compare_at_price ? (
-                              <p>
-                                <span className="mr-1 text-[var(--color-muted)]">Compare:</span>
-                                {formatCurrency(product.compare_at_price)}
-                              </p>
-                            ) : (
-                              <p />
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ) : null,
-                  ];
-                })
+              {/* Infinite scroll status */}
+              {isLoadingMore && (
+                <div className="flex items-center justify-center py-8">
+                  <p className="font-body text-[12px] text-[var(--color-muted-soft)]">Loading more...</p>
+                </div>
               )}
-            </tbody>
-          </table>
-        </div>
-        {/* ── Pagination ────────────────────────────────────────────────────────── */}
-        <div
-          className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-[22px] border bg-white px-4 py-3"
-          style={{ borderColor: "rgba(var(--color-primary-rgb),0.12)" }}
-        >
-          <button
-            type="button"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page <= 1}
-            className="rounded-full border px-4 py-2 font-body text-[10px] uppercase tracking-[0.1em] text-[var(--color-primary)] transition-colors hover:bg-[rgba(var(--color-primary-rgb),0.06)] disabled:cursor-not-allowed disabled:opacity-40"
-            style={{ borderColor: "rgba(var(--color-primary-rgb),0.2)" }}
-          >
-            Previous
-          </button>
-
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            {pageNumbers.map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => setPage(n)}
-                className={`h-8 min-w-8 rounded-full px-3 font-body text-[11px] transition-colors ${
-                  n === page
-                    ? "bg-[var(--color-primary)] text-white"
-                    : "text-[var(--color-muted)] hover:bg-[rgba(var(--color-primary-rgb),0.08)] hover:text-[var(--color-primary)]"
-                }`}
-              >
-                {n}
-              </button>
-            ))}
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page >= totalPages}
-            className="rounded-full border px-4 py-2 font-body text-[10px] uppercase tracking-[0.1em] text-[var(--color-primary)] transition-colors hover:bg-[rgba(var(--color-primary-rgb),0.06)] disabled:cursor-not-allowed disabled:opacity-40"
-            style={{ borderColor: "rgba(var(--color-primary-rgb),0.2)" }}
-          >
-            Next
-          </button>
+              {!hasMore && rows.length > 0 && (
+                <p className="mt-8 text-center font-body text-[11px] uppercase tracking-[0.12em] text-[var(--color-muted-soft)]">
+                  All {totalCount} product{totalCount === 1 ? "" : "s"} loaded
+                </p>
+              )}
+            </>
+          )}
         </div>
       </div>
 
@@ -758,11 +560,9 @@ const AdminProductsPage = () => {
         categorySlug={categorySlug}
         setCategorySlug={setCategorySlug}
         categoryTabs={categoryTabs}
-        setPage={setPage}
       />
     </div>
   );
 };
 
 export default AdminProductsPage;
-
