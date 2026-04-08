@@ -274,6 +274,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     setIsCartOpen(false);
   }, []);
 
+  const openCartDrawer = useCallback(() => {
+    setIsCartOpen(true);
+  }, []);
+
   const validateCart = useCallback(async (): Promise<ValidateCartResult> => {
     if (validationPromiseRef.current) {
       return validationPromiseRef.current;
@@ -332,9 +336,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   }, [commitItems]);
 
   const openCart = useCallback(() => {
-    setIsCartOpen(true);
+    openCartDrawer();
     void validateCart();
-  }, [validateCart]);
+  }, [openCartDrawer, validateCart]);
 
   const addToCart = useCallback(
     (product: CartProductInput) => {
@@ -371,6 +375,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         };
 
         commitItems(nextItems);
+        openCartDrawer();
         showNeutralToast(`${product.name} added to cart`);
         return;
       }
@@ -385,9 +390,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       ];
 
       commitItems(nextItems);
+      openCartDrawer();
       showNeutralToast(`${product.name} added to cart`);
     },
-    [commitItems],
+    [commitItems, openCartDrawer],
   );
 
   const removeFromCart = useCallback(
