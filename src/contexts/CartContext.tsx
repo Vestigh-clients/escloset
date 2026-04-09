@@ -56,6 +56,11 @@ export interface CartProductInput {
   variant_label: string | null;
 }
 
+export interface AddToCartOptions {
+  openCart?: boolean;
+  showToast?: boolean;
+}
+
 interface ValidateCartResult {
   state: CartState;
   hasChanges: boolean;
@@ -71,7 +76,7 @@ interface CartContextValue {
   isValidating: boolean;
   openCart: () => void;
   closeCart: () => void;
-  addToCart: (product: CartProductInput) => void;
+  addToCart: (product: CartProductInput, options?: AddToCartOptions) => void;
   removeFromCart: (productId: string, variantId?: string | null) => void;
   updateQuantity: (productId: string, quantity: number, variantId?: string | null) => void;
   replaceItems: (items: CartItem[]) => void;
@@ -341,11 +346,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   }, [openCartDrawer, validateCart]);
 
   const addToCart = useCallback(
-    (product: CartProductInput) => {
+    (product: CartProductInput, options?: AddToCartOptions) => {
       if (product.stock_quantity <= 0) {
         return;
       }
 
+      const shouldOpenCart = options?.openCart ?? true;
+      const shouldShowToast = options?.showToast ?? true;
       const currentItems = cartStateRef.current.items;
       const existingIndex = currentItems.findIndex((item) => isSameCartLine(item, product.product_id, product.variant_id));
 
@@ -375,8 +382,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         };
 
         commitItems(nextItems);
-        openCartDrawer();
-        showNeutralToast(`${product.name} added to cart`);
+        if (shouldOpenCart) {
+          openCartDrawer();
+        }
+        if (shouldShowToast) {
+          showNeutralToast(`${product.name} added to cart`);
+        }
         return;
       }
 
@@ -390,8 +401,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       ];
 
       commitItems(nextItems);
-      openCartDrawer();
-      showNeutralToast(`${product.name} added to cart`);
+      if (shouldOpenCart) {
+        openCartDrawer();
+      }
+      if (shouldShowToast) {
+        showNeutralToast(`${product.name} added to cart`);
+      }
     },
     [commitItems, openCartDrawer],
   );

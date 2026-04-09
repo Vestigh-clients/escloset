@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type TouchEvent } from "react";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import TryOnModal from "@/components/TryOnModal";
 import ProductFetchErrorState from "@/components/products/ProductFetchErrorState";
 import ProductImagePlaceholder from "@/components/products/ProductImagePlaceholder";
 import StorefrontProductCard from "@/components/products/StorefrontProductCard";
 import { storeConfig } from "@/config/store.config";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCart } from "@/contexts/CartContext";
+import { useCart, type CartProductInput } from "@/contexts/CartContext";
 import { useThemeConfig } from "@/contexts/ThemeContext";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
@@ -417,9 +417,20 @@ const formatProductWeight = (weightGrams?: number): string | null => {
   return `${weightGrams} g`;
 };
 
+const createVariantOptionSelection = (variant: ProductVariant): Record<string, string> => {
+  return variant.product_variant_options.reduce<Record<string, string>>((selection, optionLink) => {
+    if (optionLink.option_type_id && optionLink.option_value_id) {
+      selection[optionLink.option_type_id] = optionLink.option_value_id;
+    }
+
+    return selection;
+  }, {});
+};
+
 const ProductPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const { addToCart, isCartOpen } = useCart();
   const {
@@ -764,6 +775,14 @@ const ProductPage = () => {
       ) ?? null
     );
   }, [hasVariants, selectedOptions, sortedOptionTypes.length, variants]);
+  const defaultVariant = useMemo(
+    () => variants.find((variant) => variant.is_available && variant.stock_quantity > 0) ?? null,
+    [variants],
+  );
+  const defaultVariantSelection = useMemo(
+    () => (defaultVariant ? createVariantOptionSelection(defaultVariant) : null),
+    [defaultVariant],
+  );
   const selectedVariantLabel = useMemo(() => {
     if (!selectedVariant) return null;
     if (selectedVariant.label && selectedVariant.label.trim()) return selectedVariant.label.trim();
@@ -997,6 +1016,20 @@ const ProductPage = () => {
   }, [hasVariants, sortedOptionTypes]);
 
   useEffect(() => {
+    if (!hasVariants || !defaultVariantSelection) {
+      return;
+    }
+
+    setSelectedOptions((current) => {
+      if (Object.keys(current).length > 0) {
+        return current;
+      }
+
+      return defaultVariantSelection;
+    });
+  }, [defaultVariantSelection, hasVariants]);
+
+  useEffect(() => {
     if (!galleryImages.length) {
       setLightboxOpen(false);
       setLightboxIndex(0);
@@ -1123,17 +1156,17 @@ const ProductPage = () => {
     navigateLightboxTo(swipeDistance > 0 ? lightboxIndex + 1 : lightboxIndex - 1);
   };
 
-  const handleAddToCart = () => {
+  const buildCartProductInput = (): CartProductInput | null => {
     if (!product) {
-      return;
+      return null;
     }
 
     if (hasVariants) {
       if (!selectedVariant || !selectedVariant.is_available || selectedVariant.stock_quantity <= 0) {
-        return;
+        return null;
       }
 
-      addToCart({
+      return {
         product_id: product.id,
         name: product.name,
         slug: product.slug,
@@ -1146,15 +1179,14 @@ const ProductPage = () => {
         stock_quantity: selectedVariant.stock_quantity,
         variant_id: selectedVariant.id,
         variant_label: selectedVariantLabel,
-      });
-      return;
+      };
     }
 
     if (isOutOfStock) {
-      return;
+      return null;
     }
 
-    addToCart({
+    return {
       product_id: product.id,
       name: product.name,
       slug: product.slug,
@@ -1167,7 +1199,26 @@ const ProductPage = () => {
       stock_quantity: productStockQuantity,
       variant_id: null,
       variant_label: null,
-    });
+    };
+  };
+
+  const handleAddToCart = () => {
+    const cartProduct = buildCartProductInput();
+    if (!cartProduct) {
+      return;
+    }
+
+    addToCart(cartProduct);
+  };
+
+  const handleBuyNow = () => {
+    const cartProduct = buildCartProductInput();
+    if (!cartProduct) {
+      return;
+    }
+
+    addToCart(cartProduct, { openCart: false, showToast: false });
+    navigate("/checkout/contact");
   };
 
   const handleSubmitReview = async () => {
@@ -1489,25 +1540,41 @@ const ProductPage = () => {
               ) : null}
 
               <div className="hidden flex-col gap-4 md:flex">
-                <button
-                  type="button"
-                  onClick={handleAddToCart}
-                  disabled={isAddToCartDisabled}
-                  className={`flex items-center justify-center gap-3 rounded-md py-4 text-xs font-bold uppercase tracking-widest transition-all ${
-                    isAddToCartDisabled
-                      ? "cursor-not-allowed bg-[rgba(186,194,201,0.7)] text-on-surface-variant"
-                      : "bg-gradient-to-r from-[#D81B60] to-[#F06292] text-white shadow-[0_12px_30px_rgba(26,28,28,0.16)] hover:opacity-90 active:scale-[0.98]"
-                  }`}
-                >
-                  <span className="material-symbols-outlined">shopping_cart</span>
-                  {addToCartButtonText}
-                </button>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={handleAddToCart}
+                    disabled={isAddToCartDisabled}
+                    className={`flex items-center justify-center gap-3 rounded-md py-4 text-xs font-bold uppercase tracking-widest transition-all ${
+                      isAddToCartDisabled
+                        ? "cursor-not-allowed bg-[rgba(186,194,201,0.7)] text-on-surface-variant"
+                        : "bg-gradient-to-r from-[#D81B60] to-[#F06292] text-white shadow-[0_12px_30px_rgba(26,28,28,0.16)] hover:opacity-90 active:scale-[0.98]"
+                    }`}
+                  >
+                    <span className="material-symbols-outlined">shopping_cart</span>
+                    {addToCartButtonText}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleBuyNow}
+                    disabled={isAddToCartDisabled}
+                    className={`flex items-center justify-center gap-3 rounded-md py-4 text-xs font-bold uppercase tracking-widest transition-all ${
+                      isAddToCartDisabled
+                        ? "cursor-not-allowed bg-[rgba(186,194,201,0.7)] text-on-surface-variant"
+                        : "bg-[rgba(26,28,28,0.92)] text-white shadow-[0_12px_30px_rgba(26,28,28,0.14)] hover:bg-[rgba(26,28,28,0.84)] active:scale-[0.98]"
+                    }`}
+                  >
+                    <span className="material-symbols-outlined">bolt</span>
+                    Buy Now
+                  </button>
+                </div>
 
                 {showTryOn ? (
                   <button
                     type="button"
                     onClick={() => setTryOnOpen(true)}
-                    className="flex items-center justify-center gap-3 rounded-md border border-[rgba(186,194,201,0.3)] bg-[rgba(232,232,232,0.45)] py-4 text-xs font-bold uppercase tracking-widest text-on-surface transition-all hover:bg-[rgba(232,232,232,0.7)] active:scale-[0.98]"
+                    className="flex w-full items-center justify-center gap-3 rounded-md border border-[rgba(186,194,201,0.3)] bg-[rgba(232,232,232,0.45)] px-6 py-4 text-xs font-bold uppercase tracking-widest text-on-surface transition-all hover:bg-[rgba(232,232,232,0.7)] active:scale-[0.98]"
                   >
                     <span className="material-symbols-outlined">photo_camera</span>
                     Try It On
@@ -1792,25 +1859,41 @@ const ProductPage = () => {
       {!isCartOpen ? (
         <div className="fixed inset-x-0 bottom-0 z-[900] border-t border-[rgba(186,194,201,0.45)] bg-surface/95 backdrop-blur md:hidden">
           <div className="mx-auto flex max-w-screen-2xl flex-col gap-2 px-4 pb-4 pt-3">
-            <button
-              type="button"
-              onClick={handleAddToCart}
-              disabled={isAddToCartDisabled}
-              className={`flex items-center justify-center gap-2 rounded-md py-3 text-[11px] font-bold uppercase tracking-widest transition-all ${
-                isAddToCartDisabled
-                  ? "cursor-not-allowed bg-[rgba(186,194,201,0.7)] text-on-surface-variant"
-                  : "bg-gradient-to-r from-[#D81B60] to-[#F06292] text-white shadow-[0_8px_22px_rgba(26,28,28,0.16)] active:scale-[0.98]"
-              }`}
-            >
-              <span className="material-symbols-outlined text-base">shopping_cart</span>
-              {addToCartButtonText}
-            </button>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                disabled={isAddToCartDisabled}
+                className={`flex items-center justify-center gap-2 rounded-md py-3 text-[11px] font-bold uppercase tracking-widest transition-all ${
+                  isAddToCartDisabled
+                    ? "cursor-not-allowed bg-[rgba(186,194,201,0.7)] text-on-surface-variant"
+                    : "bg-gradient-to-r from-[#D81B60] to-[#F06292] text-white shadow-[0_8px_22px_rgba(26,28,28,0.16)] active:scale-[0.98]"
+                }`}
+              >
+                <span className="material-symbols-outlined text-base">shopping_cart</span>
+                {addToCartButtonText}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleBuyNow}
+                disabled={isAddToCartDisabled}
+                className={`flex items-center justify-center gap-2 rounded-md py-3 text-[11px] font-bold uppercase tracking-widest transition-all ${
+                  isAddToCartDisabled
+                    ? "cursor-not-allowed bg-[rgba(186,194,201,0.7)] text-on-surface-variant"
+                    : "bg-[rgba(26,28,28,0.92)] text-white shadow-[0_8px_22px_rgba(26,28,28,0.14)] active:scale-[0.98]"
+                }`}
+              >
+                <span className="material-symbols-outlined text-base">bolt</span>
+                Buy Now
+              </button>
+            </div>
 
             {showTryOn ? (
               <button
                 type="button"
                 onClick={() => setTryOnOpen(true)}
-                className="flex items-center justify-center gap-2 rounded-md border border-[rgba(186,194,201,0.4)] bg-[rgba(232,232,232,0.45)] py-3 text-[11px] font-bold uppercase tracking-widest text-on-surface transition-all active:scale-[0.98]"
+                className="flex w-full items-center justify-center gap-2 rounded-md border border-[rgba(186,194,201,0.4)] bg-[rgba(232,232,232,0.45)] px-5 py-3 text-[11px] font-bold uppercase tracking-widest text-on-surface transition-all active:scale-[0.98]"
               >
                 <span className="material-symbols-outlined text-base">photo_camera</span>
                 Try It On

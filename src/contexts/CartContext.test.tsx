@@ -77,6 +77,9 @@ const CartHarness = () => {
       <button type="button" onClick={() => addToCart(unavailableProduct)}>
         Add unavailable
       </button>
+      <button type="button" onClick={() => addToCart(expandableProduct, { openCart: false, showToast: false })}>
+        Add expandable silently
+      </button>
       <button type="button" onClick={closeCart}>
         Close cart
       </button>
@@ -119,6 +122,7 @@ describe("CartProvider auto-open behavior", () => {
     expect(screen.getByTestId("total-items")).toHaveTextContent("1");
     expect(screen.getByTestId("first-item-quantity")).toHaveTextContent("1");
     expect(validateCartStockMock).not.toHaveBeenCalled();
+    expect(toastMock).toHaveBeenCalledWith("Expandable Dress added to cart", expect.any(Object));
   });
 
   it("reopens the drawer when the same item quantity increases", () => {
@@ -176,5 +180,17 @@ describe("CartProvider auto-open behavior", () => {
     });
 
     expect(validateCartStockMock.mock.calls[0]?.[0]).toHaveLength(1);
+  });
+
+  it("can add to cart without opening the drawer or showing a toast", () => {
+    renderCartProvider();
+
+    fireEvent.click(screen.getByRole("button", { name: "Add expandable silently" }));
+
+    expect(screen.getByTestId("is-cart-open")).toHaveTextContent("false");
+    expect(screen.getByTestId("total-items")).toHaveTextContent("1");
+    expect(screen.getByTestId("first-item-quantity")).toHaveTextContent("1");
+    expect(toastMock).not.toHaveBeenCalled();
+    expect(validateCartStockMock).not.toHaveBeenCalled();
   });
 });
