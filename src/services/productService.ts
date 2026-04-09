@@ -287,6 +287,91 @@ const mapProducts = (rows: unknown[] | null | undefined): Product[] => {
     .map((row) => mapProduct(row));
 };
 
+const BRAND_TAG_PREFIX = "brand:";
+
+const normalizeTag = (value: string): string => value.trim().toLowerCase();
+
+const getBrandTags = (product: Product): Set<string> => {
+  return new Set(
+    (product.tags ?? [])
+      .map(normalizeTag)
+      .filter((tag) => tag.startsWith(BRAND_TAG_PREFIX) && tag.length > BRAND_TAG_PREFIX.length),
+  );
+};
+
+const getNonBrandTags = (product: Product): Set<string> => {
+  return new Set((product.tags ?? []).map(normalizeTag).filter((tag) => tag && !tag.startsWith(BRAND_TAG_PREFIX)));
+};
+
+const sharesCategory = (source: Product, candidate: Product): boolean => {
+  if (source.categories?.id && candidate.categories?.id) {
+    return source.categories.id === candidate.categories.id;
+  }
+
+  if (source.categories?.slug && candidate.categories?.slug) {
+    return source.categories.slug.trim().toLowerCase() === candidate.categories.slug.trim().toLowerCase();
+  }
+
+  return false;
+};
+
+const sharesBrand = (source: Product, candidate: Product): boolean => {
+  const sourceBrandTags = getBrandTags(source);
+  const candidateBrandTags = getBrandTags(candidate);
+
+  for (const brandTag of sourceBrandTags) {
+    if (candidateBrandTags.has(brandTag)) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+const getSharedTagScore = (source: Product, candidate: Product): number => {
+  const sourceTags = getNonBrandTags(source);
+  const candidateTags = getNonBrandTags(candidate);
+  let score = 0;
+
+  for (const tag of sourceTags) {
+    if (candidateTags.has(tag)) {
+      score += 1;
+      if (score === 4) {
+        break;
+      }
+    }
+  }
+
+  return score;
+};
+
+const hasSimilarPrice = (source: Product, candidate: Product): boolean => {
+  const lowerBound = source.price * 0.7;
+  const upperBound = source.price * 1.3;
+
+  return candidate.price >= lowerBound && candidate.price <= upperBound;
+};
+
+export const scoreCandidate = (source: Product, candidate: Product): number => {
+  let score = 0;
+
+  if (sharesCategory(source, candidate)) {
+    score += 3;
+  }
+
+  if (sharesBrand(source, candidate)) {
+    score += 3;
+  }
+
+  score += getSharedTagScore(source, candidate);
+
+  if (hasSimilarPrice(source, candidate)) {
+    score += 2;
+  }
+
+  return score;
+};
+
 // Fetch all available products
 export const getAllProducts = async () => {
   const { data, error } = await (supabase as any)
@@ -439,27 +524,46 @@ export const getTopSellingProductIds = async (limit = 4): Promise<string[]> => {
     .filter((productId): productId is string => typeof productId === "string" && productId.length > 0);
 };
 
-// Fetch related products
-// (same category, exclude current product)
-export const getRelatedProducts = async (categoryId: string, excludeProductId: string, limit = 3) => {
+// Fetch scored related products
+export const getRelatedProducts = async (source: Product, limit = 4): Promise<Product[]> => {
+  const normalizedLimit = Math.max(0, Math.trunc(limit));
+
+  if (!source?.id || normalizedLimit === 0) {
+    return [];
+  }
+
   const { data, error } = await (supabase as any)
     .from("products_with_stock")
     .select(`
-      id, name, slug, price,
+      id, name, slug, short_description,
+      price,
       compare_at_price,
       stock_quantity,
       total_stock_quantity,
       in_stock,
       is_available,
       has_variants,
-      images,
+      images, tags,
       categories ( id, name, slug )
     `)
     .eq("is_available", true)
-    .eq("category_id", categoryId)
-    .neq("id", excludeProductId)
-    .limit(limit);
+    .neq("id", source.id)
+    .limit(80);
 
   if (error) throw error;
-  return mapProducts(data);
+
+  return mapProducts(data)
+    .map((candidate) => ({
+      candidate,
+      score: scoreCandidate(source, candidate),
+    }))
+    .filter(({ score }) => score > 0)
+    .sort(
+      (left, right) =>
+        right.score - left.score ||
+        right.candidate.price - left.candidate.price ||
+        left.candidate.name.localeCompare(right.candidate.name),
+    )
+    .slice(0, normalizedLimit)
+    .map(({ candidate }) => candidate);
 };

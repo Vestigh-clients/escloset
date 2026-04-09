@@ -9,7 +9,6 @@ import {
   type ReactNode,
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
-import { storeKeyPrefix } from "@/config/store.config";
 import {
   getCurrentCustomerRole,
   getSession,
@@ -26,8 +25,6 @@ import {
   type RegisterWithEmailInput,
   type SignInWithEmailInput,
 } from "@/services/authService";
-
-const CHECKOUT_MODE_STORAGE_KEY = `${storeKeyPrefix}_checkout_mode`;
 
 interface AuthContextValue {
   user: User | null;
@@ -161,9 +158,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setSession(null);
     setUser(null);
     setRole(null);
-    if (typeof window !== "undefined") {
-      window.sessionStorage.removeItem(CHECKOUT_MODE_STORAGE_KEY);
-    }
   }, []);
 
   const value = useMemo<AuthContextValue>(

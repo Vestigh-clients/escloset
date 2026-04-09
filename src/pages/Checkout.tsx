@@ -199,7 +199,6 @@ interface SearchableStateFieldProps {
 }
 
 const CHECKOUT_SESSION_STORAGE_KEY = `${storeKeyPrefix}_checkout_session_v1`;
-const CHECKOUT_MODE_STORAGE_KEY = `${storeKeyPrefix}_checkout_mode`;
 const SAVED_ADDRESS_STORAGE_KEY_PREFIX = `${storeKeyPrefix}_saved_addresses`;
 const LAST_ORDER_STORAGE_KEY = `${storeKeyPrefix}_last_order`;
 
@@ -997,7 +996,6 @@ const Checkout = () => {
     }),
     location.hash,
   );
-  const isGuestCheckoutEnabled = storeConfig.features.guestCheckout;
   const isDiscountCodesEnabled = storeConfig.features.discountCodes;
 
   const { items, subtotal, totalItems, validateCart, isValidating, clearCart, replaceItems } = useCart();
@@ -1031,7 +1029,6 @@ const Checkout = () => {
   const [isMobileSummaryOpen, setIsMobileSummaryOpen] = useState(false);
 
   const [isSessionChecked, setIsSessionChecked] = useState(false);
-  const [checkoutMode, setCheckoutMode] = useState<"guest" | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [savedContactDetails, setSavedContactDetails] = useState<SavedContactDetails | null>(null);
@@ -1141,7 +1138,7 @@ const Checkout = () => {
         : "Not selected";
   const shouldShowSavedDetailsPrompt =
     isSessionChecked && isLoggedIn && Boolean(savedContactDetails) && isSavedDetailsPromptVisible;
-  const isGuestCheckout = isGuestCheckoutEnabled && isSessionChecked && !isLoggedIn && checkoutMode === "guest";
+  const isGuestCheckout = isSessionChecked && !isLoggedIn;
 
   useEffect(() => {
     void validateCart();
@@ -1201,15 +1198,6 @@ const Checkout = () => {
         : { method: null },
     );
   }, [availablePaymentMethods, paymentSettings]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    const storedMode = window.sessionStorage.getItem(CHECKOUT_MODE_STORAGE_KEY);
-    setCheckoutMode(storedMode === "guest" ? "guest" : null);
-  }, []);
 
   useEffect(() => {
     if (!isDiscountCodesEnabled) {
@@ -1351,7 +1339,7 @@ const Checkout = () => {
   ]);
 
   const persistCheckoutSessionSnapshot = useCallback(
-    (nextCompletedSteps: CheckoutStep[]) => {
+    (nextCompletedSteps: CheckoutStep[], options: { payment?: PaymentFormValues } = {}) => {
       if (!isHydrated || typeof window === "undefined") {
         return;
       }
@@ -1359,7 +1347,7 @@ const Checkout = () => {
       const snapshot: CheckoutSessionSnapshot = {
         contact: contactValues,
         delivery: deliveryValues,
-        payment: paymentValues,
+        payment: options.payment ?? paymentValues,
         review: reviewValues,
         completed: nextCompletedSteps,
         selectedSavedAddressId,
@@ -1422,19 +1410,6 @@ const Checkout = () => {
   }, []);
 
   useEffect(() => {
-    if (!isSessionChecked || isLoggedIn || isGuestCheckoutEnabled) {
-      return;
-    }
-
-    if (typeof window !== "undefined") {
-      window.sessionStorage.removeItem(CHECKOUT_MODE_STORAGE_KEY);
-      window.sessionStorage.setItem(REDIRECT_AFTER_LOGIN_KEY, STEP_PATH.contact);
-    }
-
-    navigate(signInModalPath, { replace: true });
-  }, [isGuestCheckoutEnabled, isLoggedIn, isSessionChecked, navigate, signInModalPath]);
-
-  useEffect(() => {
     let cancelled = false;
 
     const validateSession = async () => {
@@ -1447,10 +1422,6 @@ const Checkout = () => {
 
         setIsLoggedIn(sessionData.isLoggedIn);
         setCurrentUserId(sessionData.userId);
-        if (sessionData.isLoggedIn && typeof window !== "undefined") {
-          window.sessionStorage.removeItem(CHECKOUT_MODE_STORAGE_KEY);
-          setCheckoutMode(null);
-        }
 
         const normalizedContactDetails: SavedContactDetails | null = sessionData.contactProfile
           ? {
@@ -1739,10 +1710,26 @@ const Checkout = () => {
       return;
     }
 
-    window.sessionStorage.removeItem(CHECKOUT_MODE_STORAGE_KEY);
     window.sessionStorage.setItem(REDIRECT_AFTER_LOGIN_KEY, STEP_PATH.contact);
-    setCheckoutMode(null);
   }, []);
+
+  const handlePaymentMethodSelection = useCallback(
+    (method: Exclude<PaymentMethod, null>) => {
+      if (!availablePaymentMethods.includes(method)) {
+        return;
+      }
+
+      const nextPaymentValues: PaymentFormValues = { method };
+      const nextCompletedSteps = uniqueCheckoutSteps([...completedSteps, "contact", "delivery", "payment"]);
+
+      setPaymentValues(nextPaymentValues);
+      setCompletedSteps(nextCompletedSteps);
+      setStepAdvanceError(null);
+      persistCheckoutSessionSnapshot(nextCompletedSteps, { payment: nextPaymentValues });
+      navigate(STEP_PATH.review);
+    },
+    [availablePaymentMethods, completedSteps, navigate, persistCheckoutSessionSnapshot],
+  );
 
   const handleDeliveryBlur = useCallback(
     (field: DeliveryField) => {
@@ -2347,7 +2334,6 @@ const Checkout = () => {
 
         if (typeof window !== "undefined") {
           window.sessionStorage.removeItem(CHECKOUT_SESSION_STORAGE_KEY);
-          window.sessionStorage.removeItem(CHECKOUT_MODE_STORAGE_KEY);
           window.sessionStorage.setItem(LAST_ORDER_STORAGE_KEY, orderNumber);
         }
       };
@@ -3110,11 +3096,7 @@ const Checkout = () => {
                   <div className="mt-6">
                     <button
                       type="button"
-                      onClick={() => {
-                        setPaymentValues({
-                          method: "online",
-                        });
-                      }}
+                      onClick={() => handlePaymentMethodSelection("online")}
                       className={`w-full rounded-[var(--border-radius)] border px-6 py-7 text-left transition-colors duration-200 ${
                         paymentValues.method === "online" ? "border-[var(--color-primary)]" : "border-[var(--color-border)]"
                       }`}
@@ -3138,11 +3120,7 @@ const Checkout = () => {
                     {onlinePaymentAvailable ? (
                       <button
                         type="button"
-                        onClick={() => {
-                          setPaymentValues({
-                            method: "online",
-                          });
-                        }}
+                        onClick={() => handlePaymentMethodSelection("online")}
                         className={`rounded-[var(--border-radius)] border px-6 py-7 text-left transition-colors duration-200 ${
                           paymentValues.method === "online" ? "border-[var(--color-primary)]" : "border-[var(--color-border)]"
                         }`}
@@ -3162,11 +3140,7 @@ const Checkout = () => {
                     {cashOnDeliveryAvailable ? (
                       <button
                         type="button"
-                        onClick={() => {
-                          setPaymentValues({
-                            method: "cash_on_delivery",
-                          });
-                        }}
+                        onClick={() => handlePaymentMethodSelection("cash_on_delivery")}
                         className={`rounded-[var(--border-radius)] border px-6 py-7 text-left transition-colors duration-200 ${
                           paymentValues.method === "cash_on_delivery"
                             ? "border-[var(--color-primary)]"
@@ -3199,14 +3173,6 @@ const Checkout = () => {
                       className="self-start font-body text-[11px] uppercase tracking-[0.12em] text-[var(--color-muted)] transition-colors hover:text-[var(--color-primary)]"
                     >
                       &larr; Back
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleNextStep}
-                      className="w-full rounded-[var(--border-radius)] bg-[var(--color-primary)] px-12 py-4 font-body text-[11px] uppercase tracking-[0.18em] text-[var(--color-secondary)] transition-colors duration-300 hover:bg-[var(--color-accent)] hover:text-[var(--color-secondary)] md:w-auto"
-                    >
-                      Next Step
                     </button>
                   </div>
                 </div>

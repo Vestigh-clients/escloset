@@ -3,6 +3,7 @@ import { Link, useLocation, useParams } from "react-router-dom";
 import TryOnModal from "@/components/TryOnModal";
 import ProductFetchErrorState from "@/components/products/ProductFetchErrorState";
 import ProductImagePlaceholder from "@/components/products/ProductImagePlaceholder";
+import StorefrontProductCard from "@/components/products/StorefrontProductCard";
 import { storeConfig } from "@/config/store.config";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
@@ -15,7 +16,7 @@ import { formatPrice } from "@/lib/price";
 import { shouldShowPriceVariesByVariantNote } from "@/lib/productPricing";
 import { fetchActiveShippingRates, type ShippingRateRow } from "@/services/orderService";
 import { getPaymentSettings, type PaymentSettings } from "@/services/paymentSettingsService";
-import { getFeaturedProducts, getRelatedProducts } from "@/services/productService";
+import { getRelatedProducts } from "@/services/productService";
 import {
   buildReviewerDisplayName,
   fetchCustomerProductReview,
@@ -96,50 +97,15 @@ const formatReviewDate = (value: string) => {
 };
 
 const RelatedProductSkeleton = () => (
-  <div className="flex h-full flex-col">
-    <div className="lux-product-shimmer aspect-[4/5] w-full" />
-    <div className="mt-3 space-y-2">
-      <div className="lux-product-shimmer h-4 w-2/3" />
-      <div className="lux-product-shimmer h-3 w-1/3" />
+  <div className="animate-pulse">
+    <div className="aspect-[4/5] rounded-md bg-[#F3F3F4]" />
+    <div className="mt-4 space-y-3">
+      <div className="h-5 w-4/5 rounded bg-[#F3F3F4]" />
+      <div className="h-3 w-2/5 rounded bg-[#F3F3F4]" />
+      <div className="h-3 w-1/3 rounded bg-[#F3F3F4]" />
     </div>
   </div>
 );
-
-const RelatedProductTile = ({ product }: { product: Product }) => {
-  const [hasImageError, setHasImageError] = useState(false);
-  const imageUrl = getPrimaryImage(product);
-
-  useEffect(() => {
-    setHasImageError(false);
-  }, [imageUrl, product.id]);
-
-  return (
-    <article className="group cursor-pointer">
-      <Link to={`/shop/${product.slug}`} className="mb-4 block">
-        <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-white">
-          {imageUrl && !hasImageError ? (
-            <img
-              src={imageUrl}
-              alt={product.name}
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-              loading="lazy"
-              onError={() => setHasImageError(true)}
-            />
-          ) : (
-            <ProductImagePlaceholder className="h-full w-full" />
-          )}
-          <div className="pointer-events-none absolute right-4 top-4 rounded-full bg-white/80 p-2 opacity-0 backdrop-blur transition-opacity group-hover:opacity-100">
-            <span className="material-symbols-outlined text-xl text-[var(--color-accent)]">favorite</span>
-          </div>
-        </div>
-      </Link>
-      <Link to={`/shop/${product.slug}`} className="block space-y-1 transition-transform group-hover:translate-x-1">
-        <h4 className="font-notoSerif text-base font-bold text-on-background">{product.name}</h4>
-        <p className="font-manrope text-xs font-medium text-primary">{formatPrice(product.price)}</p>
-      </Link>
-    </article>
-  );
-};
 
 const clothingSizeGuideRows = [
   { size: "XS", chest: "84-88", waist: "68-72", hips: "88-92" },
@@ -464,6 +430,7 @@ const ProductPage = () => {
 
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [isRelatedProductsLoading, setIsRelatedProductsLoading] = useState(false);
   const [activeImage, setActiveImage] = useState<string>("");
   const [hasActiveImageError, setHasActiveImageError] = useState(false);
   const [thumbnailErrors, setThumbnailErrors] = useState<Record<string, boolean>>({});
@@ -505,6 +472,7 @@ const ProductPage = () => {
         if (!slug) {
           setProduct(null);
           setRelatedProducts([]);
+          setIsRelatedProductsLoading(false);
           setError("Product not found.");
           return;
         }
@@ -571,38 +539,17 @@ const ProductPage = () => {
 
         mappedProduct.product_variants = sortedVariants;
         mappedProduct.product_option_types = sortedOptionTypes;
+        setRelatedProducts([]);
+        setIsRelatedProductsLoading(true);
         setProduct(mappedProduct);
         setVariants(sortedVariants);
         setOptionTypes(sortedOptionTypes);
         setSelectedOptions({});
-
-        if (mappedProduct?.categories?.id) {
-          const directRelated = (await getRelatedProducts(mappedProduct.categories.id, mappedProduct.id, 4)) ?? [];
-          let mergedRelated = directRelated;
-
-          if (mergedRelated.length < 4) {
-            try {
-              const featured = await getFeaturedProducts();
-              const existingIds = new Set(mergedRelated.map((entry) => entry.id));
-              existingIds.add(mappedProduct.id);
-
-              const filler = featured.filter((entry) => !existingIds.has(entry.id));
-              mergedRelated = [...mergedRelated, ...filler].slice(0, 4);
-            } catch (featuredError) {
-              if (import.meta.env.DEV) {
-                console.error("Failed to fetch featured fallback products", featuredError);
-              }
-            }
-          }
-
-          setRelatedProducts(mergedRelated);
-        } else {
-          setRelatedProducts([]);
-        }
       } catch (err) {
         console.error(err);
         setProduct(null);
         setRelatedProducts([]);
+        setIsRelatedProductsLoading(false);
         setVariants([]);
         setOptionTypes([]);
         setSelectedOptions({});
@@ -614,6 +561,46 @@ const ProductPage = () => {
 
     void fetchProduct();
   }, [slug]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!product) {
+      setRelatedProducts([]);
+      setIsRelatedProductsLoading(false);
+      return;
+    }
+
+    const loadRelatedProducts = async () => {
+      setRelatedProducts([]);
+      setIsRelatedProductsLoading(true);
+
+      try {
+        const nextRelatedProducts = await getRelatedProducts(product, 4);
+        if (!isMounted) {
+          return;
+        }
+
+        setRelatedProducts(nextRelatedProducts);
+      } catch {
+        if (!isMounted) {
+          return;
+        }
+
+        setRelatedProducts([]);
+      } finally {
+        if (isMounted) {
+          setIsRelatedProductsLoading(false);
+        }
+      }
+    };
+
+    void loadRelatedProducts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [product]);
 
   useEffect(() => {
     let isMounted = true;
@@ -1523,7 +1510,7 @@ const ProductPage = () => {
                     className="flex items-center justify-center gap-3 rounded-md border border-[rgba(186,194,201,0.3)] bg-[rgba(232,232,232,0.45)] py-4 text-xs font-bold uppercase tracking-widest text-on-surface transition-all hover:bg-[rgba(232,232,232,0.7)] active:scale-[0.98]"
                   >
                     <span className="material-symbols-outlined">photo_camera</span>
-                    Virtual Try-On
+                    Try It On
                   </button>
                 ) : null}
               </div>
@@ -1779,7 +1766,7 @@ const ProductPage = () => {
           </section>
         ) : null}
 
-        {relatedProducts.length > 0 ? (
+        {isRelatedProductsLoading || relatedProducts.length > 0 ? (
           <section className="mt-20">
             <div className="mb-10 flex items-end justify-between gap-4">
               <div>
@@ -1791,10 +1778,12 @@ const ProductPage = () => {
                 <span className="material-symbols-outlined">arrow_forward</span>
               </Link>
             </div>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-              {relatedProducts.slice(0, 4).map((item) => (
-                <RelatedProductTile key={item.id} product={item} />
-              ))}
+            <div className="grid grid-cols-2 gap-6 lg:grid-cols-4">
+              {isRelatedProductsLoading
+                ? Array.from({ length: 4 }).map((_, index) => (
+                    <RelatedProductSkeleton key={`related-product-skeleton-${index}`} />
+                  ))
+                : relatedProducts.map((item) => <StorefrontProductCard key={item.id} product={item} actionLabel="View Product" />)}
             </div>
           </section>
         ) : null}
@@ -1824,7 +1813,7 @@ const ProductPage = () => {
                 className="flex items-center justify-center gap-2 rounded-md border border-[rgba(186,194,201,0.4)] bg-[rgba(232,232,232,0.45)] py-3 text-[11px] font-bold uppercase tracking-widest text-on-surface transition-all active:scale-[0.98]"
               >
                 <span className="material-symbols-outlined text-base">photo_camera</span>
-                Virtual Try-On
+                Try It On
               </button>
             ) : null}
           </div>

@@ -203,7 +203,7 @@ const TryOnModal = ({ product, isOpen, onClose }: TryOnModalProps) => {
       onClick={handleClose}
       role="dialog"
       aria-modal="true"
-      aria-label="Virtual Try-On"
+      aria-label="Try It On"
     >
       <div
         className="relative max-h-[calc(100dvh-6rem)] w-full max-w-[520px] overflow-y-auto rounded-[var(--border-radius)] bg-[var(--color-secondary)] p-7 sm:max-h-[90vh] sm:p-10"
@@ -218,7 +218,7 @@ const TryOnModal = ({ product, isOpen, onClose }: TryOnModalProps) => {
           <X size={20} strokeWidth={1.4} />
         </button>
 
-        <h2 className="mb-1 font-display text-[28px] italic text-[var(--color-primary)]">Try it On</h2>
+        <h2 className="mb-1 font-display text-[28px] italic text-[var(--color-primary)]">Try It On</h2>
         <p className="mb-8 font-body text-[12px] text-[var(--color-muted-soft)]">{product.name}</p>
 
         {tryOnState === "upload" ? (
@@ -320,7 +320,7 @@ const TryOnModal = ({ product, isOpen, onClose }: TryOnModalProps) => {
             {resultImage ? (
               <img
                 src={resultImage}
-                alt={`${product.name} virtual try-on`}
+                alt={`${product.name} try it on result`}
                 className="max-h-[480px] w-full rounded-[var(--border-radius)] object-contain"
               />
             ) : null}

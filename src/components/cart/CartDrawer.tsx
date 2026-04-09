@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ShoppingBag, X } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
-import { getSession } from "@/services/authService";
 import ProductImagePlaceholder from "@/components/products/ProductImagePlaceholder";
 import { formatPrice } from "@/lib/price";
 
@@ -25,7 +23,6 @@ const CartItemThumbnail = ({ src, alt }: { src: string; alt: string }) => {
 
 const CartDrawer = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const {
     items,
     totalItems,
@@ -58,21 +55,7 @@ const CartDrawer = () => {
       }
 
       closeCart();
-
-      if (isAuthenticated) {
-        navigate("/checkout/contact");
-        return;
-      }
-
-      if (isAuthLoading) {
-        const session = await getSession();
-        if (session?.user) {
-          navigate("/checkout/contact");
-          return;
-        }
-      }
-
-      navigate("/checkout");
+      navigate("/checkout/contact");
     } finally {
       setIsCheckoutPending(false);
     }
