@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Analytics } from "@vercel/analytics/react";
-import { useCallback, useEffect, useMemo } from "react";
-import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { type ReactNode, useCallback, useEffect, useMemo } from "react";
+import { Navigate, Outlet, Route, Routes, useLocation, useNavigate } from "react-router";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,11 +12,11 @@ import CartDrawer from "@/components/cart/CartDrawer";
 import RouteExperienceManager from "@/components/navigation/RouteExperienceManager";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
-import Index from "./pages/Index";
-import Shop from "./pages/Shop";
-import ProductPage from "./pages/ProductPage";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
+import { StorefrontConfigProvider } from "@/contexts/StorefrontConfigContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
+import { storeConfig } from "@/config/store.config";
+import type { PublicSiteSettings } from "@/services/publicSiteSettingsService";
+import type { StorefrontCategory } from "@/services/storefrontCategoryService";
 import Checkout from "./pages/Checkout";
 import CheckoutEntry from "./pages/CheckoutEntry";
 import CheckoutConfirmation from "./pages/CheckoutConfirmation";
@@ -50,9 +50,6 @@ import AdminShippingRatesPage from "./pages/admin/AdminShippingRatesPage";
 import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
 import AdminPaymentsPage from "./pages/admin/AdminPaymentsPage";
-import { StorefrontConfigProvider, useStorefrontConfig } from "@/contexts/StorefrontConfigContext";
-import { ThemeProvider } from "@/contexts/ThemeContext";
-import { storeConfig } from "@/config/store.config";
 import {
   AUTH_MODAL_EMAIL_QUERY_PARAM,
   AUTH_MODAL_QUERY_PARAM,
@@ -64,8 +61,39 @@ import {
 
 const queryClient = new QueryClient();
 
-const AppShell = () => {
-  const { storefrontConfig } = useStorefrontConfig();
+interface AppProvidersProps {
+  children: ReactNode;
+  initialPublicSettings?: PublicSiteSettings | null;
+  initialStorefrontCategories?: StorefrontCategory[];
+}
+
+export const AppProviders = ({
+  children,
+  initialPublicSettings,
+  initialStorefrontCategories,
+}: AppProvidersProps) => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <StorefrontConfigProvider
+        initialPublicSettings={initialPublicSettings}
+        initialStorefrontCategories={initialStorefrontCategories}
+      >
+        <ThemeProvider>
+          <AuthProvider>
+            <CartProvider>
+              {children}
+              <Analytics />
+            </CartProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </StorefrontConfigProvider>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
+
+export const AppChrome = ({ children }: { children?: ReactNode }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const isAdminRoute = location.pathname.startsWith("/admin");
@@ -113,24 +141,17 @@ const AppShell = () => {
   }, [authMode, closeAuthModal]);
 
   useEffect(() => {
-    document.title = storefrontConfig.storeName;
-
-    const descriptionMeta = document.querySelector('meta[name="description"]');
-    if (descriptionMeta) {
-      descriptionMeta.setAttribute("content", storefrontConfig.storeTagline || storefrontConfig.storeName);
-    }
-
     const existingFavicon = document.querySelector("link[rel='icon']") as HTMLLinkElement | null;
     if (existingFavicon) {
-      existingFavicon.href = storefrontConfig.faviconUrl;
+      existingFavicon.href = storeConfig.faviconUrl;
       return;
     }
 
     const favicon = document.createElement("link");
     favicon.rel = "icon";
-    favicon.href = storefrontConfig.faviconUrl;
+    favicon.href = storeConfig.faviconUrl;
     document.head.appendChild(favicon);
-  }, [location.pathname, storefrontConfig.faviconUrl, storefrontConfig.storeName, storefrontConfig.storeTagline]);
+  }, []);
 
   return (
     <>
@@ -138,83 +159,7 @@ const AppShell = () => {
       {showNavbar ? <Navbar /> : null}
       <main className={showFooter ? "min-h-screen" : ""}>
         <div key={`${location.pathname}?${routeTransitionSearch}`} className="lux-page-enter">
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/shop" element={<Shop />} />
-            <Route path="/shop/:slug" element={<ProductPage />} />
-            <Route
-              path="/checkout/confirmation"
-              element={<CheckoutConfirmation />}
-            />
-            <Route path="/checkout" element={<CheckoutEntry />} />
-            <Route
-              path="/orders/:orderNumber"
-              element={storeConfig.features.orderTracking ? <OrderTracking /> : <Navigate to="/" replace />}
-            />
-            <Route path="/checkout/*" element={<Checkout />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-
-            <Route
-              path="/account"
-              element={
-                <ProtectedRoute>
-                  <AccountLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<AccountOverview />} />
-              <Route path="orders" element={<AccountOrders />} />
-              <Route path="addresses" element={<AccountAddresses />} />
-              <Route path="profile" element={<AccountProfile />} />
-              <Route path="password" element={<AccountPassword />} />
-              <Route path="*" element={<Navigate to="/account" replace />} />
-            </Route>
-
-            <Route
-              path="/admin"
-              element={
-                <AdminRoute>
-                  <AdminLayout />
-                </AdminRoute>
-              }
-            >
-              <Route index element={<AdminDashboard />} />
-              <Route path="orders" element={<AdminOrdersPage />} />
-              <Route path="orders/:orderNumber" element={<AdminOrderDetailPage />} />
-              <Route path="products" element={<AdminProductsPage />} />
-              <Route path="products/add-with-ai" element={<AdminAddWithAIPage />} />
-              <Route path="products/new" element={<AdminProductEditorPage />} />
-              <Route path="products/:id/edit" element={<AdminProductEditorPage />} />
-              <Route path="categories" element={<AdminCategoriesPage />} />
-              <Route path="inventory-pricing" element={<AdminInventoryPricingPage />} />
-              <Route path="customers" element={<AdminCustomersPage />} />
-              <Route path="customers/:id" element={<AdminCustomerDetailPage />} />
-              <Route path="discounts" element={<AdminDiscountCodesPage />} />
-              <Route path="reviews" element={<AdminProductReviewsPage />} />
-              <Route path="shipping" element={<AdminShippingRatesPage />} />
-              <Route path="payments" element={<AdminPaymentsPage />} />
-              <Route
-                path="users"
-                element={
-                  <SuperAdminRoute>
-                    <AdminUsersPage />
-                  </SuperAdminRoute>
-                }
-              />
-              <Route
-                path="settings"
-                element={
-                  <SuperAdminRoute>
-                    <AdminSettingsPage />
-                  </SuperAdminRoute>
-                }
-              />
-              <Route path="*" element={<Navigate to="/admin" replace />} />
-            </Route>
-
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          {children ?? <Outlet />}
         </div>
       </main>
       {showFooter ? <Footer /> : null}
@@ -241,25 +186,84 @@ const AppShell = () => {
   );
 };
 
+export const LegacyRoutes = () => (
+  <Routes>
+    <Route path="/checkout/confirmation" element={<CheckoutConfirmation />} />
+    <Route path="/checkout" element={<CheckoutEntry />} />
+    <Route
+      path="/orders/:orderNumber"
+      element={storeConfig.features.orderTracking ? <OrderTracking /> : <Navigate to="/" replace />}
+    />
+    <Route path="/checkout/*" element={<Checkout />} />
+
+    <Route
+      path="/account"
+      element={
+        <ProtectedRoute>
+          <AccountLayout />
+        </ProtectedRoute>
+      }
+    >
+      <Route index element={<AccountOverview />} />
+      <Route path="orders" element={<AccountOrders />} />
+      <Route path="addresses" element={<AccountAddresses />} />
+      <Route path="profile" element={<AccountProfile />} />
+      <Route path="password" element={<AccountPassword />} />
+      <Route path="*" element={<Navigate to="/account" replace />} />
+    </Route>
+
+    <Route
+      path="/admin"
+      element={
+        <AdminRoute>
+          <AdminLayout />
+        </AdminRoute>
+      }
+    >
+      <Route index element={<AdminDashboard />} />
+      <Route path="orders" element={<AdminOrdersPage />} />
+      <Route path="orders/:orderNumber" element={<AdminOrderDetailPage />} />
+      <Route path="products" element={<AdminProductsPage />} />
+      <Route path="products/add-with-ai" element={<AdminAddWithAIPage />} />
+      <Route path="products/new" element={<AdminProductEditorPage />} />
+      <Route path="products/:id/edit" element={<AdminProductEditorPage />} />
+      <Route path="categories" element={<AdminCategoriesPage />} />
+      <Route path="inventory-pricing" element={<AdminInventoryPricingPage />} />
+      <Route path="customers" element={<AdminCustomersPage />} />
+      <Route path="customers/:id" element={<AdminCustomerDetailPage />} />
+      <Route path="discounts" element={<AdminDiscountCodesPage />} />
+      <Route path="reviews" element={<AdminProductReviewsPage />} />
+      <Route path="shipping" element={<AdminShippingRatesPage />} />
+      <Route path="payments" element={<AdminPaymentsPage />} />
+      <Route
+        path="users"
+        element={
+          <SuperAdminRoute>
+            <AdminUsersPage />
+          </SuperAdminRoute>
+        }
+      />
+      <Route
+        path="settings"
+        element={
+          <SuperAdminRoute>
+            <AdminSettingsPage />
+          </SuperAdminRoute>
+        }
+      />
+      <Route path="*" element={<Navigate to="/admin" replace />} />
+    </Route>
+
+    <Route path="*" element={<NotFound />} />
+  </Routes>
+);
+
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <AuthProvider>
-        <CartProvider>
-          <StorefrontConfigProvider>
-            <ThemeProvider>
-              <BrowserRouter>
-                <AppShell />
-              </BrowserRouter>
-              <Analytics />
-            </ThemeProvider>
-          </StorefrontConfigProvider>
-        </CartProvider>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <AppProviders>
+    <AppChrome>
+      <LegacyRoutes />
+    </AppChrome>
+  </AppProviders>
 );
 
 export default App;

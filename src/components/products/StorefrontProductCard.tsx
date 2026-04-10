@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type MouseEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import ProductImagePlaceholder from "@/components/products/ProductImagePlaceholder";
 import { getCategoryLabel } from "@/lib/categories";
 import { formatPrice } from "@/lib/price";

@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 
 const SCROLL_MEMORY_STORAGE_KEY = "escloset_scroll_memory_v1";
 

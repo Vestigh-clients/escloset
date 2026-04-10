@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import type { ReactNode } from "react";
 import StoreLogo from "@/components/StoreLogo";
 import { contentConfig } from "@/config/content.config";

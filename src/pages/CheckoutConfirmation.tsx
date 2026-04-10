@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Check, Eye, EyeOff } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router";
 import OrderSummaryDetails from "@/components/orders/OrderSummaryDetails";
 import { storeConfig, storeKeyPrefix } from "@/config/store.config";
 import { useAuth } from "@/contexts/AuthContext";

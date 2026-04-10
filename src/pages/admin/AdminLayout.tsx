@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router";
 import { Bell } from "lucide-react";
 import StoreLogo from "@/components/StoreLogo";
 import { storeConfig } from "@/config/store.config";

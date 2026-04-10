@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router";
 import {
   Drawer,
   DrawerContent,
@@ -13,6 +13,7 @@ import { useStorefrontConfig } from "@/contexts/StorefrontConfigContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatPrice } from "@/lib/price";
 import { getAllProducts } from "@/services/productService";
+import type { StorefrontCategory } from "@/services/storefrontCategoryService";
 import {
   getPrimaryImage,
   getStockQuantity,
@@ -437,15 +438,20 @@ const FilterPanel = ({
   );
 };
 
-const Shop = () => {
+interface ShopProps {
+  initialProducts?: Product[];
+  initialCategories?: StorefrontCategory[];
+}
+
+const Shop = ({ initialProducts = [], initialCategories = [] }: ShopProps) => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { addToCart } = useCart();
   const { storefrontCategories } = useStorefrontConfig();
 
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [loading, setLoading] = useState(initialProducts.length === 0);
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortKey>("newest");
   const [priceLimit, setPriceLimit] = useState(DEFAULT_PRICE_CEILING);
@@ -455,6 +461,11 @@ const Shop = () => {
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    if (initialProducts.length > 0) {
+      setLoading(false);
+      return;
+    }
+
     const fetchProducts = async () => {
       try {
         setLoading(true);
@@ -470,10 +481,11 @@ const Shop = () => {
     };
 
     void fetchProducts();
-  }, []);
+  }, [initialProducts.length]);
 
   const categoryFilterItems = useMemo(() => {
-    const fromBackend = storefrontCategories
+    const sourceCategories = initialCategories.length > 0 ? initialCategories : storefrontCategories;
+    const fromBackend = sourceCategories
       .map((category) => ({
         slug: category.slug.trim().toLowerCase(),
         label: category.name.trim() || "Category",
@@ -502,7 +514,7 @@ const Shop = () => {
         slug: category.slug,
         label: category.label || "Category",
       }));
-  }, [products, storefrontCategories]);
+  }, [initialCategories, products, storefrontCategories]);
   const categoryLookup = useMemo(() => new Set(categoryFilterItems.map((item) => item.slug)), [categoryFilterItems]);
   const requestedCategory = (searchParams.get("category") ?? "").trim().toLowerCase();
   const activeFilter: ShopFilter = requestedCategory && categoryLookup.has(requestedCategory) ? requestedCategory : "all";

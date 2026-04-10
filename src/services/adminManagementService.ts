@@ -59,7 +59,7 @@ export interface AdminCustomerListResult {
 }
 
 const applyCustomerListFilters = (
-  query: ReturnType<typeof supabase.from<"customers">>,
+  query: any,
   filters: AdminCustomerListFilters,
 ) => {
   let next = query.select(
@@ -645,7 +645,7 @@ export const updateAdminDiscountCode = async (
   await logAdminActivity("discount_code.updated", "discount_codes", id, {
     before: previous ?? null,
     after: data,
-  });
+  } as unknown as Json);
 
   return data;
 };
@@ -744,7 +744,7 @@ export const updateAdminShippingRate = async (
   await logAdminActivity("shipping_rate.updated", "shipping_rates", id, {
     before: previous ?? null,
     after: data,
-  });
+  } as unknown as Json);
 
   return data;
 };

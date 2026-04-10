@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import StorefrontProductCard from "@/components/products/StorefrontProductCard";
 import { useStorefrontConfig } from "@/contexts/StorefrontConfigContext";
 import { getAllProducts, getTopSellingProductIds } from "@/services/productService";
+import type { StorefrontCategory } from "@/services/storefrontCategoryService";
 import { type Product } from "@/types/product";
 
 const FUNDAMENTALS = [
@@ -24,12 +25,22 @@ const FUNDAMENTALS = [
   },
 ];
 
-const Index = () => {
+interface IndexProps {
+  initialNewArrivals?: Product[];
+  initialBestSellers?: Product[];
+  initialCategories?: StorefrontCategory[];
+}
+
+const Index = ({ initialNewArrivals = [], initialBestSellers = [], initialCategories = [] }: IndexProps) => {
   const { storefrontCategories } = useStorefrontConfig();
-  const [newArrivals, setNewArrivals] = useState<Product[]>([]);
-  const [bestSellers, setBestSellers] = useState<Product[]>([]);
+  const [newArrivals, setNewArrivals] = useState<Product[]>(initialNewArrivals);
+  const [bestSellers, setBestSellers] = useState<Product[]>(initialBestSellers);
 
   useEffect(() => {
+    if (initialNewArrivals.length > 0 || initialBestSellers.length > 0) {
+      return;
+    }
+
     let isMounted = true;
 
     const loadHomepageProducts = async () => {
@@ -61,18 +72,20 @@ const Index = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [initialBestSellers.length, initialNewArrivals.length]);
+
+  const activeCategories = initialCategories.length > 0 ? initialCategories : storefrontCategories;
 
   const categoryTiles = useMemo(
     () =>
-      storefrontCategories.map((category) => ({
+      activeCategories.map((category) => ({
         key: category.id || category.slug,
         title: category.name,
         to: `/shop?category=${encodeURIComponent(category.slug)}`,
         imageAlt: `${category.name} collection`,
         imageUrl: category.imageUrl || "/placeholder.svg",
       })),
-    [storefrontCategories],
+    [activeCategories],
   );
 
   return (

@@ -14,9 +14,19 @@ interface StorefrontConfigContextValue {
 
 const StorefrontConfigContext = createContext<StorefrontConfigContextValue | undefined>(undefined);
 
-export const StorefrontConfigProvider = ({ children }: { children: ReactNode }) => {
-  const [publicSettings, setPublicSettings] = useState<PublicSiteSettings | null>(null);
-  const [storefrontCategories, setStorefrontCategories] = useState<StorefrontCategory[]>([]);
+interface StorefrontConfigProviderProps {
+  children: ReactNode;
+  initialPublicSettings?: PublicSiteSettings | null;
+  initialStorefrontCategories?: StorefrontCategory[];
+}
+
+export const StorefrontConfigProvider = ({
+  children,
+  initialPublicSettings = null,
+  initialStorefrontCategories = [],
+}: StorefrontConfigProviderProps) => {
+  const [publicSettings, setPublicSettings] = useState<PublicSiteSettings | null>(initialPublicSettings);
+  const [storefrontCategories, setStorefrontCategories] = useState<StorefrontCategory[]>(initialStorefrontCategories);
 
   useEffect(() => {
     let isActive = true;
@@ -33,13 +43,13 @@ export const StorefrontConfigProvider = ({ children }: { children: ReactNode }) 
 
       if (settingsResult.status === "fulfilled") {
         setPublicSettings(settingsResult.value);
-      } else {
+      } else if (!initialPublicSettings) {
         setPublicSettings(null);
       }
 
       if (categoriesResult.status === "fulfilled") {
         setStorefrontCategories(categoriesResult.value);
-      } else {
+      } else if (initialStorefrontCategories.length === 0) {
         setStorefrontCategories([]);
       }
     };
@@ -49,7 +59,7 @@ export const StorefrontConfigProvider = ({ children }: { children: ReactNode }) 
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [initialPublicSettings, initialStorefrontCategories.length]);
 
   const storefrontConfig = useMemo(() => resolveStorefrontConfig(publicSettings), [publicSettings]);
 

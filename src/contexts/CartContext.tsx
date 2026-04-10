@@ -242,9 +242,10 @@ const showErrorToast = (message: string) => {
 };
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
-  const [cartState, setCartState] = useState<CartState>(getInitialCartState);
+  const [cartState, setCartState] = useState<CartState>(() => createCartState([]));
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
+  const [isStorageReady, setIsStorageReady] = useState(false);
 
   const cartStateRef = useRef<CartState>(cartState);
   const skipNextStorageSyncRef = useRef(false);
@@ -266,6 +267,21 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
+    const restoredState = getInitialCartState();
+    cartStateRef.current = restoredState;
+    setCartState(restoredState);
+    setIsStorageReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    if (!isStorageReady) {
+      return;
+    }
+
     if (skipNextStorageSyncRef.current) {
       skipNextStorageSyncRef.current = false;
       return;
@@ -273,7 +289,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
     window.localStorage.setItem(CART_VERSION_STORAGE_KEY, String(CART_SCHEMA_VERSION));
     window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartState));
-  }, [cartState]);
+  }, [cartState, isStorageReady]);
 
   const closeCart = useCallback(() => {
     setIsCartOpen(false);

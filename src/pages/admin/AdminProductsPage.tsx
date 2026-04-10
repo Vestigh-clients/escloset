@@ -1,6 +1,6 @@
 import { Plus, Search, Sparkles, SlidersHorizontal, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router";
 import {
   deleteAdminProduct,
   fetchAdminCategories,

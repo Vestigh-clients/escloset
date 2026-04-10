@@ -1,6 +1,6 @@
 import { ChevronDown, ChevronUp, Download, Search, SlidersHorizontal, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { storeKeyPrefix } from "@/config/store.config";
 import { buildCustomersCsv, fetchAdminCustomers, fetchAdminCustomersForExport, type AdminCustomerListItem } from "@/services/adminManagementService";
 import { formatCurrency, formatDateShort } from "@/lib/adminFormatting";

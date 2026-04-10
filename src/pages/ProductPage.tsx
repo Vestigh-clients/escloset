@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type TouchEvent } from "react";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router";
 import TryOnModal from "@/components/TryOnModal";
 import ProductFetchErrorState from "@/components/products/ProductFetchErrorState";
 import ProductImagePlaceholder from "@/components/products/ProductImagePlaceholder";
@@ -427,7 +427,17 @@ const createVariantOptionSelection = (variant: ProductVariant): Record<string, s
   }, {});
 };
 
-const ProductPage = () => {
+interface ProductPageProps {
+  initialProduct?: Product | null;
+  initialRelatedProducts?: Product[];
+}
+
+const EMPTY_INITIAL_RELATED_PRODUCTS: Product[] = [];
+
+const ProductPage = ({
+  initialProduct = null,
+  initialRelatedProducts = EMPTY_INITIAL_RELATED_PRODUCTS,
+}: ProductPageProps) => {
   const { slug } = useParams<{ slug: string }>();
   const location = useLocation();
   const navigate = useNavigate();
@@ -439,13 +449,13 @@ const ProductPage = () => {
     },
   } = useThemeConfig();
 
-  const [product, setProduct] = useState<Product | null>(null);
-  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [product, setProduct] = useState<Product | null>(initialProduct);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>(initialRelatedProducts);
   const [isRelatedProductsLoading, setIsRelatedProductsLoading] = useState(false);
-  const [activeImage, setActiveImage] = useState<string>("");
+  const [activeImage, setActiveImage] = useState<string>(() => (initialProduct ? getPrimaryImage(initialProduct) : ""));
   const [hasActiveImageError, setHasActiveImageError] = useState(false);
   const [thumbnailErrors, setThumbnailErrors] = useState<Record<string, boolean>>({});
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialProduct);
   const [error, setError] = useState<string | null>(null);
   const [isTryOnOpen, setTryOnOpen] = useState(false);
   const [isSizeGuideOpen, setSizeGuideOpen] = useState(false);
@@ -453,8 +463,8 @@ const ProductPage = () => {
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [hasLightboxImageError, setHasLightboxImageError] = useState(false);
   const [isLightboxImageVisible, setIsLightboxImageVisible] = useState(false);
-  const [variants, setVariants] = useState<ProductVariant[]>([]);
-  const [optionTypes, setOptionTypes] = useState<ProductOptionType[]>([]);
+  const [variants, setVariants] = useState<ProductVariant[]>(initialProduct?.product_variants ?? []);
+  const [optionTypes, setOptionTypes] = useState<ProductOptionType[]>(initialProduct?.product_option_types ?? []);
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [reviews, setReviews] = useState<ProductReview[]>([]);
   const [reviewSummary, setReviewSummary] = useState<ProductReviewSummary>(() => createEmptyReviewSummary());
@@ -475,6 +485,18 @@ const ProductPage = () => {
   const lightboxTouchStartXRef = useRef<number | null>(null);
 
   useEffect(() => {
+    if (initialProduct && initialProduct.slug === slug) {
+      setProduct(initialProduct);
+      setRelatedProducts(initialRelatedProducts);
+      setIsRelatedProductsLoading(false);
+      setVariants(initialProduct.product_variants ?? []);
+      setOptionTypes(initialProduct.product_option_types ?? []);
+      setSelectedOptions({});
+      setError(null);
+      setLoading(false);
+      return;
+    }
+
     const fetchProduct = async () => {
       try {
         setLoading(true);
@@ -571,13 +593,19 @@ const ProductPage = () => {
     };
 
     void fetchProduct();
-  }, [slug]);
+  }, [initialProduct, initialRelatedProducts, slug]);
 
   useEffect(() => {
     let isMounted = true;
 
     if (!product) {
       setRelatedProducts([]);
+      setIsRelatedProductsLoading(false);
+      return;
+    }
+
+    if (initialProduct?.id === product.id) {
+      setRelatedProducts(initialRelatedProducts);
       setIsRelatedProductsLoading(false);
       return;
     }
@@ -611,7 +639,7 @@ const ProductPage = () => {
     return () => {
       isMounted = false;
     };
-  }, [product]);
+  }, [initialProduct?.id, initialRelatedProducts, product]);
 
   useEffect(() => {
     let isMounted = true;

@@ -1,5 +1,5 @@
 import { FormEvent, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router";
 import { contentConfig } from "@/config/content.config";
 import { useStorefrontConfig } from "@/contexts/StorefrontConfigContext";
 import { buildWhatsAppContactLink } from "@/lib/contact";

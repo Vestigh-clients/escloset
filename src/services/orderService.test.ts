@@ -39,6 +39,8 @@ const baseInput: SubmitOrderInput = {
       quantity: 1,
       stock_quantity: 10,
       added_at: new Date().toISOString(),
+      variant_id: null,
+      variant_label: null,
     },
   ],
   subtotal: 120,

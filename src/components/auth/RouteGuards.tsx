@@ -1,5 +1,5 @@
-﻿import type { ReactNode } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import type { ReactNode } from "react";
+import { Navigate, useLocation } from "react-router";
 import { useAuth } from "@/contexts/AuthContext";
 import { REDIRECT_AFTER_LOGIN_KEY } from "@/services/authService";
 import { buildAuthModalSearch } from "@/lib/authModal";

@@ -11,8 +11,10 @@ export interface StorefrontCategory {
 
 const normalizeString = (value: unknown) => (typeof value === "string" ? value.trim() : "");
 
-export const fetchStorefrontCategories = async (): Promise<StorefrontCategory[]> => {
-  const { data, error } = await supabase
+type SupabaseQueryClient = typeof supabase;
+
+export const fetchStorefrontCategories = async (client: SupabaseQueryClient = supabase): Promise<StorefrontCategory[]> => {
+  const { data, error } = await client
     .from("categories")
     .select("id, name, slug, description, image_url, display_order, is_active")
     .eq("is_active", true)

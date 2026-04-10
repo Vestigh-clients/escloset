@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import SignOutConfirmModal from "@/components/auth/SignOutConfirmModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSignOutWithCartWarning } from "@/hooks/useSignOutWithCartWarning";

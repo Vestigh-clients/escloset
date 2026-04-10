@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import ProductImagePlaceholder from "@/components/products/ProductImagePlaceholder";
 import { formatPrice } from "@/lib/price";
 import { getPrimaryImage, type Product } from "@/types/product";

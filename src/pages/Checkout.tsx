@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import PaystackPop from "@paystack/inline-js";
+import { Link, useLocation, useNavigate } from "react-router";
 import { Banknote, Check, ChevronDown, CreditCard, X } from "lucide-react";
 import {
   Command,
@@ -2381,6 +2380,7 @@ const Checkout = () => {
         throw new Error("Invalid online payment amount.");
       }
 
+      const { default: PaystackPop } = await import("@paystack/inline-js");
       const handler = PaystackPop.setup({
         key: paystackConfig.publicKey,
         email: sanitizedContact.email,

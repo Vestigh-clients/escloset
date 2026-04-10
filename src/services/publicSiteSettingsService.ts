@@ -22,8 +22,10 @@ export interface PublicSiteSettings {
 
 const BOOLEAN_TRUE_VALUES = new Set(["true", "1", "yes", "on"]);
 
-export const fetchPublicSiteSettings = async (): Promise<PublicSiteSettings> => {
-  const { data, error } = await supabase
+type SupabaseQueryClient = typeof supabase;
+
+export const fetchPublicSiteSettings = async (client: SupabaseQueryClient = supabase): Promise<PublicSiteSettings> => {
+  const { data, error } = await client
     .from("site_settings")
     .select("key, value")
     .in("key", [...PUBLIC_SITE_SETTING_KEYS]);
@@ -32,7 +34,12 @@ export const fetchPublicSiteSettings = async (): Promise<PublicSiteSettings> => 
     throw error;
   }
 
-  const values = new Map((data ?? []).map((row) => [row.key, typeof row.value === "string" ? row.value.trim() : ""]));
+  const values = new Map<string, string>(
+    ((data ?? []) as Array<{ key: unknown; value: unknown }>).map((row) => [
+      typeof row.key === "string" ? row.key : "",
+      typeof row.value === "string" ? row.value.trim() : "",
+    ]),
+  );
 
   return {
     siteName: values.get("site_name") || undefined,

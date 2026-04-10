@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate } from "react-router";
 import { storeKeyPrefix } from "@/config/store.config";
 import { clearTestOrders, fetchSiteSettings, saveSiteSetting, buildFullDataExportZip, type SiteSettingRow } from "@/services/adminManagementService";
 import { useAuth } from "@/contexts/AuthContext";

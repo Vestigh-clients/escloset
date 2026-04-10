@@ -10,6 +10,8 @@ import type {
   ProductVariant,
 } from "@/types/product";
 
+type SupabaseQueryClient = typeof supabase;
+
 const UNKNOWN_CATEGORY: ProductCategory = {
   id: "",
   name: "Uncategorized",
@@ -373,8 +375,8 @@ export const scoreCandidate = (source: Product, candidate: Product): number => {
 };
 
 // Fetch all available products
-export const getAllProducts = async () => {
-  const { data, error } = await (supabase as any)
+export const getAllProducts = async (client: SupabaseQueryClient = supabase) => {
+  const { data, error } = await (client as any)
     .from("products_with_stock")
     .select(`
       id, name, slug, short_description,
@@ -412,8 +414,8 @@ export const getAllProducts = async () => {
 };
 
 // Fetch products by category slug
-export const getProductsByCategory = async (categorySlug: string) => {
-  const { data, error } = await (supabase as any)
+export const getProductsByCategory = async (categorySlug: string, client: SupabaseQueryClient = supabase) => {
+  const { data, error } = await (client as any)
     .from("products_with_stock")
     .select(`
       id, name, slug, short_description,
@@ -435,8 +437,8 @@ export const getProductsByCategory = async (categorySlug: string) => {
 };
 
 // Fetch single product by slug
-export const getProductBySlug = async (slug: string) => {
-  const { data, error } = await (supabase as any)
+export const getProductBySlug = async (slug: string, client: SupabaseQueryClient = supabase) => {
+  const { data, error } = await (client as any)
     .from("products_with_stock")
     .select(`
       id, name, slug, description,
@@ -477,8 +479,8 @@ export const getProductBySlug = async (slug: string) => {
 };
 
 // Fetch featured products
-export const getFeaturedProducts = async () => {
-  const { data, error } = await (supabase as any)
+export const getFeaturedProducts = async (client: SupabaseQueryClient = supabase) => {
+  const { data, error } = await (client as any)
     .from("products_with_stock")
     .select(`
       id, name, slug, short_description,
@@ -500,13 +502,13 @@ export const getFeaturedProducts = async () => {
 };
 
 // Fetch top-selling product ids ordered by sold units (paid + stock committed orders only)
-export const getTopSellingProductIds = async (limit = 4): Promise<string[]> => {
+export const getTopSellingProductIds = async (limit = 4, client: SupabaseQueryClient = supabase): Promise<string[]> => {
   const normalizedLimit = Math.max(0, Math.trunc(limit));
   if (normalizedLimit === 0) {
     return [];
   }
 
-  const { data, error } = await (supabase as any).rpc("get_top_selling_products", {
+  const { data, error } = await (client as any).rpc("get_top_selling_products", {
     p_limit: normalizedLimit,
   });
 
@@ -525,14 +527,18 @@ export const getTopSellingProductIds = async (limit = 4): Promise<string[]> => {
 };
 
 // Fetch scored related products
-export const getRelatedProducts = async (source: Product, limit = 4): Promise<Product[]> => {
+export const getRelatedProducts = async (
+  source: Product,
+  limit = 4,
+  client: SupabaseQueryClient = supabase,
+): Promise<Product[]> => {
   const normalizedLimit = Math.max(0, Math.trunc(limit));
 
   if (!source?.id || normalizedLimit === 0) {
     return [];
   }
 
-  const { data, error } = await (supabase as any)
+  const { data, error } = await (client as any)
     .from("products_with_stock")
     .select(`
       id, name, slug, short_description,

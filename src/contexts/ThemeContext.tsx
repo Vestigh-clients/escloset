@@ -1,4 +1,4 @@
-import { createContext, type ReactNode, useContext, useLayoutEffect, useMemo } from "react";
+import { createContext, type ReactNode, useContext, useEffect, useLayoutEffect, useMemo } from "react";
 import { useStorefrontConfig } from "@/contexts/StorefrontConfigContext";
 import { compileThemeVars, ensureThemePresetFonts, type ThemePreset, themePresets } from "@/themes";
 
@@ -7,12 +7,13 @@ interface ThemeContextValue {
 }
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
+const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const { storefrontConfig } = useStorefrontConfig();
   const preset = useMemo(() => themePresets[storefrontConfig.themePresetKey], [storefrontConfig.themePresetKey]);
 
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     const root = document.documentElement;
     root.dataset.themePreset = preset.key;
     void ensureThemePresetFonts(preset.key);

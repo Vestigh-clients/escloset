@@ -1,9 +1,10 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router";
 import OrderSummaryDetails from "@/components/orders/OrderSummaryDetails";
 import { storeConfig } from "@/config/store.config";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { formatPrice } from "@/lib/price";
 import { buildLiveStatusSteps, formatStatusLabel, getDeliveryWindow, getPaymentMethodLabel } from "@/lib/orderPresentation";
 import { lookupOrderTrackingDetails, type OrderDetails } from "@/services/orderService";
@@ -163,7 +164,7 @@ const mapOrderRowToOrderDetails = (value: unknown): OrderDetails | null => {
     paystack_reference: readString(value.paystack_reference) || null,
     paid_at: readString(value.paid_at) || null,
     mobile_money_number: readString(value.mobile_money_number) || null,
-    shipping_address_snapshot: value.shipping_address_snapshot ?? {},
+    shipping_address_snapshot: (value.shipping_address_snapshot ?? {}) as Json,
     created_at: readString(value.created_at),
     updated_at: readString(value.updated_at) || null,
     confirmation_email_sent: Boolean(value.confirmation_email_sent),

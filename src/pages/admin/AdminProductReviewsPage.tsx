@@ -1,6 +1,6 @@
 import { ChevronDown, ChevronUp, ExternalLink, Search, SlidersHorizontal, Star, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { formatDateShort } from "@/lib/adminFormatting";
 import {
   fetchAdminProductReviews,

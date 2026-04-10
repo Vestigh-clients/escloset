@@ -1,4 +1,4 @@
-﻿import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { formatPrice } from "@/lib/price";
 import { formatStatusLabel } from "@/lib/orderPresentation";
 import type { AccountOrderStatus, AccountOrderSummary } from "@/services/accountService";

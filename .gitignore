@@ -10,6 +10,11 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+build
+.react-router
+.phase0-rr-ssg-spike
+.vercel
+*.tsbuildinfo
 *.local
 
 # Editor directories and files
