@@ -1726,7 +1726,7 @@ export const createAdminProduct = async (payload: Database["public"]["Tables"]["
     }
 
     lastError = error;
-    slugCandidate = await nextAvailableProductSlug(withProductSlugSuffix(stripNumericSlugSuffix(slugCandidate) || "product", attempt + 2));
+    slugCandidate = await nextAvailableProductSlug(slugCandidate);
   }
 
   if (lastError) {
