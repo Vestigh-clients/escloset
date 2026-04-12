@@ -390,6 +390,88 @@ const flattenAddress = (snapshot: Json) => {
     .join(", ");
 };
 
+const MAX_PRODUCT_SLUG_INSERT_RETRIES = 20;
+
+const normalizeProductSlug = (value: string) => {
+  const normalized = value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  return normalized || "product";
+};
+
+const stripNumericSlugSuffix = (slug: string) => slug.replace(/-\d+$/, "");
+
+const withProductSlugSuffix = (baseSlug: string, suffix: number) => `${baseSlug}-${suffix}`;
+
+const getProductSlugSuffix = (slug: string, baseSlug: string) => {
+  if (slug === baseSlug) return 1;
+  const match = slug.match(new RegExp(`^${baseSlug}-(\\d+)$`));
+  if (!match) return null;
+  const parsed = Number(match[1]);
+  return Number.isFinite(parsed) && parsed > 1 ? parsed : null;
+};
+
+const toErrorText = (value: unknown) =>
+  typeof value === "string" && value.trim().length > 0 ? value.toLowerCase() : "";
+
+const isProductSlugConflictError = (error: unknown) => {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const candidate = error as Record<string, unknown>;
+  const code = toErrorText(candidate.code);
+  const message = toErrorText(candidate.message);
+  const details = toErrorText(candidate.details);
+  const hint = toErrorText(candidate.hint);
+  const composite = `${message} ${details} ${hint}`;
+
+  if (code === "23505" && composite.includes("slug")) {
+    return true;
+  }
+
+  return composite.includes("products_slug_key") || composite.includes("key (slug)=");
+};
+
+const nextAvailableProductSlug = async (requestedSlug: string) => {
+  const normalizedRequestedSlug = normalizeProductSlug(requestedSlug);
+  const baseSlug = stripNumericSlugSuffix(normalizedRequestedSlug) || "product";
+
+  const { data, error } = await supabase
+    .from("products")
+    .select("slug")
+    .or(`slug.eq.${baseSlug},slug.ilike.${baseSlug}-%`);
+
+  if (error) {
+    throw error;
+  }
+
+  const existingSlugs = new Set<string>(
+    (data ?? [])
+      .map((row) => (typeof row.slug === "string" ? row.slug.trim().toLowerCase() : ""))
+      .filter((slug): slug is string => slug.length > 0),
+  );
+
+  if (!existingSlugs.has(baseSlug)) {
+    return baseSlug;
+  }
+
+  let maxSuffix = 1;
+  existingSlugs.forEach((existingSlug) => {
+    const suffix = getProductSlugSuffix(existingSlug, baseSlug);
+    if (suffix && suffix > maxSuffix) {
+      maxSuffix = suffix;
+    }
+  });
+
+  return withProductSlugSuffix(baseSlug, maxSuffix + 1);
+};
+
 export const fetchAdminProfile = async (userId: string): Promise<AdminProfile | null> => {
   const { data, error } = await supabase
     .from("customers")
@@ -1619,16 +1701,39 @@ export const fetchAdminProductById = async (id: string) => {
 };
 
 export const createAdminProduct = async (payload: Database["public"]["Tables"]["products"]["Insert"]) => {
-  const { data, error } = await supabase.from("products").insert(payload).select().single();
-  if (error) throw error;
+  let slugCandidate = await nextAvailableProductSlug(payload.slug);
+  let lastError: unknown = null;
 
-  await logAdminActivity("product.created", "products", data.id, {
-    name: data.name,
-    slug: data.slug,
-    sku: data.sku,
-  });
+  for (let attempt = 0; attempt < MAX_PRODUCT_SLUG_INSERT_RETRIES; attempt += 1) {
+    const insertPayload = {
+      ...payload,
+      slug: slugCandidate,
+    };
+    const { data, error } = await supabase.from("products").insert(insertPayload).select().single();
 
-  return data;
+    if (!error) {
+      await logAdminActivity("product.created", "products", data.id, {
+        name: data.name,
+        slug: data.slug,
+        sku: data.sku,
+      });
+
+      return data;
+    }
+
+    if (!isProductSlugConflictError(error)) {
+      throw error;
+    }
+
+    lastError = error;
+    slugCandidate = await nextAvailableProductSlug(withProductSlugSuffix(stripNumericSlugSuffix(slugCandidate) || "product", attempt + 2));
+  }
+
+  if (lastError) {
+    throw lastError;
+  }
+
+  throw new Error("Unable to create product due to repeated slug conflicts.");
 };
 
 export const updateAdminProduct = async (
