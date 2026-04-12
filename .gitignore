@@ -30,3 +30,4 @@ build
 
 .env
 .claude/settings.local.json
+PAYSTACK_BACKEDN.md

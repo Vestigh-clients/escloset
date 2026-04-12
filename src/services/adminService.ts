@@ -391,6 +391,7 @@ const flattenAddress = (snapshot: Json) => {
 };
 
 const MAX_PRODUCT_SLUG_INSERT_RETRIES = 20;
+const MAX_PRODUCT_SKU_LENGTH = 100;
 
 const normalizeProductSlug = (value: string) => {
   const normalized = value
@@ -419,6 +420,35 @@ const getProductSlugSuffix = (slug: string, baseSlug: string) => {
 const toErrorText = (value: unknown) =>
   typeof value === "string" && value.trim().length > 0 ? value.toLowerCase() : "";
 
+const normalizeProductSku = (value: string | null | undefined) => {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const normalized = value.trim();
+  return normalized.length > 0 ? normalized : null;
+};
+
+const stripNumericSkuSuffix = (sku: string) => sku.replace(/-\d+$/, "");
+
+const withProductSkuSuffix = (baseSku: string, suffix: number) => {
+  const normalizedSuffix = Math.max(2, Math.trunc(suffix));
+  const suffixToken = `-${normalizedSuffix}`;
+  const trimmedBaseSku = baseSku.trim() || "SKU";
+  const maxBaseLength = Math.max(1, MAX_PRODUCT_SKU_LENGTH - suffixToken.length);
+  return `${trimmedBaseSku.slice(0, maxBaseLength)}${suffixToken}`;
+};
+
+const hasProductWithSku = async (sku: string) => {
+  const { data, error } = await supabase.from("products").select("id").eq("sku", sku).maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return Boolean(data?.id);
+};
+
 const isProductSlugConflictError = (error: unknown) => {
   if (!error || typeof error !== "object") {
     return false;
@@ -436,6 +466,25 @@ const isProductSlugConflictError = (error: unknown) => {
   }
 
   return composite.includes("products_slug_key") || composite.includes("key (slug)=");
+};
+
+const isProductSkuConflictError = (error: unknown) => {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const candidate = error as Record<string, unknown>;
+  const code = toErrorText(candidate.code);
+  const message = toErrorText(candidate.message);
+  const details = toErrorText(candidate.details);
+  const hint = toErrorText(candidate.hint);
+  const composite = `${message} ${details} ${hint}`;
+
+  if (code === "23505" && composite.includes("sku")) {
+    return true;
+  }
+
+  return composite.includes("products_sku_key") || composite.includes("key (sku)=");
 };
 
 const nextAvailableProductSlug = async (requestedSlug: string) => {
@@ -470,6 +519,30 @@ const nextAvailableProductSlug = async (requestedSlug: string) => {
   });
 
   return withProductSlugSuffix(baseSlug, maxSuffix + 1);
+};
+
+const nextAvailableProductSku = async (requestedSku: string | null | undefined) => {
+  const normalizedRequestedSku = normalizeProductSku(requestedSku);
+  if (!normalizedRequestedSku) {
+    return null;
+  }
+
+  const initialTaken = await hasProductWithSku(normalizedRequestedSku);
+  if (!initialTaken) {
+    return normalizedRequestedSku;
+  }
+
+  const baseSku = stripNumericSkuSuffix(normalizedRequestedSku) || "SKU";
+
+  for (let suffix = 2; suffix <= MAX_PRODUCT_SLUG_INSERT_RETRIES + 1; suffix += 1) {
+    const skuCandidate = withProductSkuSuffix(baseSku, suffix);
+    const taken = await hasProductWithSku(skuCandidate);
+    if (!taken) {
+      return skuCandidate;
+    }
+  }
+
+  return withProductSkuSuffix(baseSku, Date.now());
 };
 
 export const fetchAdminProfile = async (userId: string): Promise<AdminProfile | null> => {
@@ -1702,12 +1775,14 @@ export const fetchAdminProductById = async (id: string) => {
 
 export const createAdminProduct = async (payload: Database["public"]["Tables"]["products"]["Insert"]) => {
   let slugCandidate = await nextAvailableProductSlug(payload.slug);
+  let skuCandidate = await nextAvailableProductSku(payload.sku);
   let lastError: unknown = null;
 
   for (let attempt = 0; attempt < MAX_PRODUCT_SLUG_INSERT_RETRIES; attempt += 1) {
     const insertPayload = {
       ...payload,
       slug: slugCandidate,
+      sku: skuCandidate,
     };
     const { data, error } = await supabase.from("products").insert(insertPayload).select().single();
 
@@ -1722,6 +1797,12 @@ export const createAdminProduct = async (payload: Database["public"]["Tables"]["
     }
 
     if (!isProductSlugConflictError(error)) {
+      if (isProductSkuConflictError(error)) {
+        skuCandidate = await nextAvailableProductSku(skuCandidate || payload.sku);
+        lastError = error;
+        continue;
+      }
+
       throw error;
     }
 
